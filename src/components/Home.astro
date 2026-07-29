@@ -1,0 +1,71 @@
+---
+// Szkielet strony głównej (Etap 0) — „pusta ale żywa": navbar + hero-placeholder
+// + footer. Docelowe sekcje wg docs/design/index.html powstają w Etapie 4
+// (hero, zajawki oferta/proces/realizacje/o-nas, opinie, CTA kontaktu).
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import Navbar from "@/components/navbar/Navbar.astro";
+import Footer from "@/components/Footer.astro";
+---
+
+<BaseLayout>
+  <Navbar />
+
+  <main class="page">
+    <section class="hero-skeleton">
+      <p class="kicker">Delung Meble</p>
+      <h1>Meble na wymiar</h1>
+      <p class="lead">
+        Kuchnie, szafy i garderoby, zabudowy łazienkowe i nietypowe projekty —
+        strona w budowie.
+      </p>
+    </section>
+
+    <div class="foot-wrap">
+      <Footer />
+    </div>
+  </main>
+</BaseLayout>
+
+<style>
+  .page {
+    position: relative;
+    z-index: 1;
+    min-height: 100svh;
+    display: flex;
+    flex-direction: column;
+  }
+  .hero-skeleton {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 1.2rem;
+    padding: clamp(6rem, 18vh, 9rem) clamp(1.5rem, 6vw, 5rem) 4rem;
+  }
+  .kicker {
+    margin: 0;
+    font-family: var(--font-mono), monospace;
+    font-size: 11px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+  h1 {
+    margin: 0;
+    font-family: var(--font-display), serif;
+    font-size: clamp(2.4rem, 6vw, 4.5rem);
+    line-height: 1.05;
+    color: var(--ink);
+  }
+  .lead {
+    margin: 0;
+    max-width: 42ch;
+    color: var(--muted);
+    font-family: var(--font-body), sans-serif;
+    line-height: 1.6;
+  }
+  .foot-wrap {
+    padding: 0 clamp(1.5rem, 6vw, 5rem) clamp(1.5rem, 4vh, 2.5rem);
+  }
+</style>

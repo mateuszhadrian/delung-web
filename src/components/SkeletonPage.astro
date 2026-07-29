@@ -1,0 +1,80 @@
+---
+// Szkielet podstrony (Etap 0) — „pusta ale żywa": navbar + nagłówek +
+// footer. Działająca nawigacja przed treścią (lekcja Fazy 2 szablonu);
+// docelowe widoki wg docs/design/ powstają w Etapie 4.
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import Navbar from "@/components/navbar/Navbar.astro";
+import Footer from "@/components/Footer.astro";
+
+interface Props {
+  title: string;
+  description?: string;
+  kicker?: string;
+  heading: string;
+  lead?: string;
+}
+const { title, description, kicker, heading, lead } = Astro.props;
+---
+
+<BaseLayout title={title} description={description} smoothScroll={false}>
+  <Navbar />
+
+  <main class="skel">
+    <section class="skel-hero">
+      {kicker && <p class="kicker">{kicker}</p>}
+      <h1>{heading}</h1>
+      {lead && <p class="lead">{lead}</p>}
+      <slot />
+    </section>
+
+    <div class="foot-wrap">
+      <Footer />
+    </div>
+  </main>
+</BaseLayout>
+
+<style>
+  .skel {
+    position: relative;
+    z-index: 1;
+    min-height: 100svh;
+    display: flex;
+    flex-direction: column;
+  }
+  .skel-hero {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 1.2rem;
+    padding: clamp(6rem, 18vh, 9rem) clamp(1.5rem, 6vw, 5rem) 4rem;
+  }
+  .kicker {
+    margin: 0;
+    font-family: var(--font-display), sans-serif;
+    font-weight: 500;
+    font-size: 11px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+  h1 {
+    margin: 0;
+    font-family: var(--font-display), sans-serif;
+    font-weight: 200;
+    font-size: clamp(2.2rem, 5.5vw, 4rem);
+    line-height: 1.06;
+    color: var(--ink);
+  }
+  .lead {
+    margin: 0;
+    max-width: 46ch;
+    color: var(--muted);
+    font-family: var(--font-body), sans-serif;
+    line-height: 1.6;
+  }
+  .foot-wrap {
+    padding: 0 clamp(1.5rem, 6vw, 5rem) clamp(1.5rem, 4vh, 2.5rem);
+  }
+</style>

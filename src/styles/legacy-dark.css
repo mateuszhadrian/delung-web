@@ -1,0 +1,19 @@
+/* TYMCZASOWY motyw ciemny dla widoków odziedziczonych z szablonu
+   (WorkIndexPage, ContactPage, PolicyPage) — do czasu portu na jasny
+   design delung (Etap 4/5 instrukcji). Strony te powstały na ciemnym
+   tle (#000/#070507) i czytają tokeny :root — bez tego override'u
+   jasne tokeny delung dałyby ciemny tekst na ciemnym tle.
+   Import per strona = override działa tylko w jej dokumencie.
+   NIE używać w nowych widokach delung. */
+:root {
+  --ink: #f5f0ec;
+  --muted: rgba(245, 240, 236, 0.58);
+  --faint: rgba(245, 240, 236, 0.5);
+  --line: rgba(245, 240, 236, 0.14);
+  --bg: #070507;
+
+  /* zieleń brandowa w wariancie jaśniejszym — czytelna na czerni */
+  --accent: #7fd0a2;
+  --glow: 127, 208, 162;
+  --accent-gradient: linear-gradient(105deg, #eaf7ef 0%, #7fd0a2 100%);
+}

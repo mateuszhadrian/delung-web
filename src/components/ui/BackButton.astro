@@ -1,0 +1,104 @@
+---
+// Okrągły przycisk „wstecz" (46×46, strzałka w lewo) — port referencji
+// docs/design/BackButton.astro na tokeny projektu. Zachowanie „jak wstecz
+// w przeglądarce" zapewnia globalny mechanizm a[data-back] (BaseLayout →
+// scripts/back-link.ts): history.back() gdy jest dokąd wracać (przywraca
+// pozycję scrolla), w przeciwnym razie zwykła nawigacja pod href (fallback,
+// działa też bez JS) — dlatego skrypt z referencji jest tu zbędny.
+interface Props {
+  /** Adres fallback, gdy nie ma historii do cofnięcia. */
+  href: string;
+  /** Etykieta dla czytników ekranu (przycisk jest tylko-ikonowy). */
+  label: string;
+  /** Dodatkowe klasy — np. do pozycjonowania w layoutcie. */
+  class?: string;
+}
+const { href, label, class: className } = Astro.props;
+---
+
+<a
+  href={href}
+  aria-label={label}
+  title={label}
+  data-back
+  class:list={["bkb", className]}
+>
+  <svg
+    width="18"
+    height="18"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2.3"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    aria-hidden="true"
+  >
+    <path d="M19 12H6M11 18l-6-6 6-6"></path>
+  </svg>
+</a>
+
+<style>
+  .bkb {
+    display: grid;
+    place-items: center;
+    /* wrapper strony ma pointer-events:none — klik łapie tylko sam przycisk */
+    pointer-events: auto;
+    width: 46px;
+    height: 46px;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    /* „Szkło": lekki tint + rozmycie tła. Element ma 46×46 px, więc obszar
+       do rozmycia jest znikomy — koszt kompozytora nieistotny nawet przy
+       animowanym AmbientBackground pod spodem. */
+    background: rgba(245, 240, 236, 0.07);
+    -webkit-backdrop-filter: blur(12px) saturate(1.2);
+    backdrop-filter: blur(12px) saturate(1.2);
+    color: var(--ink);
+    text-decoration: none;
+    transition:
+      border-color 0.3s,
+      background 0.3s,
+      color 0.3s,
+      opacity 0.4s ease,
+      visibility 0.4s;
+  }
+  /* Otwarte menu mobilne: BackButton ustępuje miejsca logo „Delung",
+     które navbar odsłania w tym samym slocie (Navbar.astro → .brand-menu).
+     Crossfade 0.4s = ten sam czas co panel menu. visibility (nie display)
+     zdejmuje go z tab-orderu i drzewa a11y, zachowując przejście. */
+  :global(html[data-nav-open]) .bkb {
+    opacity: 0;
+    visibility: hidden;
+  }
+  .bkb svg {
+    display: block;
+    transition: transform 0.3s cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+  .bkb:hover,
+  .bkb:focus-visible {
+    border-color: rgba(245, 240, 236, 0.3);
+    background: rgba(245, 240, 236, 0.12);
+    /* strzałka (currentColor) rozjaśnia się na akcent */
+    color: var(--accent-gold);
+  }
+  .bkb:hover svg,
+  .bkb:focus-visible svg {
+    transform: translateX(-3px);
+  }
+  .bkb:focus-visible {
+    outline: 2px solid var(--ink);
+    outline-offset: 3px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .bkb,
+    .bkb svg {
+      transition: none;
+    }
+    .bkb:hover svg,
+    .bkb:focus-visible svg {
+      transform: none;
+    }
+  }
+</style>

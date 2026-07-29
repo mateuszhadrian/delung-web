@@ -1,0 +1,40 @@
+# build output
+dist/
+# generated types
+.astro/
+
+# dependencies
+node_modules/
+
+# logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+
+# environment variables
+.env*
+.env
+.env.production
+
+# macOS-specific files
+.DS_Store
+
+# jetbrains setting folder
+.idea/
+
+# ciężkie PNG z eksportów designów — tylko do lokalnego podglądu, nie do repo
+docs/design/assets/
+
+# artefakty Playwright (raporty i wyniki przebiegów; baseline'y wizualne
+# w tests/visual/__screenshots__/ SĄ commitowane)
+test-results/
+playwright-report/
+
+# artefakty Lighthouse CI
+.lighthouseci/
+
+# osobiste ustawienia Claude Code
+.claude/settings.local.json
+.claude/scheduled_tasks.lock

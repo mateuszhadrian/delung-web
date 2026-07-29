@@ -1,0 +1,59 @@
+@import "tailwindcss";
+
+@theme {
+  /* Role fontów wg eksportów designów (docs/design/):
+     — display: Helvetica z designów NIE wchodzi do produkcji (komercyjna,
+       Arial nie ma wagi 200) — rolę przejmuje Archivo Variable (decyzja
+       2026-07-29, test A/B w Etapie 0.4; kandydat nr 2: Inter Variable);
+     — body: Manrope (body/formularze w eksportach);
+     — serif: Cormorant Garamond (akcenty italic);
+     — mono: kickery/etykiety w designach to Archivo z letter-spacingiem,
+       ale komponenty odziedziczone używają --font-mono — mapujemy na
+       systemowy monospace do czasu portu widoków delung (Etap 4). */
+  --font-display: "Archivo Variable", system-ui, Arial, sans-serif;
+  --font-body: "Manrope Variable", system-ui, Arial, sans-serif;
+  --font-serif: "Cormorant Garamond", Georgia, serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+
+/* ── Rezerwacja miejsca na pasek scrolla (root scroller).
+   Na Windows/Linux pasek jest klasyczny — zajmuje szerokość i „spycha" treść.
+   `stable` rezerwuje tę szerokość ZAWSZE, także gdy paska chwilowo nie ma
+   (np. modal ustawia body:fixed → html traci przewijalną treść → pasek znika).
+   Bez tego obszar treści rozszerzałby się o szerokość paska i strona skakała
+   przy każdym otwarciu nakładki. Na macOS paski są nakładkowe → bez efektu. ── */
+html {
+  scrollbar-gutter: stable;
+}
+
+/* ── Design system: tokeny brandowe (jedno źródło prawdy — paleta
+   z eksportów designów: --ink/--gr/--dark/--cream + biel i linie #e5e1da).
+   Breakpoint projektu: 1024 px (spójnie wszędzie — desktop ≥1024px,
+   mobile <1024px; NIE mieszać z 760/768 z szablonu źródłowego).
+   Dziedziczone przez wszystkie komponenty; lokalne nadpisania tylko gdy
+   element naprawdę odbiega od marki. ── */
+:root {
+  /* foreground — strona delung jest JASNA (białe tło, ciemny tekst) */
+  --ink: #1a1a1a;
+  --muted: rgba(26, 26, 26, 0.78);
+  --faint: rgba(26, 26, 26, 0.5);
+  --line: #e5e1da;
+
+  /* background */
+  --bg: #ffffff;
+  --bg-cream: #f5f3ee; /* jasne sekcje „cream" z designów */
+  --bg-dark: #141311; /* ciemne sekcje (opinie, footer) */
+
+  /* accent — zieleń brandowa Delung (--gr w eksportach) */
+  --accent: #2f8f5b;
+  --glow: 47, 143, 91; /* składowe RGB → rgba(var(--glow), α) */
+  --accent-gradient: linear-gradient(105deg, #2f8f5b 0%, #7fd0a2 100%);
+
+  /* akcent ciepły (bursztyn — punktowo w designach) */
+  --accent-gold: #f2a90c;
+  --accent-gold-rgb: 242, 169, 12;
+
+  /* Docelowa SUMA odstępu wizualnego na granicy dwóch sekcji strony głównej
+     (padding-bottom sekcji górnej + padding-top sekcji dolnej). */
+  --section-gap: clamp(56px, 7vw, 96px);
+}

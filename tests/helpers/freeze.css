@@ -1,0 +1,18 @@
+/* Determinizm zrzutów (port FREEZE_CSS z verify-hero.mjs): wyłącza CZASOWE
+ * animacje i przejścia CSS (drift tła, accent-wave, scroll-pulse); animacje
+ * scroll-driven (GSAP scrub) zostają — to je testujemy. Wideo NIE jest
+ * chowane stylem — maskujemy je natywnie w toHaveScreenshot (mask). */
+*,
+*::before,
+*::after {
+  animation: none !important;
+  transition: none !important;
+}
+
+/* Nakładka przejść (LoadingOverlay) jest domyślnie ukryta i pokazuje się
+ * wyłącznie przy nawigacji między stronami (klasa .is-in) — sweep wizualny
+ * nie klika w linki, więc w praktyce jej tu nie widać. Chowamy ją twardo
+ * obronnie, żeby żaden przyszły scenariusz zrzutu jej nie złapał. */
+[data-loading-overlay] {
+  display: none !important;
+}

@@ -1,0 +1,57 @@
+{
+  "slug": "dab",
+  "order": 2,
+  "name": "Dominika robi w drewnie",
+  "year": "2025",
+  "category": "Wnętrza & Meble",
+  "blurb": "Manufaktura mebli z litego drewna — surowy, architektoniczny minimalizm.",
+  "tags": [
+    "Szybkość ładowania",
+    "Katalog produktów",
+    "Mocna typografia"
+  ],
+  "intro": "Manufaktura mebli na zamówienie chciała witryny, która podkreśli rzemiosło i jakość materiałów oraz uprości zbieranie zapytań o wycenę projektów B2B i B2C.",
+  "screens": [
+    {
+      "key": "home",
+      "label": "Strona główna",
+      "desktop": "https://media.delung.pl/realizacje/dab-desktop.webp",
+      "mobile": "https://media.delung.pl/realizacje/dab-mobile.webp"
+    },
+    {
+      "key": "gallery",
+      "label": "Kolekcje",
+      "desktop": "https://media.delung.pl/realizacje/dab-gallery-desktop.webp",
+      "mobile": "https://media.delung.pl/realizacje/dab-gallery-mobile.webp"
+    },
+    {
+      "key": "order",
+      "label": "Formularz wyceny",
+      "desktop": "https://media.delung.pl/realizacje/dab-order-desktop.webp",
+      "mobile": "https://media.delung.pl/realizacje/dab-order-mobile.webp"
+    }
+  ],
+  "results": [
+    {
+      "metric": "0,9 s",
+      "label": "Czas ładowania strony głównej"
+    },
+    {
+      "metric": "+30%",
+      "label": "Więcej zapytań z formularza wyceny"
+    },
+    {
+      "metric": "4 tyg.",
+      "label": "Pełna realizacja projektu"
+    }
+  ],
+  "quote": "Wreszcie strona, która wygląda jak nasze meble — prosto, mocno i bez zbędnych ozdobników. Zapytania o wyceny ruszyły od pierwszego tygodnia.",
+  "author": "Tomasz Wiśniewski",
+  "role": "Założyciel, Dąb & Forma",
+  "scope": [
+    "Projekt UI/UX",
+    "Wdrożenie frontendowe",
+    "Katalog produktów",
+    "Formularz wyceny"
+  ]
+}

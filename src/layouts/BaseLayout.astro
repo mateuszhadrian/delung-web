@@ -1,0 +1,194 @@
+---
+// Fonty delung (self-hosted przez fontsource — lekcja FOUC/LCP; Google
+// Fonts i GSAP-z-CDN z eksportów designów NIE wchodzą do produkcji):
+// — Archivo Variable: display (rola Helvetiki z designów — decyzja 0.4),
+// — Manrope Variable: body,
+// — Cormorant Garamond: akcenty serif (normal + italic, wagi 400/500).
+import "@fontsource-variable/archivo/index.css";
+import "@fontsource-variable/manrope/index.css";
+import "@fontsource/cormorant-garamond/400.css";
+import "@fontsource/cormorant-garamond/500.css";
+import "@fontsource/cormorant-garamond/400-italic.css";
+import "@fontsource/cormorant-garamond/500-italic.css";
+
+import "@/styles/global.css";
+
+import Toast from "@/components/ui/toast/Toast.astro";
+import LoadingOverlay from "@/components/ui/LoadingOverlay.astro";
+
+// Preload krojów above-the-fold — skraca okno font-display:swap (mniejszy
+// „przeskok" z fontu systemowego przy nawigacji). Import ?url zamiast
+// hardkodu: hash pliku woff2 zmienia się co build. Strona jest PL-only,
+// więc kryte są oba subsety (latin + latin-ext — polskie diakrytyki).
+// Cormorant Garamond celowo BEZ preloadu: akcenty serif nie są krytyczne
+// above-the-fold (dogrywa się swapem); zestaw preloadów zweryfikujemy
+// pomiarem LHCI w Etapie 3.
+import archivoWoff2 from "@fontsource-variable/archivo/files/archivo-latin-wght-normal.woff2?url";
+import archivoExtWoff2 from "@fontsource-variable/archivo/files/archivo-latin-ext-wght-normal.woff2?url";
+import manropeWoff2 from "@fontsource-variable/manrope/files/manrope-latin-wght-normal.woff2?url";
+import manropeExtWoff2 from "@fontsource-variable/manrope/files/manrope-latin-ext-wght-normal.woff2?url";
+
+interface Props {
+  title?: string;
+  lang?: string;
+  /** Opcjonalny meta description (podstrony; strona główna go nie ustawia). */
+  description?: string;
+  /** Nadpisanie canonicala (np. /kategorie/ → canonical na /oferta/ —
+   *  mobile-only widok z desktopowym redirectem; analiza §7). */
+  canonicalPath?: string;
+  /** false = podstrona bez Lenisa (scroll natywny) — patrz
+   *  docs/analiza-podstrona-realizacje.md (D1). "desktop" = Lenis tylko
+   *  na urządzeniach bez dotyku (podstrona /dla-kogo/: desktopowy
+   *  scrub+snap na Lenisie, mobile natywnie — same reveale once:true;
+   *  docs/analiza-podstrona-dla-kogo.md §VII). */
+  smoothScroll?: boolean | "desktop";
+}
+const {
+  title = "Delung Meble — meble na wymiar",
+  lang = "pl",
+  description,
+  canonicalPath,
+  smoothScroll = true,
+} = Astro.props;
+
+const smoothScrollAttr =
+  smoothScroll === "desktop" ? "desktop" : smoothScroll ? "on" : "off";
+
+// Adresy absolutne dla podglądów linków (iMessage/Messenger/X wymagają pełnego URL).
+// W dev bazą jest bieżący host (np. adres w sieci lokalnej), by podgląd linka
+// działał przed deployem; w buildzie produkcyjnym — domena z astro.config.
+// og-image.png = placeholder z logo Delung (finalny obraz w Etapie 6);
+// bez og:image komunikatory same wybierają przypadkowy duży obrazek ze strony.
+const urlBase = import.meta.env.DEV ? Astro.url : Astro.site;
+const canonicalUrl = new URL(canonicalPath ?? Astro.url.pathname, urlBase);
+const ogImageUrl = new URL("/og-image.png", urlBase);
+---
+
+<!doctype html>
+<html lang={lang}>
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" href="/favicon.ico" sizes="32x32" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <meta name="theme-color" content="#ffffff" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    {
+      /* Slot head — dla skryptów, które MUSZĄ odpalić przed paintem
+         (np. desktopowy redirect /kategorie/ → /oferta/). */
+    }
+    <slot name="head" />
+    <meta name="generator" content={Astro.generator} />
+    <link
+      rel="preload"
+      as="font"
+      type="font/woff2"
+      href={archivoWoff2}
+      crossorigin
+    />
+    <link
+      rel="preload"
+      as="font"
+      type="font/woff2"
+      href={archivoExtWoff2}
+      crossorigin
+    />
+    <link
+      rel="preload"
+      as="font"
+      type="font/woff2"
+      href={manropeWoff2}
+      crossorigin
+    />
+    <link
+      rel="preload"
+      as="font"
+      type="font/woff2"
+      href={manropeExtWoff2}
+      crossorigin
+    />
+    <script is:inline>
+      // Mikro-fade przy nawigacji WEWNĘTRZNEJ (docs/visual-corrections-part1.md
+      // pkt 8): pierwsza wizyta w karcie (brak flagi sessionStorage) renderuje
+      // się bez żadnej bramki — zero wpływu na LCP (LHCI i Playwright wchodzą
+      // na zimno). Przy kolejnych nawigacjach treść wjeżdża krótkim fade'em
+      // zdejmowanym przez document.fonts.ready LUB twardy timeout 300 ms —
+      // strona nigdy nie zostaje ukryta (błąd JS/brak JS = brak klasy
+      // nav-fade, czyli domyślnie widoczna).
+      (() => {
+        try {
+          const KEY = "hm:visited";
+          const revisit = sessionStorage.getItem(KEY) === "1";
+          sessionStorage.setItem(KEY, "1");
+          if (!revisit) return;
+          const root = document.documentElement;
+          root.classList.add("nav-fade");
+          const reveal = () => root.classList.add("fonts-in");
+          setTimeout(reveal, 300);
+          if (document.fonts && document.fonts.ready)
+            document.fonts.ready.then(reveal, reveal);
+        } catch {
+          /* sessionStorage niedostępny (tryb prywatny) — bez fade */
+        }
+      })();
+    </script>
+    <style is:global>
+      /* Bramka mikro-fade — patrz inline skrypt wyżej. Stan bazowy (bez
+         .nav-fade) jest w pełni widoczny. */
+      html.nav-fade body {
+        opacity: 0;
+      }
+      html.nav-fade.fonts-in body {
+        opacity: 1;
+        transition: opacity 0.18s ease;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        html.nav-fade.fonts-in body {
+          transition: none;
+        }
+      }
+    </style>
+    <title>{title}</title>
+    {description && <meta name="description" content={description} />}
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="delung.pl" />
+    <meta property="og:title" content={title} />
+    <meta property="og:url" content={canonicalUrl} />
+    <meta property="og:image" content={ogImageUrl} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="1200" />
+    <meta property="og:locale" content="pl_PL" />
+    <meta name="twitter:card" content="summary" />
+    <link rel="canonical" href={canonicalUrl} />
+  </head>
+  <body data-smooth-scroll={smoothScrollAttr}>
+    <LoadingOverlay />
+    <slot />
+    <Toast />
+    <script>
+      // Lenis ładowany dynamicznie przy dozwolonym ruchu (config dobiera sam).
+      // Podstrony bez animacji scrollowych rezygnują z niego w całości
+      // (smoothScroll=false → data-smooth-scroll="off", scroll natywny);
+      // tryb "desktop" pomija Lenisa na urządzeniach dotykowych (detekcja
+      // maxTouchPoints — kontrakt z .claude/rules/scroll-lenis.md, NIE media
+      // queries hover/pointer). Bramka atrybutem, bo skrypt w wyrażeniu
+      // Astro traci bundling aliasów.
+      const mode = document.body.dataset.smoothScroll;
+      if (
+        mode !== "off" &&
+        !(mode === "desktop" && navigator.maxTouchPoints > 0) &&
+        matchMedia("(prefers-reduced-motion: no-preference)").matches
+      ) {
+        import("@/scripts/smooth-scroll");
+      }
+    </script>
+    <script>
+      import { initBackLinks } from "@/scripts/back-link";
+
+      // Linki „wstecz" podstron (a[data-back]) → history.back() zamiast nowej
+      // nawigacji — przywraca miejsce scrolla poprzedniej strony (moduł).
+      initBackLinks();
+    </script>
+  </body>
+</html>

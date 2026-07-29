@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<!--
+  Delung Meble — Kategorie (eksport, TYLKO widok mobilny)
+  Źródło: "Delung Para Oferta.dc.html", widok "MOBILE 390 × 844 · karta kategorii".
+  Ta strona nie ma breakpointu desktopowego — na desktopie adres /kategorie ma być
+  przekierowany (301) na /oferta. Layout skaluje się z szerokością okna (clamp/vw/%),
+  a kolumna treści zatrzymuje się na 560 px, więc podgląd na szerokim ekranie też działa.
+-->
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kategorie — Delung Meble</title>
+<meta name="description" content="Pełna oferta Delung: kuchnie i sprzęt AGD, szafy i garderoby, wnętrza komercyjne, dekoracje okienne, zabudowy łazienkowe i realizacje nietypowe.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@200;300;400;500&family=Manrope:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+<style>
+
+/* ============ BAZA ============ */
+:root{
+  --ink:#1a1a1a; --gr:#2F8F5B; --cream:#f5f3ee; --dark:#141311;
+  --pad:clamp(18px,6.67vw,26px);   /* margines boczny */
+  --col:560px;                     /* maks. szerokość kolumny treści (mobile) */
+  --p:1;                           /* postęp przewinięcia navbara (ustawia JS) */
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:#fff;color:var(--ink);font-family:'Manrope',system-ui,sans-serif;overflow-x:hidden;overflow-x:clip}
+img{display:block;max-width:100%}
+a{color:inherit;text-decoration:none}
+h1,h2,h3,p{margin:0}
+input,textarea{font-family:'Manrope',sans-serif}
+::placeholder{color:rgba(26,26,26,.35)}
+.wrap{width:100%;max-width:var(--col);margin-inline:auto;padding-inline:var(--pad)}
+.dOnly.dOnly{display:none}
+.dOnlyI.dOnlyI{display:none}
+.noscroll{scrollbar-width:none;-ms-overflow-style:none}
+.noscroll::-webkit-scrollbar{display:none}
+
+/* ============ NAGŁÓWEK ============ */
+.hdr{position:sticky;top:0;z-index:30;display:flex;align-items:center;justify-content:space-between;gap:16px;
+     padding-block:clamp(16px,5.6vw,22px) clamp(14px,5.1vw,20px);padding-inline:var(--pad);background:#fff;
+     box-shadow:0 0 0 rgba(0,0,0,0);transition:box-shadow .25s ease}
+.hdr.on{box-shadow:none}
+.hdr-bg,.hdr-scrim{display:none}
+.hdr-logo{position:relative;display:block;flex:0 1 auto;min-width:0;width:clamp(168px,55.5vw,250px)}
+.hdr-logo img{width:100%;height:auto}
+.logo-l{position:absolute;left:0;top:0;opacity:0}
+.hdr-nav{display:none}
+.hdr-tel{display:none}
+.mbtn{display:flex;align-items:center;gap:10px;flex:none;font:500 clamp(13px,3.85vw,16px)/1 'Archivo',sans-serif;letter-spacing:.14em;
+      cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent}
+.mbtn:hover{opacity:.6}
+.mbtn i{position:relative;display:block;width:26px;height:14px;flex:none}
+.mbtn i b{position:absolute;left:0;width:26px;height:2px;background:var(--ink);transition:transform .32s cubic-bezier(.22,1,.36,1),opacity .2s ease}
+.mbtn i b:nth-child(1){top:0}
+.mbtn i b:nth-child(2){top:6px}
+.mbtn i b:nth-child(3){top:12px}
+.mbtn span{transition:opacity .3s ease}
+.menu-open .mbtn span{opacity:0}
+.menu-open .mbtn i b:nth-child(1){transform:translateY(6px) rotate(45deg)}
+.menu-open .mbtn i b:nth-child(2){opacity:0;transform:scaleX(.3)}
+.menu-open .mbtn i b:nth-child(3){transform:translateY(-6px) rotate(-45deg)}
+
+/* ---- menu mobilne (bottom sheet) ---- */
+.scrim{position:fixed;inset:0;background:rgba(0,0,0,.45);opacity:0;visibility:hidden;transition:opacity .38s ease,visibility .38s;z-index:40}
+.menu-open .scrim{opacity:1;visibility:visible}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:41;border-radius:22px 22px 0 0;overflow:hidden;visibility:hidden;
+       transform:translateY(105%);transition:transform .42s cubic-bezier(.22,1,.36,1),visibility .42s}
+.menu-open .sheet{transform:translateY(0);visibility:visible}
+.sheet>img{position:absolute;bottom:0;left:0;width:100%;height:769px;object-fit:cover;object-position:10% 58%;
+           filter:blur(22px) brightness(.85) saturate(1.05);transform:scale(1.08);transform-origin:bottom center;pointer-events:none}
+.sheet-tint{position:absolute;inset:0;background:rgba(22,22,22,.44);pointer-events:none}
+.sheet-hair{position:absolute;top:0;left:0;right:0;height:1px;background:rgba(255,255,255,.18)}
+.sheet-in{position:relative;width:100%;max-width:var(--col);margin-inline:auto;padding-block:14px 34px;padding-inline:var(--pad)}
+.sheet-grab{width:40px;height:4px;border-radius:99px;background:rgba(255,255,255,.35);margin:0 auto 22px}
+.sheet nav{display:flex;flex-direction:column}
+.sheet nav a{display:block;padding:19px 2px;font:200 clamp(26px,7.95vw,34px)/1.15 Helvetica,Arial,sans-serif;color:#fff;
+             border-bottom:1px solid rgba(255,255,255,.16);text-shadow:0 1px 8px rgba(0,0,0,.25);
+             opacity:0;transform:translateY(16px);transition:opacity .3s ease,transform .4s cubic-bezier(.22,1,.36,1)}
+.sheet nav a:last-child{border-bottom:none}
+.sheet nav a:hover{color:rgba(255,255,255,.6)}
+.menu-open .sheet nav a{opacity:1;transform:translateY(0)}
+.sheet nav a:nth-child(1){transition-delay:.10s}
+.sheet nav a:nth-child(2){transition-delay:.16s}
+.sheet nav a:nth-child(3){transition-delay:.22s}
+.sheet nav a:nth-child(4){transition-delay:.28s}
+.sheet-call{margin-top:14px;padding-top:22px;border-top:1px solid rgba(255,255,255,.16);display:flex;flex-direction:column;gap:6px;
+            opacity:0;transform:translateY(16px);transition:opacity .3s ease .34s,transform .4s cubic-bezier(.22,1,.36,1) .34s}
+.menu-open .sheet-call{opacity:1;transform:translateY(0)}
+.sheet-call span{font:500 10.5px/1 'Archivo',sans-serif;letter-spacing:.18em;color:rgba(255,255,255,.55)}
+.sheet-call a{font:300 clamp(19px,5.64vw,24px)/1.2 'Manrope',sans-serif;color:#fff}
+
+/* ============ STOPKA ============ */
+.ft{background:#161616;color:#fff;padding-top:46px;padding-bottom:26px}
+.ft-in{display:flex;flex-direction:column}
+.ft-logo{display:block;width:clamp(190px,59vw,240px)}
+.ft-logo:hover{opacity:.7}
+.ft-desc{display:none}
+.ft-nav{display:flex;flex-direction:column;margin-top:28px;border-top:1px solid rgba(255,255,255,.14)}
+.ft-nav a{padding:15px 0;border-bottom:1px solid rgba(255,255,255,.14);font:300 15px/1 'Manrope',sans-serif}
+.ft-nav a:hover{opacity:.6}
+.ft-h{font:500 10.5px/1 'Archivo',sans-serif;letter-spacing:.18em;color:rgba(255,255,255,.45)}
+.ft-call{display:flex;flex-direction:column;gap:7px;margin-top:28px}
+.ft-tel{font:300 clamp(19px,5.38vw,24px)/1.2 'Manrope',sans-serif}
+.ft-tel:hover,.ft-mail:hover{opacity:.6}
+.ft-mail{font:300 14.5px/1.4 'Manrope',sans-serif;color:rgba(255,255,255,.75);overflow-wrap:anywhere}
+.ft-hours{display:none}
+.ft-soc{display:flex;flex-wrap:wrap;gap:10px;margin-top:24px}
+.ft-soc a{display:flex;align-items:center;gap:9px;border:1px solid rgba(255,255,255,.3);border-radius:999px;padding:10px 17px;
+          font-family:Helvetica,Arial,sans-serif;font-weight:300;font-size:13.5px;white-space:nowrap}
+.ft-soc a:hover{background:rgba(255,255,255,.08)}
+.ft-soc svg{width:15px;height:15px;flex:none}
+.ft-bot{display:flex;flex-direction:column;gap:4px;margin-top:30px;padding-top:18px;border-top:1px solid rgba(255,255,255,.14)}
+.ft-bot p:first-child{font:300 11.5px/1.7 'Manrope',sans-serif;color:rgba(255,255,255,.4)}
+.ft-bot p:last-child{font:300 10.5px/1.7 'Manrope',sans-serif;color:rgba(255,255,255,.28)}
+.ft-legal{font:300 11px/1.7 'Manrope',sans-serif;color:rgba(255,255,255,.38)}
+.ft-bot a{color:rgba(255,255,255,.42);text-decoration:underline;text-underline-offset:2px}
+.ft-bot a:hover{color:rgba(255,255,255,.7)}
+
+/* (ta strona istnieje tylko w wersji mobilnej — blok desktopowy nagłówka/stopki pominięty) */
+
+/* odsłanianie treści przy przewijaniu — tylko widok mobilny (desktop ma własne animacje) */
+@media all{
+  [data-rev]{opacity:0;transform:translateY(22px);
+             transition:opacity .7s ease,transform .8s cubic-bezier(.22,.61,.36,1)}
+  [data-rev].rv-in{opacity:1;transform:none}
+  [data-rev="soft"]{transform:none}
+  [data-rev="soft"].rv-in{transform:none}
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation-duration:.001s!important;transition-duration:.001s!important}
+}
+
+/* ============ TA STRONA (tylko mobile) ============ */
+/* ---- nagłówek listy ---- */
+.kt-head{padding-inline:var(--pad);padding-block:clamp(18px,6.15vw,26px) clamp(18px,6.67vw,26px);
+         width:100%;max-width:var(--col);margin-inline:auto}
+.kt-kick{font:500 clamp(10px,2.82vw,12px)/1 'Archivo',sans-serif;letter-spacing:.2em;color:rgba(26,26,26,.5);margin-bottom:14px}
+.kt-head h1{font-family:Helvetica,Arial,sans-serif;font-weight:200;font-size:clamp(28px,8.72vw,38px);line-height:1.12;text-wrap:pretty}
+.kt-rule{width:44px;height:1px;background:rgba(26,26,26,.3);margin:16px 0}
+.kt-head p{font-family:Helvetica,Arial,sans-serif;font-weight:200;font-size:clamp(13.5px,3.97vw,17px);line-height:1.48;
+           color:rgba(26,26,26,.78);text-wrap:pretty}
+
+/* ---- kafle kategorii ---- */
+.kt-list{display:flex;flex-direction:column;gap:clamp(11px,3.59vw,15px);padding-inline:var(--pad);
+         width:100%;max-width:var(--col);margin-inline:auto}
+.kt-card{position:relative;display:block;aspect-ratio:338/300;border-radius:8px;overflow:hidden;background:#e5e1da;cursor:pointer}
+.kt-card:hover{opacity:.96}
+.kt-card img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.kt-card .tint{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,0) 38%,rgba(0,0,0,.65) 100%)}
+.kt-num{position:absolute;left:clamp(15px,5.13vw,22px);top:clamp(14px,4.62vw,20px);font:500 clamp(10px,2.82vw,12px)/1 'Archivo',sans-serif;
+        letter-spacing:.2em;color:rgba(255,255,255,.85);text-shadow:0 1px 6px rgba(0,0,0,.4)}
+.kt-txt{position:absolute;left:clamp(15px,5.13vw,22px);bottom:clamp(15px,5.13vw,22px);right:clamp(66px,20.5vw,88px);
+        display:flex;flex-direction:column;gap:6px}
+.kt-txt b{font-family:Helvetica,Arial,sans-serif;font-weight:300;font-size:clamp(18px,5.64vw,24px);line-height:1.18;color:#fff;
+          text-shadow:0 1px 8px rgba(0,0,0,.45)}
+.kt-txt span{font-family:Helvetica,Arial,sans-serif;font-weight:200;font-size:clamp(12px,3.33vw,14px);line-height:1.38;
+             color:rgba(255,255,255,.85);text-shadow:0 1px 6px rgba(0,0,0,.45)}
+.kt-go{position:absolute;right:clamp(12px,4.1vw,18px);bottom:clamp(12px,4.1vw,18px);width:clamp(38px,11.8vw,50px);aspect-ratio:1;
+       background:#fff;border-radius:999px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(0,0,0,.25)}
+.kt-go svg{width:44%;height:44%}
+
+/* ---- CTA ---- */
+.kt-cta{position:relative;overflow:hidden;margin-top:clamp(30px,11.3vw,44px);
+        padding-block:clamp(40px,14.9vw,58px) clamp(44px,15.9vw,62px)}
+.kt-cta>img{position:absolute;inset:-24px;width:calc(100% + 48px);height:calc(100% + 48px);object-fit:cover;object-position:10% 58%;
+            filter:blur(7px);transform:scale(1.06)}
+.kt-cta-tint{position:absolute;inset:0;background:rgba(22,19,16,.55)}
+.kt-cta-in{position:relative;width:100%;max-width:var(--col);margin-inline:auto;padding-inline:var(--pad)}
+.kt-cta h2{font-family:Helvetica,Arial,sans-serif;font-weight:200;font-size:clamp(24px,7.44vw,32px);line-height:1.21;color:#fff;
+           text-wrap:pretty;text-shadow:0 1px 9px rgba(0,0,0,.5);margin-bottom:26px}
+.kt-cta a{display:flex;align-items:center;justify-content:space-between;gap:14px;background:#fff;color:var(--ink);border-radius:999px;
+          padding:13px clamp(18px,6.67vw,26px);font:500 clamp(13.5px,4.1vw,17px)/1.25 'Manrope',sans-serif;box-shadow:0 8px 24px rgba(0,0,0,.25)}
+.kt-cta a:hover{opacity:.94}
+.kt-cta svg{width:clamp(22px,6.67vw,28px);height:clamp(22px,6.67vw,28px);flex:none}
+
+/* ---- karta kategorii (bottom sheet) ---- */
+.kt-ov{position:fixed;inset:0;background:rgba(0,0,0,.45);opacity:0;visibility:hidden;transition:opacity .32s ease,visibility .32s;z-index:38}
+.sheet-cat .kt-ov{opacity:1;visibility:visible}
+.dt{position:fixed;left:0;right:0;bottom:0;z-index:39;height:96svh;background:#fff;border-radius:22px 22px 0 0;
+    box-shadow:0 -12px 40px rgba(0,0,0,.18);overflow:hidden;display:flex;flex-direction:column;
+    transform:translateY(103%);visibility:hidden;transition:transform .38s cubic-bezier(.32,.72,.24,1),visibility .38s}
+.sheet-cat .dt{transform:translateY(0);visibility:visible}
+.dt-grab{flex:none;height:30px;display:flex;align-items:flex-start;justify-content:center;padding-top:12px;cursor:grab;touch-action:none}
+.dt-grab span{width:40px;height:4px;border-radius:99px;background:rgba(0,0,0,.14)}
+.dt-x{position:absolute;top:10px;right:10px;width:44px;height:44px;display:flex;align-items:center;justify-content:center;z-index:3}
+.dt-x:hover{opacity:.55}
+.dt-x i{position:relative;width:20px;height:20px;display:block}
+.dt-x i b{position:absolute;top:9px;left:0;width:20px;height:1.5px;background:var(--ink)}
+.dt-x i b:first-child{transform:rotate(45deg)}
+.dt-x i b:last-child{transform:rotate(-45deg)}
+.dt-body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.dt-body::-webkit-scrollbar{display:none}
+.dt-in{width:100%;max-width:var(--col);margin-inline:auto;padding-inline:var(--pad)}
+.dt-kick{font:500 clamp(10px,2.82vw,12px)/1 'Archivo',sans-serif;letter-spacing:.2em;color:rgba(26,26,26,.5);margin-bottom:9px;
+         padding-right:clamp(34px,11.3vw,44px)}
+.dt-in h2{font-family:Helvetica,Arial,sans-serif;font-weight:200;font-size:clamp(22px,6.67vw,29px);line-height:1.19;text-wrap:balance;
+          padding-right:clamp(34px,11.3vw,44px)}
+.dt-rule{width:44px;height:1px;background:rgba(26,26,26,.3);margin-top:12px}
+.dt-pic{position:relative;margin-top:16px;aspect-ratio:338/190;overflow:hidden;background:#e5e1da}
+.dt-pic img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.dt-desc{margin-top:16px;font-family:Helvetica,Arial,sans-serif;font-weight:200;font-size:clamp(13.5px,3.85vw,16px);line-height:1.47;
+         color:rgba(26,26,26,.78);text-wrap:pretty}
+.dt-h{margin-top:20px;font:500 clamp(10px,2.82vw,12px)/1 'Archivo',sans-serif;letter-spacing:.2em;color:rgba(26,26,26,.5)}
+.dt-specs{display:flex;flex-direction:column;gap:14px;margin-top:14px}
+.dt-spec{display:flex;align-items:center;gap:14px}
+.dt-spec i{flex:none;width:clamp(36px,10.3vw,44px);aspect-ratio:1;border:1px solid rgba(26,26,26,.22);border-radius:999px;
+           display:flex;align-items:center;justify-content:center}
+.dt-spec i svg{width:44%;height:44%}
+.dt-spec span{display:flex;flex-direction:column;gap:4px}
+.dt-spec b{font:500 clamp(9.5px,2.7vw,11px)/1 'Archivo',sans-serif;letter-spacing:.18em;color:rgba(26,26,26,.45)}
+.dt-spec em{font-family:Helvetica,Arial,sans-serif;font-style:normal;font-weight:300;font-size:clamp(13px,3.72vw,15.5px);line-height:1.31}
+.dt-more{display:block;padding:20px 0 150px;text-align:center}
+.dt-more a{display:inline-flex;align-items:center;gap:8px;font:500 clamp(12.5px,3.46vw,14.5px)/1 'Manrope',sans-serif;
+           border-bottom:1px solid rgba(26,26,26,.35);padding-bottom:4px}
+.dt-more a:hover{opacity:.6}
+.dt-more svg{width:14px;height:14px}
+.dt-foot{position:absolute;left:0;right:0;bottom:0;padding-block:40px 24px;pointer-events:none;
+         background:linear-gradient(180deg,rgba(255,255,255,0),#fff 26%)}
+.dt-foot-in{width:100%;max-width:var(--col);margin-inline:auto;padding-inline:var(--pad)}
+.dt-foot a{display:flex;align-items:center;justify-content:space-between;gap:14px;background:var(--ink);color:#fff;border-radius:999px;
+           padding:12px clamp(18px,6.67vw,26px);pointer-events:auto}
+.dt-foot a:hover{background:#2b2b2b}
+.dt-foot b{display:block;font:500 clamp(9.5px,2.7vw,11px)/1 'Archivo',sans-serif;letter-spacing:.16em;color:rgba(255,255,255,.6);margin-bottom:4px}
+.dt-foot em{display:block;font:500 clamp(14px,4.1vw,17px)/1.2 'Manrope',sans-serif;font-style:normal}
+.dt-foot svg{width:clamp(20px,6.15vw,26px);height:clamp(20px,6.15vw,26px);flex:none}
+.sheet-cat{overflow:hidden}
+
+</style>
+</head>
+<body>
+
+<header class="hdr plain" data-nav="solid">
+  <span class="hdr-scrim"></span>
+  <span class="hdr-bg"></span>
+  <a class="hdr-logo" href="index.html">
+    <img class="logo-d" src="assets/img/Delung-logo-new-no-background.png" alt="Delung — producent mebli na wymiar">
+    <img class="logo-l" src="assets/img/Delung-logo-new-no-background-footer.png" alt="">
+  </a>
+  <nav class="hdr-nav">
+    <a class="nl" data-flip data-active data-page="oferta" href="oferta.html" aria-current="page">OFERTA</a>
+    <a class="nl" data-flip data-page="realizacje" href="realizacje.html">REALIZACJE</a>
+    <a class="nl" data-flip data-page="o-nas" href="o-nas.html">O NAS</a>
+    <a class="nl" data-flip data-page="kontakt" href="kontakt.html">KONTAKT</a>
+    <a class="hdr-tel" href="tel:+48690291143">+48 690 291 143</a>
+  </nav>
+  <div class="mbtn" data-mbtn><span>MENU</span><i><b></b><b></b><b></b></i></div>
+</header>
+
+<div class="scrim" data-scrim></div>
+<div class="sheet" data-sheet>
+  <img src="assets/img/kaszmir-wood1.png" alt="" aria-hidden="true">
+  <span class="sheet-tint"></span><span class="sheet-hair"></span>
+  <div class="sheet-in">
+    <div class="sheet-grab"></div>
+    <nav>
+      <a href="oferta.html">Oferta</a>
+      <a href="realizacje.html">Realizacje</a>
+      <a href="o-nas.html">O nas</a>
+      <a href="kontakt.html">Kontakt</a>
+    </nav>
+    <div class="sheet-call">
+      <span>ZADZWOŃ DO NAS</span>
+      <a href="tel:+48690291143">+48 690 291 143</a>
+    </div>
+  </div>
+</div>
+
+<main>
+  <section class="kt">
+    <div class="kt-head">
+      <div class="kt-kick" data-rise="0">PEŁNA OFERTA</div>
+      <h1 data-words>Przestrzeń bez kompromisów.</h1>
+      <div class="kt-rule"></div>
+      <p data-rise="2">Wierzymy, że perfekcja tkwi w detalach, a słowo „niemożliwe” nie istnieje. Kompleksowo urządzamy wnętrza domów i prestiżowych lokali. Od precyzyjnych zabudów i montażu sprzętu AGD, aż po eleganckie dekoracje okienne. Poznaj pełen zakres naszych możliwości.</p>
+    </div>
+    <div class="kt-list" data-list data-rev="soft"></div>
+  </section>
+
+  <section class="kt-cta">
+    <img src="assets/img/kaszmir-wood1.png" alt="Kuchnia Delung w rozmyciu" data-par="0.08" data-par-scale="1.1">
+    <span class="kt-cta-tint"></span>
+    <div class="kt-cta-in">
+      <h2 data-rev>Masz wizję swojego wnętrza?</h2>
+      <a href="kontakt.html" data-rev="soft"><span>Skontaktuj się i omówmy projekt.</span><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 18L18 6M18 6H8M18 6v10" stroke="#1a1a1a" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+    </div>
+  </section>
+</main>
+
+<div class="kt-ov" data-ov></div>
+<div class="dt" data-dt>
+  <div class="dt-grab" data-grab><span></span></div>
+  <a class="dt-x" href="#" data-close aria-label="Zamknij"><i><b></b><b></b></i></a>
+  <div class="dt-body" data-dtbody>
+    <div class="dt-in">
+      <div class="dt-kick"><span data-num>01</span> — OFERTA</div>
+      <h2 data-title>Kuchnie pod klucz.</h2>
+      <div class="dt-rule"></div>
+      <div class="dt-pic"><img src="assets/img/kitchen_category.png" alt="" data-pic></div>
+      <p class="dt-desc" data-desc></p>
+      <div class="dt-h">W STANDARDZIE</div>
+      <div class="dt-specs" data-specs></div>
+      <div class="dt-more">
+        <a href="realizacje.html">Zobacz realizacje z tej kategorii <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 18L18 6M18 6H8M18 6v10" stroke="#1a1a1a" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+      </div>
+    </div>
+  </div>
+  <div class="dt-foot">
+    <div class="dt-foot-in">
+      <a href="kontakt.html"><span><b>CHCESZ WIĘCEJ SZCZEGÓŁÓW?</b><em>Skontaktuj się z nami</em></span><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 18L18 6M18 6H8M18 6v10" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+    </div>
+  </div>
+</div>
+
+<footer class="ft">
+  <div class="wrap ft-in">
+    <div>
+      <a class="ft-logo" href="index.html"><img src="assets/img/Delung-logo-new-no-background-footer.png" alt="Delung"></a>
+      <p class="ft-desc">Producent mebli na wymiar. Kompleksowo urządzamy domy i lokale biznesowe — od projektu po czysty montaż.</p>
+    </div>
+    <nav class="ft-nav">
+      <span class="ft-h dOnly">STRONY</span>
+      <a href="oferta.html">Oferta</a>
+      <a href="realizacje.html">Realizacje</a>
+      <a class="dOnly" href="o-nas.html">O nas</a>
+      <a href="kontakt.html">Kontakt</a>
+      <a class="dim dOnly" href="polityka-prywatnosci.html">Polityka prywatności</a>
+    </nav>
+    <div class="ft-call">
+      <span class="ft-h">ZADZWOŃ DO NAS</span>
+      <a class="ft-tel" href="tel:+48690291143">+48 690 291 143</a>
+      <a class="ft-mail" href="mailto:kontakt@delung.pl">kontakt@delung.pl</a>
+      <span class="ft-hours">Pod telefonem pn–pt praktycznie całą dobę</span>
+    </div>
+    <div class="ft-soc">
+      <a href="#"><svg viewBox="0 0 24 24" fill="none"><rect x="2" y="2" width="20" height="20" rx="5" stroke="#fff" stroke-width="1.5"/><circle cx="12" cy="12" r="4" stroke="#fff" stroke-width="1.5"/><circle cx="17.5" cy="6.5" r="1" fill="#fff"/></svg>Instagram</a>
+      <a href="#"><svg viewBox="0 0 24 24" fill="none"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Facebook</a>
+    </div>
+  </div>
+  <div class="wrap ft-bot">
+    <p>© 2026 Delung Meble. Wszystkie prawa zastrzeżone.</p>
+    <p class="ft-legal">Delung Meble Adam Delung · Strażacka 27a, 98-300 Gaszyn · NIP 7312021984</p>
+    <p>Realizacja: <a href="https://hadrianm.pl" target="_blank" rel="noopener">hadrianm</a> — pracownia stron i aplikacji</p>
+  </div>
+</footer>
+
+<script>
+/* ---------- wspólny skrypt Delung: nawigacja, menu, animacje wejścia, parallax, formularz ---------- */
+(function(){
+  var qa=function(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s));};
+  var isD=function(){return window.matchMedia('(min-width:1024px)').matches;};
+  var html=document.documentElement;
+
+  /* litery przewracane w nawigacji desktop */
+  qa('[data-flip]').forEach(function(a){
+    var t=(a.textContent||'').trim(), act=a.hasAttribute('data-active');
+    a.setAttribute('aria-label',t); a.textContent='';
+    t.split('').forEach(function(c,i){
+      var w=document.createElement('span');
+      if(c===' '){w.className='sp';}
+      else{w.className='ch';w.style.setProperty('--i',i);w.innerHTML='<span>'+c+'</span><span>'+c+'</span>';}
+      a.appendChild(w);
+    });
+    if(act){var u=document.createElement('span');u.className='ul';a.appendChild(u);}
+  });
+
+  /* menu mobilne */
+  var mb=document.querySelector('[data-mbtn]'), sc=document.querySelector('[data-scrim]'), sh=document.querySelector('[data-sheet]');
+  var setMenu=function(o){html.classList.toggle('menu-open',o);document.body.style.overflow=o?'hidden':'';};
+  if(mb){mb.addEventListener('click',function(e){e.preventDefault();setMenu(!html.classList.contains('menu-open'));});}
+  if(sc){sc.addEventListener('click',function(){setMenu(false);});}
+  if(sh){qa('a',sh).forEach(function(a){a.addEventListener('click',function(){setMenu(false);});});}
+  window.addEventListener('keydown',function(e){if(e.key==='Escape')setMenu(false);});
+
+  /* wysokość nagłówka jako zmienna — mobilne hero wypełnia dokładnie pierwszy ekran */
+  var hdrEl=document.querySelector('.hdr');
+  var hdrVar=function(){
+    if(!hdrEl)return;
+    html.style.setProperty('--hdrH',Math.round(hdrEl.getBoundingClientRect().height)+'px');
+  };
+  window.addEventListener('resize',hdrVar);
+  if(window.ResizeObserver&&hdrEl)new ResizeObserver(hdrVar).observe(hdrEl);
+  hdrVar();
+
+  /* navbar reagujący na przewijanie */
+  var hdr=document.querySelector('.hdr'), href=document.querySelector('[data-navref]')||document.querySelector('.hero');
+  function navPaint(){
+    if(!hdr)return;
+    var y=window.pageYOffset||0;
+    if(isD()&&hdr.getAttribute('data-nav')==='over'){
+      var h=href?href.offsetHeight:600;
+      var e=Math.max(0,Math.min(1,y/Math.max(1,h*0.5)));
+      hdr.style.setProperty('--p',(e*e*(3-2*e)).toFixed(3));
+    }else{
+      hdr.style.setProperty('--p','1');
+    }
+    hdr.classList.toggle('on',y>8);
+  }
+
+  /* animacje wejścia */
+  var g=window.gsap;
+  function words(el){
+    if(el.__w)return el.__w;
+    var src=(el.textContent||'').trim(); el.textContent='';
+    el.__w=src.split(/\s+/).map(function(w){
+      var o=document.createElement('span');
+      o.style.cssText='display:inline-block;overflow:hidden;vertical-align:top;padding-bottom:.14em;margin-bottom:-.14em';
+      var i=document.createElement('span'); i.style.display='inline-block'; i.textContent=w;
+      o.appendChild(i); el.appendChild(o); el.appendChild(document.createTextNode(' '));
+      return i;
+    });
+    return el.__w;
+  }
+  if(g){
+    var rise=qa('[data-rise]'), grp=qa('[data-riseg]'), wipe=qa('[data-wipe]'), head=qa('[data-words]');
+    if(rise.length)g.set(rise,{y:42,opacity:0});
+    grp.forEach(function(x){if(x.children.length)g.set(x.children,{y:30,opacity:0});});
+    if(wipe.length)g.set(wipe,{clipPath:'inset(0% 0% 100% 0%)'});
+    wipe.forEach(function(w){var im=w.querySelector('img:not([data-par])');if(im)g.set(im,{scale:1.2});});
+    head.forEach(function(h){g.set(words(h),{yPercent:112});});
+    var io=new IntersectionObserver(function(es){es.forEach(function(e){
+      if(!e.isIntersecting)return; var el=e.target; io.unobserve(el);
+      if(el.hasAttribute('data-rise'))g.to(el,{y:0,opacity:1,duration:1.05,ease:'expo.out',delay:(parseFloat(el.getAttribute('data-rise'))||0)*.075});
+      if(el.hasAttribute('data-riseg'))g.to(el.children,{y:0,opacity:1,duration:1,ease:'expo.out',stagger:.075});
+      if(el.hasAttribute('data-wipe')){
+        g.to(el,{clipPath:'inset(0% 0% 0% 0%)',duration:1.25,ease:'expo.inOut'});
+        var im=el.querySelector('img:not([data-par])'); if(im)g.to(im,{scale:1,duration:1.9,ease:'expo.out'});
+      }
+      if(el.hasAttribute('data-words'))g.to(el.__w||words(el),{yPercent:0,duration:1.05,ease:'expo.out',stagger:.05});
+    });},{rootMargin:'0px 0px -8% 0px',threshold:.01});
+    rise.concat(grp,wipe,head).forEach(function(el){io.observe(el);});
+  }
+
+  /* odsłanianie data-rev (mobile) */
+  var revIO=new IntersectionObserver(function(es){es.forEach(function(e){
+    /* odsłaniamy też to, co przy skoku (np. z zakładki) znalazło się już nad ekranem */
+    if(!e.isIntersecting&&e.boundingClientRect.bottom>0)return;
+    e.target.classList.add('rv-in'); revIO.unobserve(e.target);
+  });},{rootMargin:'0px 0px -10% 0px',threshold:.01});
+
+  /* parallax */
+  var pars=[];
+  function parPaint(){
+    var H=window.innerHeight;
+    pars.forEach(function(el){
+      var host=el.parentElement; if(!host)return;
+      var r=host.getBoundingClientRect();
+      var p=Math.max(0,Math.min(1,(H-r.top)/(H+r.height)));
+      var amt=parseFloat(el.getAttribute('data-par'))||.1;
+      el.style.transform='translate3d(0,'+((.5-p)*2*amt*r.height).toFixed(1)+'px,0) scale('+(el.getAttribute('data-par-scale')||1)+')';
+    });
+  }
+
+  /* pola formularza + przycisk wyślij */
+  qa('.field').forEach(function(fl){
+    var inp=fl.querySelector('input,textarea'), line=fl.querySelector('.fline'), lab=fl.querySelector('span');
+    if(!inp)return;
+    var set=function(act){
+      if(line){line.style.transition='transform .6s cubic-bezier(.16,1,.3,1)';line.style.transform='scaleX('+(act?1:0)+')';}
+      if(lab)lab.style.color=act?'#2F8F5B':'rgba(26,26,26,.5)';
+    };
+    inp.addEventListener('focus',function(){set(true);});
+    inp.addEventListener('blur',function(){set(!!inp.value);});
+  });
+  qa('[data-send]').forEach(function(btn){
+    var txt=btn.querySelector('[data-sendtxt]');
+    btn.addEventListener('click',function(e){
+      e.preventDefault();
+      if(btn.__sent)return; btn.__sent=true;
+      var bg=btn.style.background,col=btn.style.color;
+      if(txt)txt.textContent='Dziękujemy — odezwiemy się!';
+      btn.style.background='#2F8F5B'; btn.style.color='#fff';
+      setTimeout(function(){
+        btn.__sent=false;
+        if(txt)txt.textContent='Wyślij wiadomość';
+        btn.style.background=bg; btn.style.color=col;
+      },2600);
+    });
+  });
+
+  /* ponowne skanowanie po wstawieniu treści przez skrypt strony */
+  window.dgScan=function(){
+    pars=qa('[data-par]');
+    qa('[data-rev]').forEach(function(el){
+      if(el.__rev)return; el.__rev=1; revIO.observe(el);
+    });
+    parPaint();
+  };
+
+  /* pętla rysowania */
+  var raf=0, extra=[];
+  window.dgOnPaint=function(fn){extra.push(fn);fn();};
+  function tick(){ if(raf)return; raf=requestAnimationFrame(function(){raf=0;navPaint();parPaint();extra.forEach(function(f){f();});}); }
+  window.addEventListener('scroll',tick,{passive:true});
+  window.addEventListener('resize',tick);
+  navPaint(); window.dgScan();
+  window.addEventListener('load',function(){window.dgScan();});
+})();
+</script>
+<script>
+/* Kategorie (tylko mobile): lista kategorii -> karta kategorii w bottom sheecie.
+   Dane są te same co na oferta.html — przy zmianie treści zmieniaj oba pliki. */
+(function(){
+  var q=function(s){return document.querySelector(s);};
+  var qa=function(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s));};
+  var esc=function(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');};
+  var html=document.documentElement;
+  var ARROW='<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 18L18 6M18 6H8M18 6v10" stroke="#1a1a1a" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  var IKONY=[
+    '<svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="6.5" stroke="#1a1a1a" stroke-width="1.4"/><circle cx="12" cy="12" r="1.6" fill="#1a1a1a"/></svg>',
+    '<svg viewBox="0 0 24 24" fill="none"><rect x="4" y="4" width="11" height="11" stroke="#1a1a1a" stroke-width="1.4"/><path d="M9 20h11V9" stroke="#1a1a1a" stroke-width="1.4"/></svg>',
+    '<svg viewBox="0 0 24 24" fill="none"><rect x="5" y="7" width="14" height="12" rx="1" stroke="#1a1a1a" stroke-width="1.4"/><path d="M9 3.5V7M15 3.5V7" stroke="#1a1a1a" stroke-width="1.4" stroke-linecap="round"/></svg>',
+    '<svg viewBox="0 0 24 24" fill="none"><path d="M12 4l8 8-8 8-8-8z" stroke="#1a1a1a" stroke-width="1.4" stroke-linejoin="round"/></svg>'
+  ];
+
+  var KATEGORIE=[
+    {num:'01',name:'Kuchnie i sprzęt AGD',blurb:'Zabudowy i kompleksowe wyposażenie AGD.',title:'Kuchnie pod klucz.',
+     img:'assets/img/kitchen_category.png',pos:'0% 50%',
+     desc:'Serce każdego domu wymaga szczególnej uwagi. Projektujemy, produkujemy i montujemy zabudowy kuchenne, dbając o każdy milimetr. Wybierając nas, nie musisz martwić się o sprzęt – kompleksowo dobieramy i instalujemy urządzenia AGD, oddając Ci w pełni gotową kuchnię.',
+     det:[['NIEZAWODNE SYSTEMY','Prowadnice i zawiasy topowych marek (Blum).'],['WYSELEKCJONOWANE MATERIAŁY','Forniry, akryle, lakiery i trwałe blaty HPL.'],['SPRZĘT NA GOTOWO','Dobieramy, montujemy i podłączamy pełne AGD.'],['TRUDNE ROZWIĄZANIA','Łączenie blatów na zamek, idealne pasowanie blend.']]},
+    {num:'02',name:'Szafy i garderoby',blurb:'Systemy przesuwne i zabudowy pod sam sufit.',title:'Szafy i garderoby.',
+     img:'assets/img/wardrobe_category.png',pos:'0% 50%',
+     desc:'Maksymalnie wykorzystana przestrzeń i niezawodne systemy przechowywania. Niezależnie od tego, czy potrzebujesz dyskretnej szafy wnękowej, czy przestronnej, reprezentacyjnej garderoby typu walk-in – zrealizujemy to z najwyższej klasy materiałów.',
+     det:[['SYSTEMY PRZESUWNE','Ciche domyki i prowadnice renomowanych marek.'],['ORGANIZACJA WNĘTRZA','Szuflady wewnętrzne, pantografy i wkłady na miarę.'],['OŚWIETLENIE LED','Światło wnętrza reagujące na otwarcie frontu.'],['ZABUDOWA POD SUFIT','Wykorzystujemy każdy centymetr – także skosy i wnęki.']]},
+    {num:'03',name:'Wnętrza komercyjne i biura',blurb:'Recepcje, gabinety i przestrzenie dla biznesu.',title:'Wnętrza komercyjne (B2B).',
+     img:'assets/img/commercial_category.png',pos:'100% 50%',
+     desc:'Precyzja, której ufają profesjonaliści. Realizujemy wymagające zlecenia dla biznesu – od eleganckich gabinetów lekarskich po luksusowe salony jubilerskie. Tworzymy meble, które stają się najlepszą wizytówką Twojej firmy.',
+     det:[['TERMINOWOŚĆ','Realizacje zgrane z harmonogramem otwarcia lokalu.'],['MATERIAŁY KONTRAKTOWE','Powierzchnie odporne na intensywną eksploatację.'],['PRACA Z PROJEKTANTAMI','Projekty architektów realizujemy 1:1, bez uproszczeń.'],['KOMPLEKSOWA OBSŁUGA B2B','Wycena, produkcja i montaż w jednym kontrakcie.']]},
+    {num:'04',name:'Dekoracje okienne',blurb:'Zasłony, rolety i karnisze dobrane do wnętrza.',title:'Dekoracje okienne i tekstylia.',
+     img:'assets/img/other_details_category.png',pos:'50% 50%',
+     desc:'Twarde bryły mebli idealnie komponują się z miękkimi tkaninami. Ocieplamy wnętrza szyjąc na wymiar firany, zasłony i rolety rzymskie. Oferujemy również dobór i montaż nowoczesnych karniszy elektrycznych.',
+     det:[['SZYCIE NA WYMIAR','Firany, zasłony i rolety rzymskie z pomiarem u klienta.'],['DOBÓR TKANIN','Tkaniny dekoracyjne i zaciemniające – próbniki na miejscu.'],['KARNISZE ELEKTRYCZNE','Systemy sterowane pilotem lub z telefonu.'],['SPÓJNOŚĆ Z MEBLAMI','Tekstylia dobrane do kolorystyki zabudowy.']]},
+    {num:'05',name:'Zabudowy łazienkowe',blurb:'Meble i blaty odporne na wilgoć, precyzyjnie spasowane.',title:'Zabudowy łazienkowe.',
+     img:'assets/img/bathroom_category.png',pos:'50% 50%',
+     desc:'Elegancja odporna na warunki. Projektujemy meble łazienkowe, które łączą piękny design z absolutną odpornością na wilgoć i zmienne temperatury, zamieniając każdą łazienkę w prywatne SPA.',
+     det:[['ODPORNOŚĆ NA WILGOĆ','Materiały i okucia przeznaczone do stref mokrych.'],['BLATY I UMYWALKI','Spieki i konglomeraty odporne na wodę i kosmetyki.'],['ZABUDOWA TECHNICZNA','Pralka, bojler i rewizje ukryte w estetycznej zabudowie.'],['OKUCIA NIERDZEWNE','Zawiasy i prowadnice odporne na korozję (Blum).']]},
+    {num:'06',name:'Meble nietypowe',blurb:'Nieszablonowe projekty realizowane od zera.',title:'Realizacje nietypowe.',
+     img:'assets/img/non_typical_category.png',pos:'50% 50%',
+     desc:'Tam, gdzie inni mówią „tego nie da się zrobić”, my dopiero się rozkręcamy. Ukryte przejścia, nietypowe skosy, skomplikowane obudowy RTV czy rygorystyczne łączenia blatów – kochamy wyzwania i nie szukamy dróg na skróty.',
+     det:[['UKRYTE PRZEJŚCIA','Drzwi schowane w zabudowie i fronty bez uchwytów.'],['NIETYPOWE SKOSY','Meble idealnie spasowane z geometrią poddaszy.'],['OBUDOWY RTV','Skomplikowane zabudowy multimedialne z wentylacją.'],['PRECYZYJNE ŁĄCZENIA','Rygorystyczne łączenia blatów i blend – bez kompromisów.']]}
+  ];
+
+  /* ——— lista kafli ——— */
+  var list=q('[data-list]');
+  list.innerHTML=KATEGORIE.map(function(c,i){
+    return '<a class="kt-card" href="#" data-cat="'+i+'">'+
+      '<img loading="lazy" decoding="async" src="'+c.img+'" alt="'+esc(c.name)+'" style="object-position:'+c.pos+'">'+
+      '<span class="tint"></span><span class="kt-num">'+c.num+'</span>'+
+      '<span class="kt-txt"><b>'+esc(c.name)+'</b><span>'+esc(c.blurb)+'</span></span>'+
+      '<span class="kt-go">'+ARROW+'</span></a>';
+  }).join('');
+
+  /* ——— karta kategorii ——— */
+  var dt=q('[data-dt]'), ov=q('[data-ov]'), box=q('[data-dtbody]');
+  var fill=function(i){
+    var c=KATEGORIE[i];
+    q('[data-num]').textContent=c.num;
+    q('[data-title]').textContent=c.title;
+    var im=q('[data-pic]');
+    im.src=c.img; im.alt=c.title; im.style.objectPosition=c.pos;
+    q('[data-desc]').textContent=c.desc;
+    q('[data-specs]').innerHTML=c.det.map(function(d,k){
+      return '<div class="dt-spec"><i>'+IKONY[k]+'</i><span><b>'+esc(d[0])+'</b><em>'+esc(d[1])+'</em></span></div>';
+    }).join('');
+  };
+  var setOpen=function(o){
+    html.classList.toggle('sheet-cat',o);
+    document.body.style.overflow=o?'hidden':'';
+  };
+  var open=function(i){ fill(i); if(box)box.scrollTop=0; setOpen(true); };
+  var close=function(){ setOpen(false); };
+
+  qa('[data-cat]').forEach(function(a){
+    a.addEventListener('click',function(e){e.preventDefault();open(parseInt(a.getAttribute('data-cat'),10)||0);});
+  });
+  qa('[data-close]').forEach(function(a){a.addEventListener('click',function(e){e.preventDefault();close();});});
+  if(ov)ov.addEventListener('click',close);
+  window.addEventListener('keydown',function(e){if(e.key==='Escape')close();});
+
+  /* ——— przeciąganie karty w dół ——— */
+  var grab=q('[data-grab]'), drag=null;
+  if(grab&&dt){
+    grab.addEventListener('pointerdown',function(e){
+      drag={y:e.clientY,dy:0};
+      dt.style.transition='none';
+      if(grab.setPointerCapture)grab.setPointerCapture(e.pointerId);
+    });
+    grab.addEventListener('pointermove',function(e){
+      if(!drag)return;
+      drag.dy=Math.max(0,e.clientY-drag.y);
+      dt.style.transform='translateY('+drag.dy+'px)';
+    });
+    var up=function(){
+      if(!drag)return;
+      var dy=drag.dy; drag=null;
+      dt.style.transition='transform .38s cubic-bezier(.32,.72,.24,1)';
+      dt.style.transform=dy>120?'':'translateY(0px)';
+      if(dy>120)close();
+    };
+    grab.addEventListener('pointerup',up);
+    grab.addEventListener('pointercancel',up);
+  }
+
+  fill(0);
+  if(window.dgScan)window.dgScan();
+
+  /* zapas na wypadek, gdyby IntersectionObserver nie zdążył: cokolwiek jest w kadrze — odsłoń */
+  if(window.dgOnPaint){
+    window.dgOnPaint(function(){
+      qa('[data-rev]').forEach(function(el){
+        if(el.classList.contains('rv-in'))return;
+        if(el.getBoundingClientRect().top < window.innerHeight * 0.9)el.classList.add('rv-in');
+      });
+    });
+  }
+})();
+</script>
+</body>
+</html>
