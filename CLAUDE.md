@@ -60,8 +60,19 @@ treść/sekcje budowane od nowa wg `docs/design/`).
 - **Etap 0 (bootstrap) — WYKONANY**: kopia szablonu, wycięte hero/EN/sekcje
   hadrianm, parametryzacja, tokeny+fonty delung, 8 tras-szkieletów,
   `categories.ts`.
-- Etapy 1–7 — przed nami (repo GitHub/Pages/domena → CMS+R2 → testy/CI →
-  widoki → formularz → SEO/pomiar → przekazanie).
+- **Etap 1 („pusta" produkcja) — WYKONANY** (2026-07-30): repo GitHub
+  `mateuszhadrian/delung-web` (**PUBLICZNE** — świadoma decyzja: ruleset
+  egzekwowany za darmo, jak hadrianm-web; zero sekretów/wrażliwych
+  danych w repo), Cloudflare Pages (`delung-web`, NODE_VERSION=22),
+  domena `delung.pl` + `www` (NS na Cloudflare, DNSSEC zdjęty przed
+  delegacją), skrzynka Zimbra `kontakt@delung.pl` + alias `adam@`
+  (MX/SPF/DKIM/DMARC/SRV w Cloudflare — komplet PASS), ruleset
+  `main-protection` AKTYWNY (PR + required check `quality`; bypass dla
+  konta CMS dojdzie w Etapie 2). CI na main: `quality` zielone;
+  `e2e`/`lighthouse` czerwone ZGODNIE Z PLANEM (adaptacja speców
+  i budżetów = Etap 3).
+- Etapy 2–7 — przed nami (CMS+R2 → testy/CI → widoki → formularz →
+  SEO/pomiar → przekazanie).
 - PRZEJŚCIOWE dziedzictwo szablonu (do wymiany w Etapach 2–5): schemat
   kolekcji realizacje (screens/results/quote → docelowo cover/gallery
   z wideo/specs), widoki `/realizacje/` `/kontakt/` `/polityka-prywatnosci/`
