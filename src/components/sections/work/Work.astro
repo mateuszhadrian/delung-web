@@ -2,7 +2,7 @@
 import { getCollection } from "astro:content";
 import { useTranslations, type Lang } from "@/i18n/utils";
 import { WORK_INDEX_PATH } from "@/lib/routes";
-import { localizeProject } from "./work-data";
+import { viewProject } from "./work-data";
 import WorkCard from "./WorkCard.astro";
 import WorkCarousel from "./WorkCarousel.astro";
 import WorkMoreButton from "./WorkMoreButton.astro";
@@ -22,7 +22,7 @@ const entries = await getCollection("realizacje");
 const projects = entries
   .map((e) => e.data)
   .sort((a, b) => a.order - b.order)
-  .map((p) => localizeProject(p))
+  .map((p) => viewProject(p))
   .slice(0, 3);
 
 const moreHref = WORK_INDEX_PATH;
@@ -79,10 +79,8 @@ const moreHref = WORK_INDEX_PATH;
       <template data-work-detail={project.slug}>
         <WorkDetail
           project={project}
-          previewLabel={t("work.preview")}
-          resultsLabel={t("work.results")}
-          scopeLabel={t("work.scope")}
-          liveLabel={t("work.live")}
+          galleryLabel={t("work.gallery")}
+          specsLabel={t("work.specs")}
         />
       </template>
     ))

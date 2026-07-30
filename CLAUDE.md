@@ -67,19 +67,30 @@ treść/sekcje budowane od nowa wg `docs/design/`).
   domena `delung.pl` + `www` (NS na Cloudflare, DNSSEC zdjęty przed
   delegacją), skrzynka Zimbra `kontakt@delung.pl` + alias `adam@`
   (MX/SPF/DKIM/DMARC/SRV w Cloudflare — komplet PASS), ruleset
-  `main-protection` AKTYWNY (PR + required check `quality`; bypass dla
-  konta CMS dojdzie w Etapie 2). CI na main: `quality` zielone;
-  `e2e`/`lighthouse` czerwone ZGODNIE Z PLANEM (adaptacja speców
-  i budżetów = Etap 3).
-- Etapy 2–7 — przed nami (CMS+R2 → testy/CI → widoki → formularz →
-  SEO/pomiar → przekazanie).
-- PRZEJŚCIOWE dziedzictwo szablonu (do wymiany w Etapach 2–5): schemat
-  kolekcji realizacje (screens/results/quote → docelowo cover/gallery
-  z wideo/specs), widoki `/realizacje/` `/kontakt/` `/polityka-prywatnosci/`
-  na ciemnym motywie (`src/styles/legacy-dark.css` — strona delung jest
-  JASNA), breakpointy 760/861 w odziedziczonych komponentach (docelowo
-  wszędzie **1024 px**), placeholdery `TODO_*` w `public/admin/config.yml`
-  (R2, Etap 2) i `contact-config.ts` (Turnstile, Etap 5).
+  `main-protection` AKTYWNY (PR + required check `quality`). CI na main:
+  `quality` zielone; `e2e`/`lighthouse` czerwone ZGODNIE Z PLANEM
+  (adaptacja speców i budżetów = Etap 3).
+- **Etap 2 (CMS + media + logowanie klienta) — WYKONANY** (2026-07-30):
+  R2 `delung-media` (jurysdykcja EU) + custom domain `media.delung.pl`
+  - Image Transformations + CORS (delung.pl, localhost:4321) + token
+    `delung-media-sveltia` (Object R&W, tylko ten bucket); konto GitHub
+    `delung-cms` (collaborator write, mail `kontakt@delung.pl`) z
+    User-bypassem Always w rulesecie (dodany przez API — UI repo osobistego
+    nie wyszukuje userów); OAuth App „Panel treści — delung.pl" + Worker
+    `sveltia-cms-auth-delung` (`auth.delung.pl`, ALLOWED_DOMAINS
+    delung.pl,localhost); `site_domain` w config.yml (bez tego localhost
+    wysyła site_id=cms.netlify.com); SPIKE wideo = **PLAN A potwierdzony**
+    (widget `file` wgrywa MP4 do R2; range requests OK); docelowy schemat
+    kolekcji w trzech miejscach + test kontraktu selecta kategorii;
+    5 testowych wpisów (dane z designu, media-placeholdery w R2).
+- Etapy 3–7 — przed nami (testy/CI → widoki → formularz → SEO/pomiar →
+  przekazanie).
+- PRZEJŚCIOWE dziedzictwo szablonu (do wymiany w Etapach 3–5): widoki
+  `/realizacje/` `/kontakt/` `/polityka-prywatnosci/` na ciemnym motywie
+  (`src/styles/legacy-dark.css` — strona delung jest JASNA; kafle/detal
+  realizacji = tymczasowe kafle zdjęciowe), breakpointy 760/861
+  w odziedziczonych komponentach (docelowo wszędzie **1024 px**),
+  placeholder `TODO_*` w `contact-config.ts` (Turnstile, Etap 5).
 
 ## Mapa projektu
 

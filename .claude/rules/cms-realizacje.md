@@ -26,20 +26,21 @@ paths:
 3. konsumenci: `src/components/sections/work/*`.
    Niespójność = build przechodzi lokalnie, a wpis z panelu wybucha w CI.
 
-- STAN PRZEJŚCIOWY (Etap 0): schemat odziedziczony z szablonu
-  (screens/results/quote). Docelowy schemat delung (category jako `select`
-  ze slugami z `src/lib/categories.ts`, cover, gallery ze zdjęciami
-  I WIDEO, specs — analiza §6.1) wchodzi w Etapie 2 — również w trzech
-  miejscach naraz + spike uploadu MP4 (§6.3; plan B: pole URL).
+- Schemat DOCELOWY (od Etapu 2, analiza §6.1): `slug`, `order`, `title`,
+  `category` (`select` — opcje 1:1 ze slugami/etykietami
+  `src/lib/categories.ts`; spójności pilnuje test kontraktu), `year`,
+  `description`, `cover {image, position?}`, `gallery[] {image, position?,
+video?, duration?}` (min 1), `specs[] {label, value}`.
 
 ## Media (Cloudflare R2)
 
 - Bucket `delung-media`, domena publiczna `https://media.delung.pl`,
   prefix `realizacje/`. Zdjęcia i wideo NIE trafiają do repo.
-- Sveltia wgrywa do R2 TYLKO przez pola Image (nie przez bibliotekę
-  Assets) i NIE kasuje plików z R2 przy usuwaniu wpisu — osierocone pliki
-  trzeba sprzątać ręcznie w dashboardzie R2 (przy wideo istotniejsze niż
-  przy zdjęciach).
+- Sveltia wgrywa do R2 przez pola wpisu: Image (zdjęcia) oraz `file`
+  (wideo MP4 — plan A potwierdzony spike'iem Etapu 2; upload przez
+  bibliotekę Assets poza polami NIE trafia do R2). Sveltia NIE kasuje
+  plików z R2 przy usuwaniu wpisu — osierocone pliki trzeba sprzątać
+  ręcznie w dashboardzie R2 (przy wideo istotniejsze niż przy zdjęciach).
 - Rozmiary obrazów: wyłącznie przez `imgAt()` (`src/lib/img.ts`) —
   Cloudflare Image Transformations (`/cdn-cgi/image/...`). W dev endpoint
   nie istnieje → funkcja zwraca oryginał; NIE debuguj „złych rozmiarów"
@@ -52,8 +53,12 @@ paths:
 ## Autoryzacja panelu
 
 - Logowanie przez Worker `sveltia-cms-auth-delung` (`base_url`
-  w config.yml — docelowo `https://auth.delung.pl`). Worker to OSOBNY
-  deploy dla delung (czysty branding i kill-switch; wdrożenie: Etap 2).
+  w config.yml — `https://auth.delung.pl`). Worker to OSOBNY deploy dla
+  delung (czysty branding i kill-switch; wdrożony w Etapie 2).
+- `site_domain: delung.pl` w config.yml jest OBOWIĄZKOWE: bez niego panel
+  na localhoscie wysyła `site_id=cms.netlify.com` (dziedzictwo Netlify
+  w Sveltii) i wpada na ALLOWED_DOMAINS Workera.
 - Klient loguje się kontem technicznym `delung-cms` (collaborator write
-  wyłącznie do tego repo); konto musi móc commitować na `main` z panelu
-  (branch protection wymuszaj przez PR dla ludzi, nie blokuj CMS-a).
+  wyłącznie do tego repo); konto ma wpis User-bypass (tryb Always)
+  w rulesecie `main-protection` — commituje na `main` z panelu; ludzie
+  chodzą przez PR-y (właściciel bez bypassu).

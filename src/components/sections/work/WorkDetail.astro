@@ -3,142 +3,85 @@
 // (mobile). Renderowana wewnątrz <template> per projekt w Work.astro, a po
 // kliknięciu kafelka klonowana do właściwej nakładki. Układ (2 kolumny vs stos)
 // wynika z media-query 760px — tej samej, która decyduje modal vs sheet.
-import WorkDeviceDuo from "./WorkDeviceDuo.astro";
-import type { LocalizedProject } from "./work-data";
+// Przejściowa wersja pod nowy schemat (galeria + specs); docelowy detal wg
+// designu realizacje.html wchodzi w Etapie 4.4 (tam też pełny wzorzec wideo:
+// odtwarzanie na tap z badge play + duration).
+import { imgAt } from "@/lib/img";
+import type { ViewProject } from "./work-data";
 
 interface Props {
-  project: LocalizedProject;
-  previewLabel: string;
-  resultsLabel: string;
-  scopeLabel: string;
-  liveLabel: string;
+  project: ViewProject;
+  galleryLabel: string;
+  specsLabel: string;
 }
-const { project, previewLabel, resultsLabel, scopeLabel, liveLabel } =
-  Astro.props;
+const { project, galleryLabel, specsLabel } = Astro.props;
 const p = project;
 ---
 
 <article class="wdx">
   <header class="wdx__header">
     <div class="wdx__tagline">
-      <span class="wdx__category">{p.category}</span>
+      <span class="wdx__category">{p.categoryLabel}</span>
       <span class="wdx__dot" aria-hidden="true">·</span>
       <span class="wdx__year">{p.year}</span>
     </div>
-    <h2 class="wdx__title">{p.name}</h2>
-    <p class="wdx__intro">{p.intro}</p>
+    <h2 class="wdx__title">{p.title}</h2>
+    <p class="wdx__intro">{p.description}</p>
   </header>
 
-  <div class="wdx__screens">
-    <p class="wdx__screens-head">{previewLabel}</p>
+  <div class="wdx__gallery">
+    <p class="wdx__gallery-head">{galleryLabel}</p>
     {
-      p.screens.map((s) => (
-        <div class="wdx__screen">
-          <div class="wdx__screen-label">
-            <span>{s.label}</span>
-            <span class="wdx__screen-line" aria-hidden="true" />
-          </div>
-          <div class="wdx__duo">
-            <WorkDeviceDuo
-              desktop={s.desktop}
-              mobile={s.mobile}
-              altDesktop={`${p.name} — ${s.label} (desktop)`}
-              altMobile={`${p.name} — ${s.label} (mobile)`}
+      p.gallery.map((item, i) => (
+        <figure class="wdx__shot">
+          {item.video ? (
+            /* eslint-disable-next-line astro/jsx-a11y/media-has-caption --
+               klipy realizacji to nieme b-rolle mebli (bez ścieżki dialogowej) */
+            <video
+              class="wdx__media"
+              src={item.video}
+              poster={imgAt(item.image, "full")}
+              preload="none"
+              controls
+              playsinline
+              style={
+                item.position ? `object-position: ${item.position}` : undefined
+              }
             />
-          </div>
-        </div>
+          ) : (
+            <img
+              class="wdx__media"
+              src={imgAt(item.image, "full")}
+              alt={`${p.title} — zdjęcie ${i + 1}`}
+              loading="lazy"
+              decoding="async"
+              style={
+                item.position ? `object-position: ${item.position}` : undefined
+              }
+            />
+          )}
+          {item.video && item.duration && (
+            <figcaption class="wdx__duration">{item.duration}</figcaption>
+          )}
+        </figure>
       ))
     }
   </div>
 
   <div class="wdx__body">
     <section class="wdx__block">
-      <p class="wdx__block-head">{resultsLabel}</p>
-      <div class="wdx__results">
+      <p class="wdx__block-head">{specsLabel}</p>
+      <dl class="wdx__specs">
         {
-          p.results.map((r) => (
-            <div class="wdx__result">
-              <div class="wdx__metric">{r.metric}</div>
-              <div class="wdx__result-label">{r.label}</div>
+          p.specs.map((s) => (
+            <div class="wdx__spec">
+              <dt class="wdx__spec-label">{s.label}</dt>
+              <dd class="wdx__spec-value">{s.value}</dd>
             </div>
           ))
         }
-      </div>
+      </dl>
     </section>
-
-    <figure class="wdx__quote">
-      <blockquote class="wdx__quote-text">{`„${p.quote}”`}</blockquote>
-      <figcaption class="wdx__author">
-        <span class="wdx__avatar" aria-hidden="true">
-          {
-            p.author
-              .split(/[\s&]+/)
-              .filter(Boolean)
-              .slice(0, 2)
-              .map((w) => w[0])
-              .join("")
-              .toUpperCase()
-          }
-        </span>
-        <span>
-          <span class="wdx__author-name">{p.author}</span>
-          <span class="wdx__author-role">{p.role}</span>
-        </span>
-      </figcaption>
-    </figure>
-
-    <section class="wdx__block">
-      <p class="wdx__block-head">{scopeLabel}</p>
-      <ul class="wdx__scope">
-        {
-          p.scope.map((s) => (
-            <li class="wdx__scope-item">
-              <svg
-                class="wdx__check"
-                width="17"
-                height="17"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2.6"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                aria-hidden="true"
-              >
-                <path d="M20 6L9 17l-5-5" />
-              </svg>
-              <span>{s}</span>
-            </li>
-          ))
-        }
-      </ul>
-    </section>
-
-    {
-      p.liveUrl && (
-        <a
-          class="wdx__cta"
-          href={p.liveUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <span>{liveLabel}</span>
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2.2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            aria-hidden="true"
-          >
-            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3" />
-          </svg>
-        </a>
-      )
-    }
   </div>
 </article>
 
@@ -195,13 +138,13 @@ const p = project;
     text-wrap: pretty;
   }
 
-  /* ── Ekrany ── */
-  .wdx__screens {
+  /* ── Galeria ── */
+  .wdx__gallery {
     display: flex;
     flex-direction: column;
-    gap: 38px;
+    gap: 22px;
   }
-  .wdx__screens-head {
+  .wdx__gallery-head {
     margin: 0;
     font-family: var(--font-mono), monospace;
     font-size: 10.5px;
@@ -209,36 +152,33 @@ const p = project;
     text-transform: uppercase;
     color: var(--faint);
   }
-  .wdx__screen {
-    display: flex;
-    flex-direction: column;
-    gap: 18px;
+  .wdx__shot {
+    position: relative;
+    margin: 0;
   }
-  .wdx__screen-label {
-    display: flex;
-    align-items: center;
-    gap: 10px;
+  .wdx__media {
+    display: block;
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+    border-radius: 4px;
+    background: rgba(245, 240, 236, 0.04);
   }
-  .wdx__screen-label > span:first-child {
+  .wdx__duration {
+    position: absolute;
+    right: 10px;
+    bottom: 10px;
+    padding: 3px 8px;
+    border-radius: 3px;
+    background: rgba(0, 0, 0, 0.55);
     font-family: var(--font-mono), monospace;
-    font-size: 10.5px;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    color: var(--accent-gold);
-  }
-  .wdx__screen-line {
-    flex: 1;
-    height: 1px;
-    background: var(--line);
-  }
-  .wdx__duo {
-    padding-right: clamp(20px, 5vw, 48px);
-  }
-  .wdx__screen :global(.wd) {
-    --lap-w: clamp(220px, 62vw, 280px);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    color: var(--ink);
+    pointer-events: none;
   }
 
-  /* ── Body: liczby / opinia / zakres / CTA ── */
+  /* ── Body: parametry ── */
   .wdx__body {
     display: flex;
     flex-direction: column;
@@ -252,136 +192,37 @@ const p = project;
     text-transform: uppercase;
     color: var(--faint);
   }
-  .wdx__results {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 12px;
-  }
-  .wdx__result {
-    background: rgba(245, 240, 236, 0.04);
-    border: 1px solid var(--line);
-    border-radius: 4px;
-    padding: 18px 16px;
-  }
-  .wdx__metric {
-    font-family: var(--font-display), sans-serif;
-    font-weight: 800;
-    letter-spacing: -0.02em;
-    font-size: clamp(24px, 3vw, 34px);
-    line-height: 1;
-    color: var(--accent-gold);
-  }
-  .wdx__result-label {
-    margin-top: 9px;
-    font-family: var(--font-body), sans-serif;
-    font-weight: 500;
-    font-size: 12.5px;
-    line-height: 1.35;
-    color: var(--muted);
-    text-wrap: pretty;
-  }
-
-  .wdx__quote {
+  .wdx__specs {
     margin: 0;
-    background: rgba(245, 240, 236, 0.03);
-    border: 1px solid var(--line);
-    border-radius: 4px;
-    padding: 24px 22px;
-  }
-  .wdx__quote-text {
-    margin: 0;
-    font-family: var(--font-serif), serif;
-    font-style: italic;
-    font-size: clamp(18px, 2.2vw, 22px);
-    line-height: 1.4;
-    color: var(--ink);
-    text-wrap: pretty;
-  }
-  .wdx__author {
     display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-top: 18px;
+    flex-direction: column;
   }
-  .wdx__avatar {
-    width: 42px;
-    height: 42px;
-    flex: 0 0 auto;
-    border-radius: 3px;
+  .wdx__spec {
     display: grid;
-    place-items: center;
-    background: rgba(245, 240, 236, 0.08);
-    color: var(--accent-gold);
-    font-family: var(--font-display), sans-serif;
-    font-weight: 800;
-    font-size: 15px;
-  }
-  .wdx__author-name {
-    display: block;
-    font-family: var(--font-body), sans-serif;
-    font-weight: 700;
-    font-size: 14.5px;
-    color: var(--ink);
-  }
-  .wdx__author-role {
-    display: block;
-    font-family: var(--font-body), sans-serif;
-    font-weight: 500;
-    font-size: 12.5px;
-    color: var(--faint);
-  }
-
-  .wdx__scope {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 12px 22px;
-  }
-  .wdx__scope-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-  .wdx__check {
-    flex: 0 0 auto;
-    color: var(--accent-gold);
-  }
-  .wdx__scope-item > span {
-    font-family: var(--font-body), sans-serif;
-    font-weight: 600;
-    font-size: 14px;
-    color: rgba(245, 240, 236, 0.82);
-  }
-
-  .wdx__cta {
-    align-self: flex-start;
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-    font-family: var(--font-body), sans-serif;
-    font-weight: 700;
-    font-size: 15px;
-    color: var(--ink);
-    text-decoration: none;
+    grid-template-columns: minmax(120px, 0.55fr) 1fr;
+    gap: 16px;
+    padding: 12px 0;
     border-bottom: 1px solid var(--line);
-    padding-bottom: 8px;
-    transition: border-color 0.25s;
   }
-  .wdx__cta svg {
+  .wdx__spec:first-child {
+    border-top: 1px solid var(--line);
+  }
+  .wdx__spec-label {
+    font-family: var(--font-mono), monospace;
+    font-size: 10.5px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
     color: var(--accent-gold);
-    transition: transform 0.3s cubic-bezier(0.2, 0.7, 0.2, 1);
+    align-self: baseline;
+    padding-top: 2px;
   }
-  .wdx__cta:hover {
-    border-bottom-color: rgba(245, 240, 236, 0.5);
-  }
-  .wdx__cta:hover svg {
-    transform: translateX(4px);
-  }
-  .wdx__cta:focus-visible {
-    outline: 2px solid var(--ink);
-    outline-offset: 2px;
+  .wdx__spec-value {
+    margin: 0;
+    font-family: var(--font-body), sans-serif;
+    font-weight: 500;
+    font-size: 14.5px;
+    line-height: 1.45;
+    color: var(--muted);
   }
 
   /* ════ Desktop / modal: dwie kolumny ════ */
@@ -391,41 +232,28 @@ const p = project;
       grid-template-columns: 1fr 1fr;
       grid-template-rows: auto 1fr;
       grid-template-areas:
-        "screens header"
-        "screens body";
+        "gallery header"
+        "gallery body";
       gap: 0;
     }
     .wdx__header {
       grid-area: header;
       padding: clamp(28px, 3.5vw, 48px) clamp(28px, 3.5vw, 48px) 0;
     }
-    .wdx__screens {
-      grid-area: screens;
-      gap: clamp(36px, 4vw, 56px);
+    .wdx__gallery {
+      grid-area: gallery;
+      gap: clamp(20px, 2.5vw, 32px);
       padding: clamp(28px, 3.5vw, 48px);
       border-right: 1px solid var(--line);
       background: rgba(255, 255, 255, 0.012);
     }
-    .wdx__screens-head {
+    .wdx__gallery-head {
       display: none;
-    }
-    .wdx__screen :global(.wd) {
-      --lap-w: clamp(240px, 24vw, 340px);
     }
     .wdx__body {
       grid-area: body;
       padding: clamp(24px, 3vw, 34px) clamp(28px, 3.5vw, 48px)
         clamp(28px, 3.5vw, 48px);
-    }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .wdx__cta,
-    .wdx__cta svg {
-      transition: none;
-    }
-    .wdx__cta:hover svg {
-      transform: none;
     }
   }
 </style>
