@@ -3,19 +3,20 @@ backend:
   name: github
   repo: mateuszhadrian/delung-web # właściciel/nazwa repo
   branch: main
-  # Worker-logowania (OAuth proxy) — osobny deploy dla delung, wdrażany
-  # w Etapie 2 (docelowo custom domain auth.delung.pl):
+  # Worker-logowania (OAuth proxy) — osobny deploy dla delung:
   base_url: https://auth.delung.pl
+  # Bez tego panel na localhoscie wysyła site_id=cms.netlify.com (dziedzictwo
+  # Netlify w Sveltii) i wpada na ALLOWED_DOMAINS Workera:
+  site_domain: delung.pl
 
-# ── Gdzie trafiają media: Cloudflare R2 (Etap 2) ──────────────────────────
+# ── Gdzie trafiają media: Cloudflare R2 ──────────────────────────────────
 # Secret Access Key NIE trafia do tego pliku — Sveltia poprosi o niego
 # w panelu przy pierwszym uploadzie i trzyma go w pamięci przeglądarki.
-# account_id / access_key_id uzupełniane po utworzeniu bucketa i tokenu R2
-# (Etap 2.1) — placeholdery celowo niepodobne do prawdziwych wartości.
+# account_id i access_key_id są jawne (autoryzuje dopiero sekret).
 media_libraries:
   cloudflare_r2:
-    account_id: "TODO_ACCOUNT_ID"
-    access_key_id: "TODO_ACCESS_KEY_ID"
+    account_id: "a1f687532595bb8659c557adba293d53"
+    access_key_id: "a62e09bb76d1c9157b1705c95079be4c"
     bucket: "delung-media"
     public_url: "https://media.delung.pl" # custom domain bucketa
     prefix: "realizacje/" # pliki wewnątrz bucketa w podfolderze
@@ -26,10 +27,11 @@ output:
   omit_empty_optional_fields: true
 
 # ── PL-only (decyzja #2 delung): zwykłe pola, bez obiektów {pl,en} ────────
-# UWAGA: przejściowy kształt odziedziczony z szablonu źródłowego; docelowy schemat
-# delung (category select z categories.ts, cover, gallery z wideo, specs)
-# wchodzi w Etapie 2 — zmiana zawsze w TRZECH miejscach naraz
-# (src/content.schema.ts / ten plik / src/components/sections/work/*).
+# Docelowy schemat delung (analiza §6.1). Zmiana schematu zawsze w TRZECH
+# miejscach naraz (src/content.schema.ts / ten plik /
+# src/components/sections/work/*) — reguła cms-realizacje.
+# Opcje selecta „Kategoria" = slugi z src/lib/categories.ts (D2);
+# spójności pilnuje test kontraktu (tests/unit/cms-contract.test.ts).
 
 collections:
   - name: "realizacje"
@@ -40,11 +42,15 @@ collections:
     format: "json"
     create: true # pozwól DODAWAĆ nowe realizacje
     delete: true # pozwól USUWAĆ realizacje
-    identifier_field: "name" # co pokazać na liście wpisów
+    identifier_field: "title" # co pokazać na liście wpisów
     slug: "{{fields.slug}}" # nazwa pliku = wartość pola slug
-    summary: "{{fields.name}} ({{fields.year}})"
+    summary: "{{fields.title}} ({{fields.year}})"
     fields:
-      - { label: "Slug (adres, np. aura)", name: "slug", widget: "string" }
+      - {
+          label: "Slug (adres, np. kuchnia-kaszmirowa)",
+          name: "slug",
+          widget: "string",
+        }
       - {
           label: "Kolejność (mniejsze = wyżej)",
           name: "order",
@@ -52,66 +58,75 @@ collections:
           value_type: "int",
           default: 10,
         }
-      - { label: "Nazwa", name: "name", widget: "string" }
-      - { label: "Rok", name: "year", widget: "string" }
-      - { label: "Kategoria", name: "category", widget: "string" }
-      - { label: "Krótki opis (blurb)", name: "blurb", widget: "text" }
+      - { label: "Tytuł", name: "title", widget: "string" }
+      - label: "Kategoria"
+        name: "category"
+        widget: "select"
+        options:
+          # slugi + etykiety 1:1 z src/lib/categories.ts (test kontraktu!)
+          - { label: "Kuchnie", value: "kuchnie" }
+          - { label: "Szafy i garderoby", value: "szafy-garderoby" }
+          - { label: "Wnętrza komercyjne i biura", value: "wnetrza-komercyjne" }
+          - { label: "Dekoracje okienne", value: "dekoracje-okienne" }
+          - { label: "Zabudowy łazienkowe", value: "zabudowy-lazienkowe" }
+          - { label: "Meble nietypowe", value: "meble-nietypowe" }
+          - { label: "Inne", value: "inne" }
+      - { label: "Rok realizacji", name: "year", widget: "string" }
+      - { label: "Opis", name: "description", widget: "text" }
 
-      # min/max — strona pokazuje maks. 3 tagi (limit zgodny ze schematem Zod
-      # .max(3)); `min` w parze, bo w Decap/Sveltii `max` bez `min` bywa ignorowane
-      - {
-          label: "Tagi (maks. 3)",
-          name: "tags",
-          widget: "list",
-          min: 1,
-          max: 3,
-          field: { label: "Tag", name: "tag", widget: "string" },
-        }
+      # ── Kafel na liście realizacji ──
+      - label: "Kafel (cover)"
+        name: "cover"
+        widget: "object"
+        fields:
+          - { label: "Zdjęcie", name: "image", widget: "image" }
+          - {
+              label: "Kadr (object-position, np. 50% 42%)",
+              name: "position",
+              widget: "string",
+              required: false,
+            }
 
-      - { label: "Wprowadzenie (intro)", name: "intro", widget: "text" }
-
-      # ── Ekrany: lista, każdy ma DWA zrzuty (desktop + mobile) ──
-      - label: "Ekrany (podgląd na urządzeniach)"
-        name: "screens"
+      # ── Galeria detalu: zdjęcia, opcjonalnie wideo (zdjęcie = poster) ──
+      - label: "Galeria"
+        name: "gallery"
         widget: "list"
-        label_singular: "Ekran"
-        min: 1 # schemat Zod wymaga ≥1 ekranu; kafelek bierze obraz z ekranu „home"
+        label_singular: "Pozycja galerii"
+        min: 1 # schemat Zod wymaga ≥1 pozycji
+        summary: "{{fields.image}}"
+        fields:
+          - { label: "Zdjęcie", name: "image", widget: "image" }
+          - {
+              label: "Kadr (object-position, np. 50% 42%)",
+              name: "position",
+              widget: "string",
+              required: false,
+            }
+          - {
+              # Plan A ze spike'a Etapu 2: widget file wgrywa MP4 do R2.
+              # Limity: H.264+AAC, 1080p, ≤ ~30 MB (reguła cms-realizacje).
+              label: "Wideo MP4 (opcjonalne — zdjęcie wyżej staje się posterem)",
+              name: "video",
+              widget: "file",
+              required: false,
+            }
+          - {
+              label: "Długość wideo (np. 0:24 — opis przy znaczku play)",
+              name: "duration",
+              widget: "string",
+              required: false,
+            }
+
+      # ── Tabela parametrów detalu ──
+      - label: "Parametry (specs)"
+        name: "specs"
+        widget: "list"
+        label_singular: "Parametr"
         summary: "{{fields.label}}"
         fields:
           - {
-              label: "Klucz (home/gallery/order)",
-              name: "key",
+              label: "Etykieta (np. MATERIAŁY / BLAT / ZAKRES)",
+              name: "label",
               widget: "string",
             }
-          - { label: "Etykieta", name: "label", widget: "string" }
-          - { label: "Zrzut DESKTOP", name: "desktop", widget: "image" }
-          - { label: "Zrzut MOBILE", name: "mobile", widget: "image" }
-
-      # ── Liczby i wyniki ──
-      - label: "Wyniki (liczby)"
-        name: "results"
-        widget: "list"
-        label_singular: "Wynik"
-        fields:
-          - { label: "Metryka", name: "metric", widget: "string" }
-          - { label: "Opis", name: "label", widget: "string" }
-
-      # ── Opinia ──
-      - { label: "Cytat / opinia", name: "quote", widget: "text" }
-      - { label: "Autor opinii", name: "author", widget: "string" }
-      - { label: "Rola autora", name: "role", widget: "string" }
-
-      # ── Zakres prac ──
-      - {
-          label: "Zakres prac (scope)",
-          name: "scope",
-          widget: "list",
-          field: { label: "Punkt", name: "item", widget: "string" },
-        }
-
-      - {
-          label: "Link do strony na żywo (opcjonalny)",
-          name: "liveUrl",
-          widget: "string",
-          required: false,
-        }
+          - { label: "Wartość", name: "value", widget: "string" }

@@ -1,0 +1,54 @@
+{
+  "slug": "biala-kuchnia-zlote-detale",
+  "order": 5,
+  "title": "Biała kuchnia ze złotymi detalami",
+  "category": "kuchnie",
+  "year": "2023",
+  "description": "Zadaniem w tym projekcie było maksymalne wykorzystanie wąskiej przestrzeni oraz ukrycie sprzętów AGD. Zastosowaliśmy tu systemy podnoszenia frontów oraz ukryte uchwyty wlotowe.",
+  "cover": {
+    "image": "https://media.delung.pl/realizacje/white-01.webp",
+    "position": "50% 52%"
+  },
+  "gallery": [
+    {
+      "image": "https://media.delung.pl/realizacje/white-02.webp",
+      "position": "62% 55%"
+    },
+    {
+      "image": "https://media.delung.pl/realizacje/white-03.webp",
+      "position": "50% 45%",
+      "video": "https://media.delung.pl/realizacje/spike-test.mp4",
+      "duration": "0:25"
+    },
+    {
+      "image": "https://media.delung.pl/realizacje/white-04.webp",
+      "position": "50% 55%"
+    },
+    {
+      "image": "https://media.delung.pl/realizacje/white-01.webp",
+      "position": "50% 52%"
+    }
+  ],
+  "specs": [
+    {
+      "label": "MATERIAŁY",
+      "value": "Płyta MDF lakierowany mat, fornir dąb naturalny"
+    },
+    {
+      "label": "BLAT",
+      "value": "Konglomerat kwarcowy"
+    },
+    {
+      "label": "SYSTEMY / OKUCIA",
+      "value": "Zawiasy Blum, system Peka"
+    },
+    {
+      "label": "ZAKRES",
+      "value": "Projekt, produkcja, montaż, dobór i podłączenie AGD"
+    },
+    {
+      "label": "ROK REALIZACJI",
+      "value": "2023"
+    }
+  ]
+}

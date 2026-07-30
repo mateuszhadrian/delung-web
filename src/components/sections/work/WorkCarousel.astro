@@ -6,10 +6,10 @@
 // animacje/smooth-scroll wyłączone. Wzorzec: docs/design/Karuzela Mobile - referencja/.
 import WorkCarouselCard from "./WorkCarouselCard.astro";
 import WorkMoreButton from "./WorkMoreButton.astro";
-import type { LocalizedProject } from "./work-data";
+import type { ViewProject } from "./work-data";
 
 interface Props {
-  projects: LocalizedProject[];
+  projects: ViewProject[];
   cta: string;
   moreHref: string;
   moreBig: string;

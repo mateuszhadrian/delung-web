@@ -1,19 +1,14 @@
 ---
-import WorkDeviceDuo from "./WorkDeviceDuo.astro";
-import type { LocalizedProject } from "./work-data";
+import { imgAt } from "@/lib/img";
+import type { ViewProject } from "./work-data";
 
 interface Props {
-  project: LocalizedProject;
+  project: ViewProject;
   index: number;
   cta: string;
 }
 const { project, index, cta } = Astro.props;
 const flip = index % 2 === 1;
-
-// Kafelek bierze obraz z ekranu „home" (fallback: pierwszy ekran) — dzięki temu
-// w CMS nie trzeba wgrywać tego samego zrzutu dwa razy.
-const cover =
-  project.screens.find((s) => s.key === "home") ?? project.screens[0];
 ---
 
 <button
@@ -21,43 +16,32 @@ const cover =
   class="rz-card"
   data-flip={flip}
   data-work-slug={project.slug}
-  data-work-name={project.name}
-  aria-label={`${project.name} — ${cta}`}
+  data-work-name={project.title}
+  aria-label={`${project.title} — ${cta}`}
 >
   <div class="rz-card__media">
-    <WorkDeviceDuo
-      desktop={cover.desktop}
-      mobile={cover.mobile}
-      altDesktop={`${project.name} — desktop`}
-      altMobile={`${project.name} — mobile`}
+    <img
+      class="rz-card__img"
+      src={imgAt(project.cover.image, "full")}
+      alt=""
+      loading="lazy"
+      decoding="async"
+      style={project.cover.position
+        ? `object-position: ${project.cover.position}`
+        : undefined}
     />
   </div>
 
   <div class="rz-card__meta">
     <div class="rz-card__tagline">
-      <span class="rz-card__category">{project.category}</span>
+      <span class="rz-card__category">{project.categoryLabel}</span>
       <span class="rz-card__dot" aria-hidden="true">·</span>
       <span class="rz-card__year">{project.year}</span>
     </div>
 
     <div>
-      <h3 class="rz-card__name">{project.name}</h3>
-      <p class="rz-card__blurb">{project.blurb}</p>
-    </div>
-
-    <div class="rz-card__tags">
-      {
-        project.tags.map((tag, i) => (
-          <>
-            {i > 0 && (
-              <span class="rz-card__tag-dot" aria-hidden="true">
-                ·
-              </span>
-            )}
-            <span class="rz-card__tag">{tag}</span>
-          </>
-        ))
-      }
+      <h3 class="rz-card__name">{project.title}</h3>
+      <p class="rz-card__blurb">{project.description}</p>
     </div>
 
     <span class="rz-card__cta">
@@ -124,7 +108,7 @@ const cover =
     .rz-card:hover::before {
       opacity: 1;
     }
-    .rz-card:hover :global(.wd) {
+    .rz-card:hover .rz-card__img {
       transform: scale(1.045);
     }
     .rz-card:hover .rz-card__cta {
@@ -133,6 +117,19 @@ const cover =
     .rz-card:hover .rz-card__arrow {
       transform: translateX(4px);
     }
+  }
+
+  /* Przejściowy kafel zdjęciowy (docelowy wygląd kafli = Etap 4). */
+  .rz-card__media {
+    overflow: hidden;
+    border-radius: 4px;
+  }
+  .rz-card__img {
+    display: block;
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+    transition: transform 0.5s cubic-bezier(0.2, 0.7, 0.2, 1);
   }
 
   .rz-card__meta {
@@ -184,22 +181,6 @@ const cover =
     max-width: 440px;
     text-wrap: pretty;
   }
-  .rz-card__tags {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: baseline;
-    gap: 4px 10px;
-  }
-  .rz-card__tag {
-    font-family: var(--font-body), sans-serif;
-    font-weight: 400;
-    font-size: 12px;
-    color: var(--muted);
-  }
-  .rz-card__tag-dot {
-    font-size: 12px;
-    color: var(--accent-gold);
-  }
   .rz-card__cta {
     margin-top: 6px;
     display: inline-flex;
@@ -249,8 +230,7 @@ const cover =
       align-items: center;
       text-align: center;
     }
-    .rz-card__tagline,
-    .rz-card__tags {
+    .rz-card__tagline {
       justify-content: center;
     }
     .rz-card__name {
@@ -271,7 +251,10 @@ const cover =
     .rz-card__arrow {
       transition: none;
     }
-    .rz-card:hover :global(.wd) {
+    .rz-card__img {
+      transition: none;
+    }
+    .rz-card:hover .rz-card__img {
       transform: none;
     }
   }

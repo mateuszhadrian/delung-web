@@ -1,65 +1,48 @@
 ---
-// Karta siatki podstrony /realizacje — port `.rz-card` z referencji
-// docs/design/RealizacjeGaleria.astro na tokeny projektu i reużyty
-// WorkDeviceDuo (geometria duetu identyczna z referencją; szerokość steruje
-// nadpisanie --lap-w per breakpoint siatki). Karta jest <button>, bo klik
-// otwiera nakładkę WorkDetail (Modal/BottomSheet) — jak WorkCard na stronie
-// głównej, nie nawigację.
-import WorkDeviceDuo from "./WorkDeviceDuo.astro";
-import type { LocalizedProject } from "./work-data";
+// Karta siatki podstrony /realizacje. Przejściowy kafel zdjęciowy (cover
+// z object-position) — docelowy wygląd wg designu wchodzi w Etapie 4.
+// Karta jest <button>, bo klik otwiera nakładkę WorkDetail
+// (Modal/BottomSheet) — jak WorkCard na stronie głównej, nie nawigację.
+import { imgAt } from "@/lib/img";
+import type { ViewProject } from "./work-data";
 
 interface Props {
-  project: LocalizedProject;
+  project: ViewProject;
   cta: string;
 }
 const { project, cta } = Astro.props;
-
-// Okładka = ekran „home" (fallback: pierwszy) — konwencja z WorkCard.
-const cover =
-  project.screens.find((s) => s.key === "home") ?? project.screens[0];
 ---
 
 <button
   type="button"
   class="wix-card"
   data-work-slug={project.slug}
-  data-work-name={project.name}
-  aria-label={`${project.name} — ${cta}`}
+  data-work-name={project.title}
+  aria-label={`${project.title} — ${cta}`}
 >
   <div class="wix-card__media">
-    <WorkDeviceDuo
-      desktop={cover.desktop}
-      mobile={cover.mobile}
-      altDesktop={`${project.name} — desktop`}
-      altMobile={`${project.name} — mobile`}
+    <img
+      class="wix-card__img"
+      src={imgAt(project.cover.image, "full")}
+      alt=""
+      loading="lazy"
+      decoding="async"
+      style={project.cover.position
+        ? `object-position: ${project.cover.position}`
+        : undefined}
     />
   </div>
 
   <div class="wix-card__meta">
     <div class="wix-card__kicker">
-      <span class="wix-card__cat">{project.category}</span>
+      <span class="wix-card__cat">{project.categoryLabel}</span>
       <span class="wix-card__dot" aria-hidden="true">·</span>
       <span class="wix-card__year">{project.year}</span>
     </div>
 
     <div>
-      <h2 class="wix-card__name">{project.name}</h2>
-      <p class="wix-card__blurb">{project.blurb}</p>
-    </div>
-
-    <div class="wix-card__tags">
-      {
-        project.tags.map((tag, i) => (
-          <>
-            {i > 0 && (
-              <span class="wix-card__tag-sep" aria-hidden="true">
-                ·
-              </span>
-            )}
-            <span class="wix-card__tag">{tag}</span>
-          </>
-        ))
-      }
+      <h2 class="wix-card__name">{project.title}</h2>
+      <p class="wix-card__blurb">{project.description}</p>
     </div>
 
     <span class="wix-card__cta">
@@ -126,16 +109,19 @@ const cover =
     outline-offset: 4px;
   }
 
-  /* ── Media: duet laptop + telefon (WorkDeviceDuo) ── */
+  /* ── Media: przejściowy kafel zdjęciowy ── */
   .wix-card__media {
-    display: flex;
-    justify-content: center;
+    display: block;
     width: 100%;
+    overflow: hidden;
+    border-radius: 4px;
   }
-  /* Szerokość duetu wg breakpointów siatki referencji (--lw 250/300/334).
-     Nadpisanie wygrywa z wewnętrznym clampem .wd (wyższa specyficzność). */
-  .wix-card :global(.wd) {
-    --lap-w: 250px;
+  .wix-card__img {
+    display: block;
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+    transition: transform 0.45s cubic-bezier(0.2, 0.7, 0.2, 1);
   }
 
   /* ── Metadane ── */
@@ -188,24 +174,6 @@ const cover =
     max-width: 440px;
     text-wrap: pretty;
   }
-  .wix-card__tags {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 9px;
-  }
-  .wix-card__tag {
-    font-family: var(--font-body), sans-serif;
-    font-weight: 500;
-    font-size: 12.5px;
-    letter-spacing: 0.01em;
-    color: var(--muted);
-  }
-  .wix-card__tag-sep {
-    font-family: var(--font-mono), monospace;
-    font-size: 11px;
-    color: rgba(var(--accent-gold-rgb), 0.7);
-  }
   .wix-card__cta {
     margin-top: 4px;
     display: inline-flex;
@@ -229,7 +197,7 @@ const cover =
     display: block;
   }
 
-  /* ── ≥761 px: karty bez panelu, hover „ramka" + delikatny zoom duetu.
+  /* ── ≥761 px: karty bez panelu, hover „ramka" + delikatny zoom kafla.
      Próg 761 px zamiast 768 px z referencji — spójnie z sheetMQ (760 px)
      wyboru Modal↔BottomSheet (decyzja w analizie, §3). ── */
   @media (min-width: 761px) {
@@ -240,16 +208,13 @@ const cover =
       border-radius: 0;
       padding: 0;
     }
-    .wix-card :global(.wd) {
-      --lap-w: 300px;
-    }
   }
   @media (min-width: 761px) and (hover: hover) {
     .wix-card:hover::before {
       border-color: rgba(245, 240, 236, 0.2);
       background: rgba(245, 240, 236, 0.025);
     }
-    .wix-card:hover :global(.wd) {
+    .wix-card:hover .wix-card__img {
       transform: scale(1.035);
     }
     .wix-card:hover .wix-card__cta {
@@ -259,19 +224,15 @@ const cover =
       transform: translateX(6px);
     }
   }
-  @media (min-width: 1024px) {
-    .wix-card :global(.wd) {
-      --lap-w: 334px;
-    }
-  }
 
   @media (prefers-reduced-motion: reduce) {
     .wix-card::before,
     .wix-card__cta,
-    .wix-card__arrow {
+    .wix-card__arrow,
+    .wix-card__img {
       transition: none;
     }
-    .wix-card:hover :global(.wd) {
+    .wix-card:hover .wix-card__img {
       transform: none;
     }
   }

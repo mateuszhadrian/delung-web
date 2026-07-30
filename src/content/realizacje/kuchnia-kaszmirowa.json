@@ -1,0 +1,52 @@
+{
+  "slug": "kuchnia-kaszmirowa",
+  "order": 1,
+  "title": "Kuchnia kaszmirowa z podświetlaną witryną",
+  "category": "kuchnie",
+  "year": "2025",
+  "description": "Ciepły kaszmir, fornirowana witryna z podświetleniem LED i blat spiekowy. Cała zabudowa pod sufit, z ukrytymi uchwytami wlotowymi.",
+  "cover": {
+    "image": "https://media.delung.pl/realizacje/kashmir-01.webp",
+    "position": "50% 42%"
+  },
+  "gallery": [
+    {
+      "image": "https://media.delung.pl/realizacje/kashmir-01.webp",
+      "position": "50% 42%"
+    },
+    {
+      "image": "https://media.delung.pl/realizacje/kashmir-02.webp",
+      "position": "50% 50%"
+    },
+    {
+      "image": "https://media.delung.pl/realizacje/kashmir-03.webp",
+      "position": "50% 55%"
+    },
+    {
+      "image": "https://media.delung.pl/realizacje/kashmir-04.webp",
+      "position": "50% 50%"
+    }
+  ],
+  "specs": [
+    {
+      "label": "MATERIAŁY",
+      "value": "Płyta lakierowana w kolorze kaszmiru, fornir dąb"
+    },
+    {
+      "label": "BLAT",
+      "value": "Spiek kwarcowy, łączenie na zamek"
+    },
+    {
+      "label": "SYSTEMY / OKUCIA",
+      "value": "Zawiasy Blum, prowadnice Legrabox"
+    },
+    {
+      "label": "ZAKRES",
+      "value": "Projekt, produkcja, montaż, oświetlenie LED"
+    },
+    {
+      "label": "ROK REALIZACJI",
+      "value": "2025"
+    }
+  ]
+}

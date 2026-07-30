@@ -3,85 +3,46 @@
 // Tu zostają wyłącznie typy (PL-only — decyzja #2 delung) i normalizacja
 // wpisu do postaci konsumowanej przez komponenty.
 //
-// UWAGA: to przejściowy kształt odziedziczony z szablonu źródłowego (screens/results/
-// quote). Docelowy schemat delung (category/cover/gallery z wideo/specs —
-// analiza §6.1) wchodzi w Etapie 2 razem z config.yml i komponentami
-// (zmiana w TRZECH miejscach naraz — reguła cms-realizacje).
+// Docelowy schemat delung (analiza §6.1): cover + gallery (zdjęcia i wideo)
+// + specs; kategoria jako slug z src/lib/categories.ts (D2) — komponenty
+// dostają też gotową etykietę (categoryLabel).
 
-// Pojedynczy ekran realizacji prezentowany w modalu/sheecie.
-export interface WorkScreen {
-  key: string;
-  label: string;
-  desktop: string;
-  mobile: string;
+import { categoryLabel, type CategorySlug } from "@/lib/categories";
+
+// Pozycja galerii detalu; `video` (URL MP4 w R2) => zdjęcie pełni rolę
+// posteru, a kafel dostaje badge play (+ opcjonalny opis `duration`).
+export interface WorkGalleryItem {
+  image: string;
+  position?: string;
+  video?: string;
+  duration?: string;
 }
 
-// Liczba/wynik w sekcji „Liczby i wyniki".
-export interface WorkResult {
-  metric: string;
+// Para tabeli parametrów detalu (MATERIAŁY / BLAT / ZAKRES / …).
+export interface WorkSpec {
   label: string;
+  value: string;
 }
 
+// Kształt wpisu kolekcji (zgodny z realizacjaSchema).
 export interface WorkProject {
   slug: string;
   order: number;
-  name: string;
-  category: string;
+  title: string;
+  category: CategorySlug;
   year: string;
-  blurb: string;
-  tags: string[];
-
-  // ── Treść modala / bottom sheeta ──
-  screens: WorkScreen[];
-  intro: string;
-  results: WorkResult[];
-  quote: string;
-  author: string;
-  role: string;
-  scope: string[];
-  // Link do strony na żywo. Pominięty (lub „#") → CTA się nie renderuje.
-  liveUrl?: string;
+  description: string;
+  cover: { image: string; position?: string };
+  gallery: WorkGalleryItem[];
+  specs: WorkSpec[];
 }
 
-export type LocalizedScreen = WorkScreen;
-export type LocalizedResult = WorkResult;
-
-export type LocalizedProject = {
-  slug: string;
-  name: string;
-  year: string;
-  category: string;
-  blurb: string;
-  tags: string[];
-  screens: LocalizedScreen[];
-  intro: string;
-  results: LocalizedResult[];
-  quote: string;
-  author: string;
-  role: string;
-  scope: string[];
-  liveUrl?: string;
+// Postać widokowa: slug kategorii + gotowa etykieta do wyświetlenia.
+export type ViewProject = Omit<WorkProject, "order"> & {
+  categoryLabel: string;
 };
 
-// Normalizacja wpisu do postaci widokowej (limit tagów, filtr pustego
-// liveUrl). Nazwa historyczna z szablonu źródłowego — zostaje do wymiany schematu
-// w Etapie 2.
-export function localizeProject(p: WorkProject): LocalizedProject {
-  const live = p.liveUrl && p.liveUrl !== "#" ? p.liveUrl : undefined;
-  return {
-    slug: p.slug,
-    name: p.name,
-    year: p.year,
-    category: p.category,
-    blurb: p.blurb,
-    tags: p.tags.slice(0, 3),
-    screens: p.screens,
-    intro: p.intro,
-    results: p.results,
-    quote: p.quote,
-    author: p.author,
-    role: p.role,
-    scope: p.scope,
-    liveUrl: live,
-  };
+// Normalizacja wpisu do postaci konsumowanej przez komponenty.
+export function viewProject(p: WorkProject): ViewProject {
+  return { ...p, categoryLabel: categoryLabel(p.category) };
 }

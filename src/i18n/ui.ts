@@ -21,10 +21,8 @@ export const ui = {
     "work.prev": "Poprzednia realizacja",
     "work.next": "Następna realizacja",
     "work.goto": "Przejdź do slajdu",
-    "work.preview": "Podgląd",
-    "work.results": "Liczby i wyniki",
-    "work.scope": "Zakres prac",
-    "work.live": "Zobacz na żywo",
+    "work.gallery": "Galeria",
+    "work.specs": "Szczegóły realizacji",
     "work.close": "Zamknij",
     "workPage.title": "Realizacje — Delung Meble",
     "workPage.description":

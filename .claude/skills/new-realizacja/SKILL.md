@@ -6,17 +6,18 @@ argument-hint: "[nazwa-realizacji]"
 
 Prowadzisz proces dodania realizacji „$ARGUMENTS" (jeśli brak nazwy — zapytaj).
 
-UWAGA (Etap 0–2): schemat kolekcji jest jeszcze PRZEJŚCIOWY (odziedziczony
-z szablonu — screens/results/quote). Docelowe pola delung (category ze
-slugami z `src/lib/categories.ts`, cover, gallery ze zdjęciami i WIDEO,
-specs) wchodzą w Etapie 2 — wtedy zaktualizuj też ten skill.
+Schemat docelowy delung (od Etapu 2, `src/content.schema.ts`): `slug`,
+`order`, `title`, `category` (select — slugi z `src/lib/categories.ts`),
+`year`, `description`, `cover` (zdjęcie + opcjonalny kadr `position`),
+`gallery` (≥1 pozycja: zdjęcie + opcjonalnie kadr / wideo MP4 / `duration`),
+`specs` (pary etykieta+wartość, np. MATERIAŁY / BLAT / ZAKRES).
 
 ## 1. Zbierz materiały
 
-Wg AKTUALNEGO schematu (`src/content.schema.ts` — sprawdź przed startem):
-nazwa, rok, kategoria (docelowo slug z `categories.ts`), opis, zdjęcia
-(okładka + galeria), opcjonalnie klipy wideo (MP4 H.264, ≤ ~30 MB,
-przygotowane wg flow z Części C instrukcji — HandBrake preset), specs.
+Tytuł, rok, kategoria (jedna ze slugów `categories.ts`), opis, zdjęcia
+(okładka + galeria), opcjonalnie klipy wideo (MP4 H.264+AAC, 1080p,
+≤ ~30 MB, przygotowane wg flow z Części C instrukcji — HandBrake preset),
+specs (etykiety wielkimi literami — konwencja designu).
 
 ## 2. Przygotuj media (lokalnie, PRZED uploadem)
 
@@ -33,10 +34,12 @@ przygotowane wg flow z Części C instrukcji — HandBrake preset), specs.
 Przypomnij checklistę (sam NIE edytuj JSON-ów — pisze je Sveltia):
 
 - panel: https://delung.pl/admin (login przez GitHub — konto
-  `delung-cms` lub Mateusza);
-- zdjęcia wgrywać WYŁĄCZNIE przez pola Image (upload przez bibliotekę
-  Assets NIE trafia do R2!); wideo wg wyniku spike'a Etapu 2
-  (widget file albo wklejany URL `https://media.delung.pl/…`);
+  `delung-cms`; lokalnie: `pnpm dev` → `http://localhost:4321/admin/index.html`);
+- zdjęcia wgrywać przez pola Image, wideo przez pole „Wideo MP4" w pozycji
+  galerii (widget file — upload MP4 do R2 potwierdzony spike'iem Etapu 2;
+  upload przez bibliotekę Assets poza polami NIE trafia do R2!);
+- wideo zawsze W PARZE ze zdjęciem tej samej pozycji galerii (zdjęcie =
+  poster klatki); `duration` (np. "0:24") opcjonalnie do badge'a play;
 - przy pierwszym uploadzie na nowym urządzeniu panel poprosi o R2 Secret
   Access Key (menedżer haseł);
 - slug małymi literami, bez spacji (idzie do URL i nazwy pliku);

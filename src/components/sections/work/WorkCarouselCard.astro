@@ -1,45 +1,44 @@
 ---
 // Kompaktowa karta realizacji w karuzeli mobilnej. Tap → BottomSheet
 // (obsługa w WorkCarousel.astro: data-work-slug / data-work-name).
-// Bez tagów (świadomie — patrz docs/analiza-realizacje-karuzela-mobile.md).
-import WorkDeviceDuo from "./WorkDeviceDuo.astro";
-import type { LocalizedProject } from "./work-data";
+import { imgAt } from "@/lib/img";
+import type { ViewProject } from "./work-data";
 
 interface Props {
-  project: LocalizedProject;
+  project: ViewProject;
   cta: string;
 }
 const { project, cta } = Astro.props;
-
-// Obraz kafelka bierzemy z ekranu „home" (fallback: pierwszy) — jak w WorkCard.
-const cover =
-  project.screens.find((s) => s.key === "home") ?? project.screens[0];
 ---
 
 <button
   type="button"
   class="wk-car-card"
   data-work-slug={project.slug}
-  data-work-name={project.name}
-  aria-label={`${project.name} — ${cta}`}
+  data-work-name={project.title}
+  aria-label={`${project.title} — ${cta}`}
 >
   <span class="wk-car-card__media">
-    <WorkDeviceDuo
-      desktop={cover.desktop}
-      mobile={cover.mobile}
-      altDesktop={`${project.name} — desktop`}
-      altMobile={`${project.name} — mobile`}
+    <img
+      class="wk-car-card__img"
+      src={imgAt(project.cover.image, "mobile")}
+      alt=""
+      loading="lazy"
+      decoding="async"
+      style={project.cover.position
+        ? `object-position: ${project.cover.position}`
+        : undefined}
     />
   </span>
 
   <span class="wk-car-card__body">
     <span class="wk-car-card__meta">
-      <span class="wk-car-card__cat">{project.category}</span>
+      <span class="wk-car-card__cat">{project.categoryLabel}</span>
       <span class="wk-car-card__sep" aria-hidden="true">·</span>
       <span class="wk-car-card__year">{project.year}</span>
     </span>
-    <span class="wk-car-card__name">{project.name}</span>
-    <span class="wk-car-card__blurb">{project.blurb}</span>
+    <span class="wk-car-card__name">{project.title}</span>
+    <span class="wk-car-card__blurb">{project.description}</span>
     <span class="wk-car-card__cta">
       <span>{cta}</span>
       <svg
@@ -82,23 +81,21 @@ const cover =
     -webkit-tap-highlight-color: transparent;
   }
 
+  /* Przejściowy kafel zdjęciowy (docelowy wygląd kafli = Etap 4). */
   .wk-car-card__media {
-    display: flex;
-    justify-content: center;
+    display: block;
     width: 100%;
+    overflow: hidden;
+    border-radius: 4px;
   }
-  /* Skalowanie urządzeń pod wąską kartę karuzeli (czysty CSS, bez JS). */
-  .wk-car-card__media :global(.wd) {
-    /* --wk-scale dziedziczy z .wk-car (WorkCarousel) — parametr strojenia. */
-    --lap-w: clamp(
-      calc(180px * var(--wk-scale, 1)),
-      calc(62vw * var(--wk-scale, 1)),
-      calc(246px * var(--wk-scale, 1))
-    );
+  .wk-car-card__img {
+    display: block;
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
     transition: transform 0.45s cubic-bezier(0.2, 0.7, 0.2, 1);
-    will-change: transform;
   }
-  .wk-car-card:active .wk-car-card__media :global(.wd) {
+  .wk-car-card:active .wk-car-card__img {
     transform: scale(0.99);
   }
 
@@ -170,7 +167,7 @@ const cover =
   }
 
   @media (hover: hover) {
-    .wk-car-card:hover .wk-car-card__media :global(.wd) {
+    .wk-car-card:hover .wk-car-card__img {
       transform: scale(1.02);
     }
     .wk-car-card:hover .wk-car-card__cta {
@@ -182,13 +179,13 @@ const cover =
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .wk-car-card__media :global(.wd),
+    .wk-car-card__img,
     .wk-car-card__cta,
     .wk-car-card__arrow {
       transition: none;
     }
-    .wk-car-card:active .wk-car-card__media :global(.wd),
-    .wk-car-card:hover .wk-car-card__media :global(.wd) {
+    .wk-car-card:active .wk-car-card__img,
+    .wk-car-card:hover .wk-car-card__img {
       transform: none;
     }
   }
