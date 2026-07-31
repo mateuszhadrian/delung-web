@@ -1,22 +1,20 @@
 ---
-// Podstrona z pełną galerią realizacji (PL: /realizacje/, EN: /en/projects/).
-// Port referencji docs/design/RealizacjeGaleria.astro na komponenty/tokeny
-// projektu; decyzje: docs/analiza-podstrona-realizacje.md. Kluczowe różnice
-// względem strony głównej: scroll NATYWNY (smoothScroll=false — brak animacji
-// scrollowych, Lenis zbędny), jedna statyczna warstwa ambientu (blue, bez
-// crossfade). Nakładki szczegółów (Modal/BottomSheet + WorkDetail) działają
-// identycznie jak w sekcji #work.
+// Podstrona /realizacje/ (część 4.4) — port docs/design/realizacje.html;
+// decyzje: docs/analiza-realizacje.md. Jasny design docelowy (koniec
+// legacy-dark/Ambient z szablonu). Szyna filtrów: „Wszystkie" + tylko
+// kategorie z wpisami (D-R1, workRail); filtrowanie i deep-link
+// /realizacje/#<slug> (D-R2) w skrypcie niżej. Kafle otwierają detal
+// w JEDNYM overlayu #work-detail (D-R3, open-detail.ts). Media w R2 —
+// rozmiary wyłącznie przez imgAt() (w komponentach kafla/detalu).
 import { getCollection } from "astro:content";
-import "@/styles/legacy-dark.css";
 import BaseLayout from "@/layouts/BaseLayout.astro";
 import Navbar from "@/components/navbar/Navbar.astro";
-import AmbientBackground from "@/components/backgrounds/AmbientBackground.astro";
+import Footer from "@/components/Footer.astro";
 import WorkIndexCard from "@/components/sections/work/WorkIndexCard.astro";
 import WorkDetail from "@/components/sections/work/WorkDetail.astro";
-import Modal from "@/components/ui/Modal.astro";
-import BottomSheet from "@/components/ui/BottomSheet.astro";
-import Footer from "@/components/Footer.astro";
-import { viewProject } from "@/components/sections/work/work-data";
+import WorkDetailOverlay from "@/components/sections/work/WorkDetailOverlay.astro";
+import { viewProject, workRail } from "@/components/sections/work/work-data";
+import { CONTACT_PATH } from "@/lib/routes";
 import { useTranslations } from "@/i18n/utils";
 
 const t = useTranslations("pl");
@@ -27,215 +25,580 @@ const projects = entries
   .map((e) => e.data)
   .sort((a, b) => a.order - b.order)
   .map((p) => viewProject(p));
+
+const rail = workRail(projects);
+const pad = (n: number) => String(n).padStart(2, "0");
 ---
 
-<BaseLayout
-  title={t("workPage.title")}
-  description={t("workPage.description")}
-  smoothScroll={false}
->
-  <div class="wix-bg" aria-hidden="true">
-    <AmbientBackground variant="blue" />
-  </div>
+<BaseLayout title={t("workPage.title")} description={t("workPage.description")}>
+  <script is:inline>
+    // PRZED paintem: motion OK → html.js-motion (uzbraja stany startowe
+    // revealów — reszta w work-motion.ts, ładowanym niżej).
+    if (window.matchMedia("(prefers-reduced-motion: no-preference)").matches) {
+      document.documentElement.classList.add("js-motion");
+    }
+  </script>
 
   <Navbar />
 
-  <main class="wix">
-    <header class="wix-head">
-      <p class="wix-eyebrow">{t("work.eyebrow")}</p>
-      <h1 class="wix-title">
-        {t("workPage.headlineLead")}{" "}
-        <em class="wix-accent">{t("workPage.headlineAccent")}</em>
-      </h1>
-      <p class="wix-sub">{t("workPage.intro")}</p>
-    </header>
+  <main class="re">
+    <div class="re-in">
+      <header class="re-head">
+        <p class="re-kick" data-rev>REALIZACJE</p>
+        <h1 data-rev>Nasze realizacje</h1>
+        <div class="re-rule" aria-hidden="true"></div>
+        <p class="re-lead" data-rev>
+          <span class="re-leadLong"
+            >Zobacz, jak zmieniamy puste wnętrza w przestrzeń dopasowaną do
+            życia.
+          </span>Każdy projekt to indywidualna historia, precyzja wykonania i
+          materiały najwyższej jakości.<span class="re-leadLong">
+            Zainspiruj się.</span
+          >
+        </p>
+        <nav class="re-rail" data-rail aria-label="Filtry kategorii">
+          {
+            rail.map((item) => (
+              <button
+                type="button"
+                data-f={item.slug ?? ""}
+                class={item.slug === null ? "on" : undefined}
+                aria-pressed={item.slug === null ? "true" : "false"}
+              >
+                <span>{item.label}</span>
+                <b>{pad(item.count)}</b>
+              </button>
+            ))
+          }
+        </nav>
+        {
+          /* Telefon składany w JS (antyscraping D-CH5) — wypełnia
+            fillContactSlots wołany przez Navbar; bez JS karta ukryta. */
+        }
+        <a class="re-phone" href={CONTACT_PATH} data-tel hidden>
+          <b>SZUKASZ CZEGOŚ PODOBNEGO?</b>
+          <span data-slot></span>
+        </a>
+      </header>
 
-    <div class="wix-grid">
-      {
-        projects.map((project) => (
-          <WorkIndexCard project={project} cta={t("work.cta")} />
-        ))
-      }
-      <div class="wix-ghost" aria-hidden="true">
-        <div class="wix-ghost__plus">+</div>
-        <div class="wix-ghost__label">{t("workPage.ghost")}</div>
-      </div>
+      <section class="re-list">
+        {
+          /* bez „NAJNOWSZE" + chevrona z makiety — sortowania nie ma
+            (kolejność = `order` z CMS), atrapa selecta myliłaby */
+        }
+        <div class="re-bar">
+          <span data-gridlabel
+            >WSZYSTKIE KATEGORIE · {pad(projects.length)} Z {
+              pad(projects.length)
+            }</span
+          >
+        </div>
+        <div class="re-grid" data-tiles>
+          {projects.map((project) => <WorkIndexCard project={project} />)}
+        </div>
+      </section>
     </div>
   </main>
 
-  {/* Współdzielony footer strony (ten sam co finał strony głównej). */}
-  <div class="wix-foot">
-    <Footer />
-  </div>
+  <section class="re-cta">
+    <div class="re-cta-in">
+      <div class="re-cta-txt">
+        <h2 data-rev>Masz pomysł na własne wnętrze?</h2>
+        <p data-rev>
+          Napisz lub zadzwoń — niezobowiązująca rozmowa i darmowy pomiar to
+          pierwszy krok.
+        </p>
+      </div>
+      <a href={CONTACT_PATH} data-rev="soft">
+        <span>Skontaktuj się z nami</span>
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path
+            d="M6 18L18 6M18 6H8M18 6v10"
+            stroke="#fff"
+            stroke-width="1.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"></path>
+        </svg>
+      </a>
+    </div>
+  </section>
 
-  {/* Treść szczegółów per realizacja — klonowana do nakładki po kliknięciu. */}
+  <Footer />
+
+  {/* Treść detalu per realizacja — klonowana do #work-detail po kliknięciu. */}
   {
     projects.map((project) => (
       <template data-work-detail={project.slug}>
-        <WorkDetail
-          project={project}
-          galleryLabel={t("work.gallery")}
-          specsLabel={t("work.specs")}
-        />
+        <WorkDetail project={project} />
       </template>
     ))
   }
-
-  <Modal id="work-modal" closeLabel={t("work.close")}>
-    <div data-work-host></div>
-  </Modal>
-  <BottomSheet id="work-sheet" closeLabel={t("work.close")}>
-    <div data-work-host></div>
-  </BottomSheet>
+  <WorkDetailOverlay />
 </BaseLayout>
 
 <script>
-  // Klik w kartę siatki → Modal/BottomSheet z WorkDetail (współdzielony
-  // helper open-detail, ta sama mechanika co sekcja #work strony głównej).
-  import { openWorkDetail, sheetMQ } from "./sections/work/open-detail";
+  // Filtry + deep-link #<slug> (D-R1/D-R2) i otwieranie detalu (D-R3).
+  import {
+    openWorkDetail,
+    setDetailContext,
+  } from "./sections/work/open-detail";
 
-  const grid = document.querySelector<HTMLElement>(".wix-grid");
-  grid?.addEventListener("click", (e) => {
-    const card = (e.target as HTMLElement).closest<HTMLElement>(
-      "[data-work-slug]",
+  const pad = (n: number) => String(n).padStart(2, "0");
+  const tiles = Array.from(
+    document.querySelectorAll<HTMLElement>("[data-tiles] [data-work-slug]"),
+  );
+  const buttons = Array.from(
+    document.querySelectorAll<HTMLButtonElement>("[data-rail] button"),
+  );
+  const label = document.querySelector<HTMLElement>("[data-gridlabel]");
+  const total = tiles.length;
+
+  function applyFilter(slug: string) {
+    let shown = 0;
+    tiles.forEach((tile) => {
+      const on = !slug || tile.dataset.cat === slug;
+      tile.hidden = !on;
+      if (on) shown += 1;
+    });
+    let name = "WSZYSTKIE KATEGORIE";
+    buttons.forEach((b) => {
+      const on = (b.dataset.f ?? "") === slug;
+      b.classList.toggle("on", on);
+      b.setAttribute("aria-pressed", String(on));
+      if (on && slug)
+        name = (b.querySelector("span")?.textContent ?? slug).toUpperCase();
+    });
+    if (label) label.textContent = `${name} · ${pad(shown)} Z ${pad(total)}`;
+    // projnav/licznik detalu chodzą po AKTUALNIE przefiltrowanym zbiorze
+    setDetailContext(
+      tiles
+        .filter((tile) => !tile.hidden)
+        .map((tile) => ({
+          slug: tile.dataset.workSlug ?? "",
+          name: tile.dataset.workName ?? "",
+        })),
     );
-    if (!card) return;
-    const slug = card.dataset.workSlug;
-    if (!slug) return;
-    openWorkDetail(slug, card.dataset.workName ?? "");
+    // adres odzwierciedla filtr (deep-link D-R2) — bez wpisu w historii
+    const hash = slug ? `#${slug}` : "";
+    if (location.hash !== hash) {
+      history.replaceState(null, "", hash || location.pathname);
+    }
+  }
+
+  buttons.forEach((b) =>
+    b.addEventListener("click", () => applyFilter(b.dataset.f ?? "")),
+  );
+
+  // Deep-link na wejściu; slug spoza szyny (pusta kategoria, literówka)
+  // → „Wszystkie".
+  const initial = decodeURIComponent(location.hash.slice(1));
+  applyFilter(buttons.some((b) => b.dataset.f === initial) ? initial : "");
+
+  // Klik/tap w kafel → detal.
+  document
+    .querySelector<HTMLElement>("[data-tiles]")
+    ?.addEventListener("click", (e) => {
+      const card = (e.target as HTMLElement).closest<HTMLElement>(
+        "[data-work-slug]",
+      );
+      if (!card?.dataset.workSlug) return;
+      openWorkDetail(card.dataset.workSlug, card.dataset.workName ?? "");
+    });
+
+  // „Zobacz więcej z kategorii X" w detalu: na tej stronie = filtr +
+  // zamknięcie (zachowanie eksportu); href #<slug> zostaje fallbackiem.
+  document.addEventListener("click", (e) => {
+    const more = (e.target as HTMLElement).closest<HTMLElement>(
+      "[data-work-more-cat]",
+    );
+    if (!more) return;
+    const slug = more.dataset.workMoreCat ?? "";
+    if (!buttons.some((b) => b.dataset.f === slug)) return;
+    e.preventDefault();
+    applyFilter(slug);
+    window.overlay?.close("work-detail");
   });
 
-  // Zmiana progu (modal ↔ sheet) przy otwartej nakładce: zamknij, by nie
-  // zostawić niespójnego stanu między wariantami.
-  sheetMQ.addEventListener("change", () => {
-    if (!window.overlay?.isOpen()) return;
-    window.overlay.close("work-modal");
-    window.overlay.close("work-sheet");
-  });
+  // Ruch — dynamicznie, tylko przy motion OK (wzorzec D-SG9).
+  if (matchMedia("(prefers-reduced-motion: no-preference)").matches) {
+    import("./sections/work/work-motion");
+  }
 </script>
 
+<style is:global>
+  /* Odsłanianie treści przy przewijaniu — stan startowy WYŁĄCZNIE pod
+     html.js-motion i tylko mobile (desktop eksportu miał osobne animacje
+     GSAP, których nie portujemy — reguła sections.md; wzorzec 4.2/4.3). */
+  @media (max-width: 1023px) {
+    html.js-motion [data-rev] {
+      opacity: 0;
+      transform: translateY(22px);
+      transition:
+        opacity 0.7s ease,
+        transform 0.8s cubic-bezier(0.22, 0.61, 0.36, 1);
+    }
+    html.js-motion [data-rev].rv-in {
+      opacity: 1;
+      transform: none;
+    }
+    html.js-motion [data-rev="soft"],
+    html.js-motion [data-rev="soft"].rv-in {
+      transform: none;
+    }
+  }
+</style>
+
 <style>
-  :global(body) {
-    background: #000;
+  /* ── Mobile (<1024): head + sticky szyna + siatka 1 kol. ── */
+  .re {
+    background: #fff;
   }
-
-  /* Jedna statyczna warstwa ambientu — bez crossfade'u strony głównej. */
-  .wix-bg {
-    position: fixed;
-    inset: 0;
-    z-index: 0;
-    background: #000;
-    pointer-events: none;
+  .re-in {
+    width: 100%;
+    max-width: var(--col);
+    margin-inline: auto;
   }
-
-  .wix {
-    position: relative;
-    z-index: 1;
-    color: var(--ink);
-    font-family: var(--font-body), sans-serif;
-    /* PRZEJŚCIOWE: odstępy z czasów fixed navbara — po zmianie chrome'u na
-       sticky dają nadmiar światła u góry; znikną z portem widoku (4.4). */
-    padding: clamp(40px, 8vh, 90px) 0 clamp(80px, 10vw, 120px);
+  .re-head {
+    padding-block: 24px 20px;
   }
-
-  /* ── Nagłówek (wzorzec sekcji: eyebrow mono / display + serif accent) ── */
-  .wix-head {
-    text-align: center;
-    padding: 0 5vw;
-  }
-  .wix-eyebrow {
-    margin: 0 0 22px;
-    font-family: var(--font-mono), monospace;
-    font-size: 12px;
-    letter-spacing: 0.42em;
-    text-indent: 0.42em;
-    text-transform: uppercase;
-    color: var(--faint);
-  }
-  .wix-title {
-    margin: 0;
+  .re-kick {
     font-family: var(--font-display), sans-serif;
-    font-weight: 800;
-    letter-spacing: -0.035em;
+    font-weight: 500;
+    font-size: clamp(10px, 2.82vw, 12px);
     line-height: 1;
-    font-size: clamp(44px, 8vw, 104px);
-    color: var(--ink);
-    text-wrap: balance;
+    letter-spacing: 0.2em;
+    color: var(--faint);
+    margin-bottom: 14px;
+    padding-inline: var(--pad);
   }
-  .wix-accent {
-    font-family: var(--font-serif), serif;
-    font-style: italic;
-    font-weight: 400;
-    letter-spacing: 0;
-    background: var(--accent-gradient);
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
-    color: transparent;
+  .re-head h1 {
+    font-family: var(--font-display), sans-serif;
+    font-weight: 200;
+    font-size: clamp(29px, 8.72vw, 38px);
+    line-height: 1.12;
+    padding-inline: var(--pad);
   }
-  .wix-sub {
-    max-width: 560px;
-    margin: 24px auto 0;
-    font-size: 17px;
-    line-height: 1.5;
-    color: var(--muted);
+  .re-rule {
+    width: 44px;
+    height: 1px;
+    background: rgba(26, 26, 26, 0.3);
+    margin: 16px var(--pad);
+  }
+  .re-lead {
+    font-family: var(--font-display), sans-serif;
+    font-weight: 200;
+    font-size: clamp(13.5px, 3.97vw, 17px);
+    line-height: 1.48;
+    color: rgba(26, 26, 26, 0.78);
     text-wrap: pretty;
+    padding-inline: var(--pad);
+  }
+  .re-leadLong {
+    display: inline;
   }
 
-  /* ── Siatka: 1 kolumna → 2 (≥761 px) → 3 (≥1024 px) ── */
-  .wix-grid {
+  /* Szyna filtrów: sticky POD paskiem chrome'u (--hdr-h z navbara 4.1 —
+     eksport przyklejał na top:0, gdzie chowała się pod sticky navbar;
+     świadomy fix, D-R7). */
+  .re-rail {
+    display: flex;
+    gap: 24px;
+    overflow-x: auto;
+    padding-block: 2px 0;
+    padding-inline: var(--pad);
+    scrollbar-width: none;
+    border-bottom: 1px solid rgba(26, 26, 26, 0.12);
+    position: sticky;
+    top: var(--hdr-h, 74px);
+    z-index: 3;
+    background: #fff;
+    margin-top: 18px;
+  }
+  .re-rail::-webkit-scrollbar {
+    display: none;
+  }
+  .re-rail button {
+    appearance: none;
+    border: none;
+    background: none;
+    margin: 0;
+    cursor: pointer;
+    flex: none;
+    padding: 10px 2px 13px;
+    font-family: var(--font-body), sans-serif;
+    font-weight: 500;
+    font-size: clamp(13px, 3.59vw, 15px);
+    line-height: 1;
+    white-space: nowrap;
+    color: var(--faint);
+    -webkit-tap-highlight-color: transparent;
+    transition: color 0.3s ease;
+  }
+  .re-rail button.on {
+    color: var(--ink);
+    box-shadow: inset 0 -2px 0 0 #1a1a1a;
+  }
+  .re-rail button b {
+    display: none;
+  }
+  .re-phone {
+    display: none;
+  }
+  .re-bar {
+    display: none;
+  }
+
+  /* ── Siatka kafli ── */
+  .re-grid {
     display: grid;
     grid-template-columns: 1fr;
-    gap: 44px;
-    max-width: 1320px;
-    margin: 52px auto 0;
-    padding: 0 5vw;
-  }
-  @media (min-width: 761px) {
-    .wix-grid {
-      grid-template-columns: 1fr 1fr;
-      gap: 52px 28px;
-    }
-  }
-  @media (min-width: 1024px) {
-    .wix-grid {
-      grid-template-columns: 1fr 1fr 1fr;
-    }
+    gap: 32px;
+    padding-block: 16px 44px;
+    padding-inline: var(--pad);
   }
 
-  /* ── Kafel „ghost" ── */
-  .wix-ghost {
-    border: 1.5px dashed rgba(245, 240, 236, 0.18);
-    border-radius: 4px;
+  /* ── CTA ── */
+  .re-cta {
+    background: #eae5dd;
+    padding: 52px 0 56px;
+    margin-top: 14px;
+  }
+  .re-cta-in {
+    width: 100%;
+    max-width: var(--col);
+    margin-inline: auto;
+    padding-inline: var(--pad);
+  }
+  .re-cta h2 {
+    margin-bottom: 26px;
+    font-family: var(--font-display), sans-serif;
+    font-weight: 200;
+    font-size: clamp(23px, 6.92vw, 30px);
+    line-height: 1.22;
+    text-wrap: pretty;
+  }
+  .re-cta-txt p {
+    display: none;
+  }
+  .re-cta a {
     display: flex;
-    flex-direction: column;
     align-items: center;
-    justify-content: center;
-    gap: 14px;
-    color: var(--faint);
-    min-height: 150px;
-  }
-  @media (min-width: 761px) {
-    .wix-ghost {
-      min-height: 230px;
-    }
-  }
-  .wix-ghost__plus {
-    font-size: 30px;
-    font-weight: 300;
+    justify-content: space-between;
+    gap: 16px;
+    background: var(--ink);
+    color: #fff;
+    border-radius: 999px;
+    padding: 14px 28px;
+    font-family: var(--font-body), sans-serif;
+    font-weight: 500;
+    font-size: clamp(14px, 4.36vw, 18px);
     line-height: 1;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+    text-decoration: none;
   }
-  .wix-ghost__label {
-    font-family: var(--font-mono), monospace;
-    font-size: 11px;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
+  .re-cta a:hover {
+    background: #2b2b2b;
+  }
+  .re-cta svg {
+    width: 26px;
+    height: 26px;
+    flex: none;
+    transition: transform 0.55s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .re-cta a:hover svg {
+    transform: translate(5px, -5px);
   }
 
-  /* ── Stopka: full-bleed (Footer.astro sam kontroluje kontener/wrap);
-     z-index tylko wynosi ją nad warstwę ambientu. ── */
-  .wix-foot {
-    position: relative;
-    z-index: 1;
+  /* ════ Desktop (≥1024): sticky kolumna z filtrami | lista ════ */
+  @media (min-width: 1024px) {
+    .re-in {
+      display: flex;
+      align-items: flex-start;
+      gap: clamp(28px, 3.89vw, 56px);
+      padding-inline: var(--pad);
+    }
+    .re-head {
+      position: sticky;
+      top: var(--hdr-h, 80px);
+      width: clamp(220px, 20vw, 288px);
+      flex: none;
+      padding: clamp(34px, 3.33vw, 48px) 0 40px;
+      align-self: flex-start;
+    }
+    .re-kick,
+    .re-head h1,
+    .re-lead {
+      padding-inline: 0;
+    }
+    .re-kick {
+      font-size: clamp(10.5px, 0.83vw, 12px);
+      letter-spacing: 0.22em;
+      color: var(--accent-ink);
+      margin-bottom: 16px;
+    }
+    .re-head h1 {
+      font-size: clamp(32px, 2.92vw, 42px);
+      line-height: 1.08;
+    }
+    .re-rule {
+      display: none;
+    }
+    .re-lead {
+      margin: 20px 0 32px;
+      font-size: clamp(14px, 1.08vw, 15.5px);
+      line-height: 1.6;
+      color: rgba(26, 26, 26, 0.7);
+    }
+    .re-leadLong {
+      display: none;
+    }
+    .re-rail {
+      display: block;
+      position: static;
+      border-bottom: none;
+      border-top: 1px solid rgba(26, 26, 26, 0.14);
+      padding: 0;
+      margin: 0;
+      overflow: visible;
+      background: none;
+    }
+    .re-rail button {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 14px;
+      width: 100%;
+      padding: 15px 0;
+      border-bottom: 1px solid rgba(26, 26, 26, 0.1);
+      font-size: clamp(14px, 1.04vw, 15px);
+      line-height: 1.2;
+      text-align: left;
+      box-shadow: none;
+      transition:
+        color 0.35s ease,
+        padding-left 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .re-rail button.on {
+      padding-left: 14px;
+      box-shadow: inset 2px 0 0 0 #2f8f5b;
+      color: var(--ink);
+    }
+    .re-rail button b {
+      display: block;
+      flex: none;
+      font-family: var(--font-display), sans-serif;
+      font-weight: 500;
+      font-size: 11px;
+      line-height: 1;
+      letter-spacing: 0.14em;
+      color: var(--faint);
+    }
+    .re-phone {
+      display: block;
+      margin-top: 36px;
+      padding: 22px 24px;
+      background: var(--bg-cream);
+      text-decoration: none;
+      color: var(--ink);
+      transition: background 0.3s ease;
+    }
+    .re-phone[hidden] {
+      display: none;
+    }
+    .re-phone:hover {
+      background: #eae5dd;
+    }
+    .re-phone b {
+      display: block;
+      font-family: var(--font-display), sans-serif;
+      font-weight: 500;
+      font-size: 10.5px;
+      line-height: 1;
+      letter-spacing: 0.18em;
+      color: var(--faint);
+      margin-bottom: 10px;
+    }
+    .re-phone span {
+      display: block;
+      font-family: var(--font-display), sans-serif;
+      font-weight: 200;
+      font-size: clamp(18px, 1.53vw, 22px);
+      line-height: 1.2;
+    }
+
+    .re-list {
+      flex: 1;
+      min-width: 0;
+      padding: clamp(34px, 3.33vw, 48px) 0 0;
+    }
+    .re-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+      padding-bottom: 22px;
+      border-bottom: 1px solid rgba(26, 26, 26, 0.12);
+      margin-bottom: 34px;
+      font-family: var(--font-display), sans-serif;
+      font-weight: 500;
+      font-size: 11px;
+      line-height: 1;
+      letter-spacing: 0.18em;
+      color: var(--faint);
+    }
+    .re-grid {
+      grid-template-columns: 1fr 1fr;
+      gap: 46px 28px;
+      padding: 0 0 80px;
+    }
+
+    .re-cta {
+      background: var(--bg-cream);
+      padding: clamp(72px, 7.22vw, 104px) 0;
+      margin-top: 0;
+    }
+    .re-cta-in {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: clamp(40px, 5.56vw, 80px);
+    }
+    .re-cta-txt {
+      max-width: 640px;
+    }
+    .re-cta h2 {
+      margin-bottom: 0;
+      font-size: clamp(34px, 3.19vw, 46px);
+      line-height: 1.1;
+    }
+    .re-cta-txt p {
+      display: block;
+      margin-top: 22px;
+      font-family: var(--font-display), sans-serif;
+      font-weight: 200;
+      font-size: clamp(15px, 1.15vw, 16.5px);
+      line-height: 1.6;
+      color: rgba(26, 26, 26, 0.7);
+      text-wrap: pretty;
+    }
+    .re-cta a {
+      flex: none;
+      justify-content: center;
+      padding: clamp(17px, 1.46vw, 21px) clamp(28px, 2.78vw, 40px);
+      font-size: clamp(16px, 1.25vw, 18px);
+      box-shadow: none;
+    }
+    .re-cta svg {
+      width: 21px;
+      height: 21px;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .re-rail button,
+    .re-phone,
+    .re-cta svg {
+      transition: none;
+    }
   }
 </style>

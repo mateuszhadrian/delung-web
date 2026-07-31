@@ -1,259 +1,732 @@
 ---
-// Treść szczegółów realizacji — wspólna dla modala (desktop) i bottom sheeta
-// (mobile). Renderowana wewnątrz <template> per projekt w Work.astro, a po
-// kliknięciu kafelka klonowana do właściwej nakładki. Układ (2 kolumny vs stos)
-// wynika z media-query 760px — tej samej, która decyduje modal vs sheet.
-// Przejściowa wersja pod nowy schemat (galeria + specs); docelowy detal wg
-// designu realizacje.html wchodzi w Etapie 4.4 (tam też pełny wzorzec wideo:
-// odtwarzanie na tap z badge play + duration).
+// Treść detalu realizacji (część 4.4) — markup `dt-*` z designu
+// docs/design/realizacje.html, wspólny dla obu progów JEDNEGO overlaya
+// #work-detail (WorkDetailOverlay.astro): <1024 bottom sheet (galeria
+// w strumieniu scrolla), ≥1024 modal (galeria przenoszona przez
+// open-detail.ts do lewej kolumny panelu — wzorzec placeGal eksportu).
+// Renderowana wewnątrz <template data-work-detail={slug}> i klonowana
+// do hosta przy otwarciu; liczniki (REALIZACJA NN/NN, 01/0N) maluje
+// open-detail.ts po klonowaniu.
+//
+// Wideo: preload="none" + poster z imgAt() (obraz tej samej pozycji
+// galerii — reguła cms-realizacje), odtwarzane na tap w badge play;
+// `duration` z CMS na badge'u czasu (desktop, jak w designie).
+// Kontrasty podbite pod pustą allowlistę axe (D-R8): --accent-ink
+// zamiast --gr, --faint zamiast alpha .45–.55.
 import { imgAt } from "@/lib/img";
+import { WORK_INDEX_PATH, CONTACT_PATH } from "@/lib/routes";
 import type { ViewProject } from "./work-data";
 
 interface Props {
   project: ViewProject;
-  galleryLabel: string;
-  specsLabel: string;
 }
-const { project, galleryLabel, specsLabel } = Astro.props;
+const { project } = Astro.props as unknown as Props;
 const p = project;
+const pad = (n: number) => String(n).padStart(2, "0");
 ---
 
-<article class="wdx">
-  <header class="wdx__header">
-    <div class="wdx__tagline">
-      <span class="wdx__category">{p.categoryLabel}</span>
-      <span class="wdx__dot" aria-hidden="true">·</span>
-      <span class="wdx__year">{p.year}</span>
-    </div>
-    <h2 class="wdx__title">{p.title}</h2>
-    <p class="wdx__intro">{p.description}</p>
-  </header>
+<div class="dt-head">
+  <span data-projcount>REALIZACJA 01 / 01</span>
+  <button class="dt-x" type="button" data-overlay-close aria-label="Zamknij">
+    <i aria-hidden="true"><b></b><b></b></i>
+  </button>
+</div>
 
-  <div class="wdx__gallery">
-    <p class="wdx__gallery-head">{galleryLabel}</p>
+<div class="dt-txt">
+  <div class="dt-meta">
+    <span class="dt-tag">{p.categoryLabel}</span>
+    <span class="dt-dot" aria-hidden="true"></span>
+    <span class="dt-year">{p.year}</span>
+  </div>
+  <h2 class="dt-title">{p.title}</h2>
+  <div class="dt-rule" aria-hidden="true"></div>
+</div>
+
+<div class="dt-gal" data-gal>
+  <div class="dt-track" data-track data-lenis-prevent-horizontal>
     {
       p.gallery.map((item, i) => (
-        <figure class="wdx__shot">
+        <div class="dt-slide" data-slide>
           {item.video ? (
-            /* eslint-disable-next-line astro/jsx-a11y/media-has-caption --
-               klipy realizacji to nieme b-rolle mebli (bez ścieżki dialogowej) */
-            <video
-              class="wdx__media"
-              src={item.video}
-              poster={imgAt(item.image, "full")}
-              preload="none"
-              controls
-              playsinline
-              style={
-                item.position ? `object-position: ${item.position}` : undefined
-              }
-            />
+            <>
+              {/* Bez `controls` i bez własnego znaku play (korekta
+                  Mateusza): tap/klik w kadr odpala film w podglądzie
+                  pełnoekranowym; stan sygnalizuje ikonka kamery. */}
+              {/* eslint-disable-next-line astro/jsx-a11y/media-has-caption --
+                  klipy realizacji to nieme b-rolle mebli (bez dialogów) */}
+              <video
+                src={item.video}
+                poster={imgAt(item.image, "full")}
+                preload="none"
+                playsinline
+                style={
+                  item.position
+                    ? `object-position: ${item.position}`
+                    : undefined
+                }
+              />
+              <span class="dt-cam" data-cam aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none">
+                  <rect
+                    x="3"
+                    y="7"
+                    width="12"
+                    height="10"
+                    rx="2"
+                    stroke="#fff"
+                    stroke-width="1.5"
+                  />
+                  <path
+                    d="M15 10.5l6-3v9l-6-3"
+                    stroke="#fff"
+                    stroke-width="1.5"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+              </span>
+              {item.duration && <span class="dt-time">{item.duration}</span>}
+            </>
           ) : (
             <img
-              class="wdx__media"
               src={imgAt(item.image, "full")}
               alt={`${p.title} — zdjęcie ${i + 1}`}
               loading="lazy"
               decoding="async"
+              draggable="false"
               style={
                 item.position ? `object-position: ${item.position}` : undefined
               }
             />
           )}
-          {item.video && item.duration && (
-            <figcaption class="wdx__duration">{item.duration}</figcaption>
-          )}
-        </figure>
+        </div>
       ))
     }
   </div>
-
-  <div class="wdx__body">
-    <section class="wdx__block">
-      <p class="wdx__block-head">{specsLabel}</p>
-      <dl class="wdx__specs">
+  <div class="dt-galbar">
+    <span class="dt-shotnav">
+      <button type="button" data-prevshot aria-label="Poprzednie zdjęcie">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path
+            d="M15 5l-7 7 7 7"
+            stroke="#fff"
+            stroke-width="1.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"></path>
+        </svg>
+      </button>
+      <button type="button" data-nextshot aria-label="Następne zdjęcie">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path
+            d="M9 5l7 7-7 7"
+            stroke="#fff"
+            stroke-width="1.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"></path>
+        </svg>
+      </button>
+    </span>
+    <span class="dt-galside">
+      <span class="dt-dashes" data-dashes>
         {
-          p.specs.map((s) => (
-            <div class="wdx__spec">
-              <dt class="wdx__spec-label">{s.label}</dt>
-              <dd class="wdx__spec-value">{s.value}</dd>
-            </div>
+          p.gallery.map((_, i) => (
+            <button
+              type="button"
+              data-shot={i}
+              class={i === 0 ? "on" : undefined}
+              aria-label={`Zdjęcie ${i + 1}`}
+            />
           ))
         }
-      </dl>
-    </section>
+      </span>
+      <span class="dt-count" data-shotcount>01 / {pad(p.gallery.length)}</span>
+    </span>
   </div>
-</article>
+</div>
+
+<div class="dt-about">
+  <p class="dt-about-h">O PROJEKCIE</p>
+  <p class="dt-desc">{p.description}</p>
+</div>
+
+<div class="dt-specs">
+  {
+    p.specs.map((s) => (
+      <div class="dt-spec">
+        <b>{s.label}</b>
+        <span>{s.value}</span>
+      </div>
+    ))
+  }
+</div>
+
+<div class="dt-foot">
+  <a class="dt-ask" href={CONTACT_PATH}>
+    <span>
+      <span class="dt-ask-k">PODOBA CI SIĘ PROJEKT?</span>
+      <span class="dt-ask-t">Zapytaj o wycenę</span>
+    </span>
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path
+        d="M6 18L18 6M18 6H8M18 6v10"
+        stroke="#fff"
+        stroke-width="1.5"
+        stroke-linecap="round"
+        stroke-linejoin="round"></path>
+    </svg>
+  </a>
+  <a
+    class="dt-more"
+    href={`${WORK_INDEX_PATH}#${p.category}`}
+    data-work-more-cat={p.category}
+  >
+    Zobacz więcej z kategorii „{p.categoryLabel}”
+  </a>
+</div>
 
 <style>
-  /* ── Wspólne (stos — domyślny, mobile/sheet) ── */
-  .wdx {
-    display: flex;
-    flex-direction: column;
-    gap: 30px;
-    color: var(--ink);
+  /* ── Mobile (<1024): jeden strumień scrolla w dt-body ── */
+  .dt-head {
+    display: none;
   }
-
-  .wdx__tagline {
+  .dt-txt {
+    padding-block: 2px 0;
+    padding-left: var(--pad);
+    padding-right: 70px;
+  }
+  .dt-meta {
     display: flex;
     align-items: baseline;
-    gap: 10px;
-    flex-wrap: wrap;
-    margin-bottom: 16px;
+    gap: 12px;
+    margin-bottom: 9px;
   }
-  .wdx__category {
-    font-family: var(--font-mono), monospace;
-    font-size: 10.5px;
-    letter-spacing: 0.24em;
-    text-transform: uppercase;
-    color: var(--accent-gold);
-  }
-  .wdx__dot {
-    font-family: var(--font-mono), monospace;
-    font-size: 10.5px;
-    color: var(--faint);
-  }
-  .wdx__year {
-    font-family: var(--font-mono), monospace;
-    font-size: 10.5px;
-    letter-spacing: 0.16em;
-    color: var(--faint);
-  }
-  .wdx__title {
-    margin: 0;
+  .dt-tag {
     font-family: var(--font-display), sans-serif;
-    font-weight: 800;
-    letter-spacing: -0.03em;
-    line-height: 1;
-    font-size: clamp(30px, 7vw, 48px);
-    color: var(--ink);
-  }
-  .wdx__intro {
-    margin: 16px 0 0;
-    font-family: var(--font-body), sans-serif;
     font-weight: 500;
-    font-size: 16px;
-    line-height: 1.55;
-    color: var(--muted);
+    font-size: clamp(10px, 2.82vw, 11px);
+    line-height: 1;
+    letter-spacing: 0.2em;
+    color: var(--faint);
+    text-transform: uppercase;
+  }
+  .dt-dot,
+  .dt-year {
+    display: none;
+  }
+  .dt-title {
+    font-family: var(--font-display), sans-serif;
+    font-weight: 200;
+    font-size: clamp(20px, 6.15vw, 26px);
+    line-height: 1.21;
+    text-wrap: balance;
+  }
+  .dt-rule {
+    width: 44px;
+    height: 1px;
+    background: rgba(26, 26, 26, 0.3);
+    margin-top: 12px;
+  }
+
+  /* ── Galeria: karuzela snap ── */
+  .dt-gal {
+    margin-top: 16px;
+    position: relative;
+  }
+  .dt-track {
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scroll-padding-left: var(--pad);
+    padding-inline: var(--pad);
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .dt-track::-webkit-scrollbar {
+    display: none;
+  }
+  .dt-slide {
+    flex: none;
+    width: min(330px, 84.6vw);
+    aspect-ratio: 330 / 412;
+    position: relative;
+    overflow: hidden;
+    background: #e5e1da;
+    scroll-snap-align: start;
+    /* kafel po kaflu — gotcha karuzel (sections.md) */
+    scroll-snap-stop: always;
+    /* tap/klik w kadr otwiera podgląd pełnoekranowy (korekta 4.4) */
+    cursor: zoom-in;
+  }
+  /* szerokie, niskie ekrany widoku mobilnego: kadry o połowę mniejsze
+     (1:1 z eksportem) */
+  @media (min-width: 835px) and (max-width: 1023px) {
+    .dt-slide {
+      width: 165px;
+    }
+  }
+  .dt-slide img,
+  .dt-slide video {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  /* ikonka kamery (lewy górny róg kadru wideo) — znika, gdy film gra
+     (klasa is-playing na slajdzie podglądu; w galerii film nie gra) */
+  .dt-cam {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    width: 32px;
+    height: 32px;
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+  }
+  .dt-cam svg {
+    width: 17px;
+    height: 17px;
+  }
+  .dt-time {
+    display: none;
+  }
+
+  .dt-galbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding-block: 16px 0;
+    padding-inline: var(--pad);
+  }
+  .dt-galbar::before {
+    content: "";
+    width: 24px;
+    height: 1px;
+    background: rgba(26, 26, 26, 0.3);
+  }
+  .dt-count {
+    font-family: var(--font-display), sans-serif;
+    font-weight: 500;
+    font-size: 11px;
+    line-height: 1;
+    letter-spacing: 0.18em;
+    color: var(--faint);
+  }
+  .dt-dashes,
+  .dt-shotnav {
+    display: none;
+  }
+
+  .dt-about {
+    padding-block: 20px 0;
+    padding-inline: var(--pad);
+  }
+  .dt-about-h {
+    font-family: var(--font-display), sans-serif;
+    font-weight: 500;
+    font-size: 11px;
+    line-height: 1;
+    letter-spacing: 0.2em;
+    color: var(--faint);
+    margin-bottom: 11px;
+  }
+  .dt-desc {
+    font-family: var(--font-display), sans-serif;
+    font-weight: 200;
+    font-size: clamp(13.5px, 3.85vw, 16px);
+    line-height: 1.47;
+    color: rgba(26, 26, 26, 0.78);
     text-wrap: pretty;
   }
 
-  /* ── Galeria ── */
-  .wdx__gallery {
-    display: flex;
-    flex-direction: column;
-    gap: 22px;
+  .dt-specs {
+    padding-block: 20px 150px;
+    padding-inline: var(--pad);
   }
-  .wdx__gallery-head {
-    margin: 0;
-    font-family: var(--font-mono), monospace;
-    font-size: 10.5px;
-    letter-spacing: 0.22em;
-    text-transform: uppercase;
-    color: var(--faint);
+  .dt-spec {
+    padding: 13px 0;
+    border-top: 1px solid rgba(26, 26, 26, 0.1);
   }
-  .wdx__shot {
-    position: relative;
-    margin: 0;
-  }
-  .wdx__media {
+  .dt-spec b {
     display: block;
-    width: 100%;
-    aspect-ratio: 4 / 3;
-    object-fit: cover;
-    border-radius: 4px;
-    background: rgba(245, 240, 236, 0.04);
+    font-family: var(--font-display), sans-serif;
+    font-weight: 500;
+    font-size: 10.5px;
+    line-height: 1;
+    letter-spacing: 0.18em;
+    color: var(--faint);
+    margin-bottom: 6px;
   }
-  .wdx__duration {
-    position: absolute;
-    right: 10px;
-    bottom: 10px;
-    padding: 3px 8px;
-    border-radius: 3px;
-    background: rgba(0, 0, 0, 0.55);
-    font-family: var(--font-mono), monospace;
-    font-size: 11px;
-    letter-spacing: 0.08em;
-    color: var(--ink);
-    pointer-events: none;
+  .dt-spec span {
+    display: block;
+    font-family: var(--font-display), sans-serif;
+    font-weight: 300;
+    font-size: clamp(13px, 3.72vw, 15px);
+    line-height: 1.38;
   }
 
-  /* ── Body: parametry ── */
-  .wdx__body {
+  /* ── Stopka CTA: mobile przyklejona nad dołem sheeta (gradient) ── */
+  .dt-foot {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding-block: 40px 24px;
+    padding-inline: var(--pad);
+    pointer-events: none;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0), #fff 26%);
+  }
+  .dt-ask {
     display: flex;
-    flex-direction: column;
-    gap: 30px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    background: var(--ink);
+    color: #fff;
+    border-radius: 999px;
+    padding: 12px 26px;
+    pointer-events: auto;
+    text-decoration: none;
   }
-  .wdx__block-head {
-    margin: 0 0 16px;
-    font-family: var(--font-mono), monospace;
+  .dt-ask:hover {
+    background: #2b2b2b;
+  }
+  .dt-ask-k {
+    display: block;
+    font-family: var(--font-display), sans-serif;
+    font-weight: 500;
     font-size: 10.5px;
-    letter-spacing: 0.22em;
-    text-transform: uppercase;
-    color: var(--faint);
+    line-height: 1;
+    letter-spacing: 0.16em;
+    color: rgba(255, 255, 255, 0.7);
+    margin-bottom: 4px;
   }
-  .wdx__specs {
-    margin: 0;
-    display: flex;
-    flex-direction: column;
-  }
-  .wdx__spec {
-    display: grid;
-    grid-template-columns: minmax(120px, 0.55fr) 1fr;
-    gap: 16px;
-    padding: 12px 0;
-    border-bottom: 1px solid var(--line);
-  }
-  .wdx__spec:first-child {
-    border-top: 1px solid var(--line);
-  }
-  .wdx__spec-label {
-    font-family: var(--font-mono), monospace;
-    font-size: 10.5px;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    color: var(--accent-gold);
-    align-self: baseline;
-    padding-top: 2px;
-  }
-  .wdx__spec-value {
-    margin: 0;
+  .dt-ask-t {
+    display: block;
     font-family: var(--font-body), sans-serif;
     font-weight: 500;
-    font-size: 14.5px;
-    line-height: 1.45;
-    color: var(--muted);
+    font-size: clamp(14px, 4.1vw, 17px);
+    line-height: 1.2;
+  }
+  .dt-ask svg {
+    width: 24px;
+    height: 24px;
+    flex: none;
+    transition: transform 0.55s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .dt-ask:hover svg {
+    transform: translate(5px, -5px);
+  }
+  .dt-more {
+    display: none;
   }
 
-  /* ════ Desktop / modal: dwie kolumny ════ */
-  @media (min-width: 761px) {
-    .wdx {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      grid-template-rows: auto 1fr;
-      grid-template-areas:
-        "gallery header"
-        "gallery body";
-      gap: 0;
+  /* ════ Desktop (≥1024): modal — galeria w lewej kolumnie (JS move),
+     treść scrolluje w prawej ════ */
+  @media (min-width: 1024px) {
+    .dt-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      padding: 26px clamp(28px, 3.19vw, 46px) 0;
+      flex: none;
+      font-family: var(--font-display), sans-serif;
+      font-weight: 500;
+      font-size: 11px;
+      line-height: 1;
+      letter-spacing: 0.18em;
+      color: var(--faint);
     }
-    .wdx__header {
-      grid-area: header;
-      padding: clamp(28px, 3.5vw, 48px) clamp(28px, 3.5vw, 48px) 0;
+    .dt-x {
+      appearance: none;
+      border: none;
+      background: none;
+      padding: 0;
+      cursor: pointer;
+      width: 42px;
+      height: 42px;
+      margin-right: -8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
-    .wdx__gallery {
-      grid-area: gallery;
-      gap: clamp(20px, 2.5vw, 32px);
-      padding: clamp(28px, 3.5vw, 48px);
-      border-right: 1px solid var(--line);
-      background: rgba(255, 255, 255, 0.012);
+    .dt-x:hover {
+      opacity: 0.55;
     }
-    .wdx__gallery-head {
+    .dt-x i {
+      position: relative;
+      width: 18px;
+      height: 18px;
+      display: block;
+    }
+    .dt-x i b {
+      position: absolute;
+      top: 8px;
+      left: 0;
+      width: 18px;
+      height: 1.5px;
+      background: var(--ink);
+    }
+    .dt-x i b:first-child {
+      transform: rotate(45deg);
+    }
+    .dt-x i b:last-child {
+      transform: rotate(-45deg);
+    }
+
+    .dt-txt {
+      padding: 22px clamp(28px, 3.19vw, 46px) 0;
+    }
+    .dt-meta {
+      margin-bottom: 14px;
+    }
+    .dt-tag {
+      color: var(--accent-ink);
+    }
+    .dt-dot {
+      display: block;
+      width: 3px;
+      height: 3px;
+      border-radius: 999px;
+      background: rgba(26, 26, 26, 0.25);
+    }
+    .dt-year {
+      display: block;
+      font-family: var(--font-display), sans-serif;
+      font-weight: 500;
+      font-size: 11px;
+      line-height: 1;
+      letter-spacing: 0.18em;
+      color: var(--faint);
+    }
+    .dt-title {
+      font-size: clamp(26px, 2.36vw, 34px);
+      line-height: 1.16;
+    }
+    .dt-rule {
       display: none;
     }
-    .wdx__body {
-      grid-area: body;
-      padding: clamp(24px, 3vw, 34px) clamp(28px, 3.5vw, 48px)
-        clamp(28px, 3.5vw, 48px);
+
+    /* galeria po przeniesieniu do .dt (lewa połowa panelu) */
+    .dt-gal {
+      order: 0;
+      flex: none;
+      width: 50%;
+      height: 100%;
+      margin: 0;
+      background: #e5e1da;
+      overflow: hidden;
+    }
+    .dt-gal::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: linear-gradient(
+        180deg,
+        rgba(0, 0, 0, 0) 62%,
+        rgba(0, 0, 0, 0.42) 100%
+      );
+    }
+    .dt-track {
+      height: 100%;
+      gap: 0;
+      /* visible, NIE hidden z eksportu: overflow:hidden na torze
+         przycinałby przesunięte translateX slajdy we współrzędnych
+         lokalnych (klipuje .dt-gal — fix wady makiety) */
+      overflow: visible;
+      padding: 0;
+      scroll-snap-type: none;
+      transition: transform 0.62s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .dt-slide {
+      width: 100%;
+      height: 100%;
+      aspect-ratio: auto;
+      scroll-snap-align: none;
+    }
+    .dt-cam {
+      top: 14px;
+      left: 14px;
+      width: 36px;
+      height: 36px;
+    }
+    .dt-cam svg {
+      width: 19px;
+      height: 19px;
+    }
+    .dt-time {
+      display: block;
+      position: absolute;
+      right: 18px;
+      bottom: 86px;
+      padding: 6px 11px;
+      border-radius: 4px;
+      background: rgba(0, 0, 0, 0.5);
+      font-family: var(--font-display), sans-serif;
+      font-weight: 500;
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      color: #fff;
+    }
+    .dt-galbar {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 2;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 26px;
+    }
+    .dt-galbar::before {
+      display: none;
+    }
+    .dt-shotnav {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .dt-shotnav button {
+      appearance: none;
+      padding: 0;
+      cursor: pointer;
+      width: 46px;
+      height: 46px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.7);
+      background: rgba(255, 255, 255, 0.14);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition:
+        opacity 0.35s ease,
+        background 0.3s ease;
+    }
+    .dt-shotnav button:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
+    .dt-shotnav button[disabled] {
+      opacity: 0.35;
+      cursor: default;
+    }
+    .dt-shotnav svg {
+      width: 17px;
+      height: 17px;
+    }
+    .dt-galside {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .dt-dashes {
+      display: flex;
+      gap: 6px;
+    }
+    .dt-dashes button {
+      appearance: none;
+      border: none;
+      padding: 0;
+      cursor: pointer;
+      width: 26px;
+      height: 2px;
+      background: rgba(255, 255, 255, 0.35);
+      transition: background 0.35s ease;
+    }
+    .dt-dashes button.on {
+      background: #fff;
+    }
+    .dt-count {
+      color: #fff;
+    }
+
+    .dt-about {
+      padding: 22px clamp(28px, 3.19vw, 46px) 0;
+    }
+    .dt-about-h {
+      display: none;
+    }
+    .dt-desc {
+      font-size: clamp(15px, 1.11vw, 16px);
+      line-height: 1.62;
+    }
+    .dt-specs {
+      padding: 28px clamp(28px, 3.19vw, 46px) 0;
+    }
+    .dt-spec {
+      display: flex;
+      align-items: baseline;
+      gap: 22px;
+      border-top: 1px solid rgba(26, 26, 26, 0.12);
+    }
+    .dt-spec b {
+      flex: none;
+      width: clamp(104px, 9.17vw, 132px);
+      margin-bottom: 0;
+      font-size: 10.5px;
+      line-height: 1.5;
+      letter-spacing: 0.14em;
+      color: var(--accent-ink);
+    }
+    .dt-spec span {
+      flex: 1;
+      font-weight: 200;
+      font-size: clamp(14px, 1.08vw, 15.5px);
+      line-height: 1.5;
+    }
+
+    .dt-foot {
+      position: static;
+      order: 4;
+      margin-top: auto;
+      padding: 30px clamp(28px, 3.19vw, 46px);
+      background: none;
+      pointer-events: auto;
+      display: flex;
+      flex-direction: column;
+    }
+    .dt-ask {
+      padding: 18px 32px;
+    }
+    .dt-ask-k {
+      margin-bottom: 5px;
+    }
+    .dt-ask-t {
+      font-size: clamp(15px, 1.18vw, 17px);
+    }
+    .dt-ask svg {
+      width: 21px;
+      height: 21px;
+    }
+    .dt-more {
+      display: block;
+      align-self: center;
+      margin-top: 16px;
+      font-family: var(--font-body), sans-serif;
+      font-weight: 500;
+      font-size: 13.5px;
+      line-height: 1;
+      color: var(--faint);
+      text-decoration: none;
+    }
+    .dt-more:hover {
+      color: var(--ink);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .dt-track,
+    .dt-ask svg,
+    .dt-shotnav button,
+    .dt-dashes button {
+      transition: none;
     }
   }
 </style>

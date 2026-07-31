@@ -87,7 +87,11 @@ test.describe("oferta desktop (zakładki + panel)", () => {
       .locator("[data-ofpanel]")
       .first()
       .locator(".of-ctaCard:visible");
-    await expect(cta).toHaveAttribute("href", WORK_INDEX_PATH);
+    // Deep-link filtra /realizacje/#<slug> (część 4.4, D-R2).
+    await expect(cta).toHaveAttribute(
+      "href",
+      `${WORK_INDEX_PATH}#${OFERTA_CATEGORIES[0].slug}`,
+    );
     // Etykieta z categoryLabel() (D-OK6), nie `rel` z eksportu.
     await expect(cta).toContainText("KUCHNIE");
   });

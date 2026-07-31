@@ -1,0 +1,592 @@
+---
+// JEDEN overlay detalu realizacji (część 4.4, D-R3) — port elementu `dt`
+// z docs/design/realizacje.html: <1024 bottom sheet 96svh (grab-handle,
+// swipe-down z overlay.ts), ≥1024 modal 1200×740 wyśrodkowany. Wybór
+// wariantu to czysty CSS przy WORK_DESKTOP_MIN_PX (koniec sheetMQ/760 —
+// domknięcie D-SG6); zmiana progu przy otwartym detalu ZAMYKA go
+// (open-detail.ts, reguła sections.md).
+//
+// Treść (dt-head/txt/gal/about/specs/foot) klonuje open-detail.ts
+// z <template data-work-detail={slug}> do hosta [data-work-host];
+// projnav (strzałki poprzednia/następna realizacja, desktop) to chrome —
+// siedzi POZA panelem (fixed w rodzicu .dt-ov; wewnątrz panelu psułby go
+// transform modala), open-detail.ts stopuje propagację kliknięć, żeby
+// delegacja overlay.ts nie wzięła ich za klik w tło.
+// Konsumenci: WorkIndexPage (/realizacje/) i HomeRealizacje (zajawka).
+---
+
+<div
+  class="dt-ov"
+  id="work-detail"
+  data-overlay
+  data-overlay-kind="sheet"
+  role="dialog"
+  aria-modal="true"
+  data-lenis-prevent
+  hidden
+>
+  <div class="dt" data-overlay-panel tabindex="-1">
+    <div class="dt-grab" data-overlay-drag>
+      <span aria-hidden="true"></span>
+    </div>
+    {
+      /* X sheeta (mobile) — dokładnie jak karta kategorii 4.3; desktop
+        zamyka X w dt-head klonowanym z treścią. */
+    }
+    <button class="dt-xm" type="button" data-overlay-close aria-label="Zamknij">
+      <i aria-hidden="true"><b></b><b></b></i>
+    </button>
+    <div class="dt-body" data-overlay-scroll data-work-host></div>
+  </div>
+
+  {
+    /* ── Podgląd pełnoekranowy galerii (korekta Mateusza po testach 4.4):
+      tap/klik w kadr otwiera pełny ekran; slajdy wypełnia open-detail.ts
+      klonami kadrów bieżącego projektu. data-overlay-panel TAKŻE tutaj —
+      dla delegacji overlay.ts klik w podgląd nie jest „klikiem w tło"
+      (inaczej zamykałby cały detal). ── */
+  }
+  <div
+    class="lb"
+    data-lightbox
+    data-overlay-panel
+    role="region"
+    aria-label="Podgląd pełnoekranowy galerii"
+    tabindex="-1"
+    hidden
+  >
+    <div class="lb-track" data-lb-track data-lenis-prevent-horizontal></div>
+    <button
+      class="lb-back"
+      type="button"
+      data-lb-close
+      aria-label="Wróć do szczegółów realizacji"
+    >
+      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path
+          d="M15 5l-7 7 7 7"
+          stroke="#fff"
+          stroke-width="1.5"
+          stroke-linecap="round"
+          stroke-linejoin="round"></path>
+      </svg>
+    </button>
+    <button
+      class="lb-x"
+      type="button"
+      data-lb-close
+      aria-label="Zamknij podgląd pełnoekranowy"
+    >
+      <i aria-hidden="true"><b></b><b></b></i>
+    </button>
+    <span class="lb-count lb-count--m" data-lb-count aria-hidden="true"></span>
+    <div class="lb-bar">
+      <span class="lb-nav">
+        <button type="button" data-lb-prev aria-label="Poprzednie zdjęcie">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path
+              d="M15 5l-7 7 7 7"
+              stroke="#fff"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"></path>
+          </svg>
+        </button>
+        <button type="button" data-lb-next aria-label="Następne zdjęcie">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path
+              d="M9 5l7 7-7 7"
+              stroke="#fff"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"></path>
+          </svg>
+        </button>
+      </span>
+      <span class="lb-side">
+        <span class="lb-dashes" data-lb-dashes></span>
+        <span class="lb-count" data-lb-count>01 / 01</span>
+      </span>
+    </div>
+  </div>
+  <div class="dt-projnav">
+    <button
+      class="dt-pn dt-pn--prev"
+      type="button"
+      data-prevproj
+      aria-label="Poprzednia realizacja"
+    >
+      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path
+          d="M15 5l-7 7 7 7"
+          stroke="#fff"
+          stroke-width="1.5"
+          stroke-linecap="round"
+          stroke-linejoin="round"></path>
+      </svg>
+    </button>
+    <button
+      class="dt-pn dt-pn--next"
+      type="button"
+      data-nextproj
+      aria-label="Następna realizacja"
+    >
+      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path
+          d="M9 5l7 7-7 7"
+          stroke="#fff"
+          stroke-width="1.5"
+          stroke-linecap="round"
+          stroke-linejoin="round"></path>
+      </svg>
+    </button>
+  </div>
+</div>
+
+<style>
+  /* ── Wspólne: scrim + stany overlay.ts (is-open / is-closing) ── */
+  .dt-ov {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    display: flex;
+    align-items: flex-end;
+    background: rgba(0, 0, 0, 0.45);
+    opacity: 0;
+    transition: opacity 0.32s ease;
+  }
+  .dt-ov[hidden] {
+    display: none;
+  }
+  .dt-ov.is-open {
+    opacity: 1;
+  }
+
+  /* ── Panel: mobile = bottom sheet 96svh ── */
+  .dt {
+    position: relative;
+    width: 100%;
+    height: 96svh;
+    background: #fff;
+    border-radius: 22px 22px 0 0;
+    box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.18);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transform: translateY(101%);
+    transition: transform 0.38s cubic-bezier(0.32, 0.72, 0.24, 1);
+  }
+  .dt-ov.is-open .dt {
+    transform: translateY(0);
+  }
+  /* Panel bywa programowo fokusowany przy otwarciu dotykiem (tabindex=-1) —
+     bez pierścienia; to kontener, nie kontrolka. */
+  .dt:focus {
+    outline: none;
+  }
+
+  .dt-grab {
+    flex: none;
+    height: 30px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding-top: 12px;
+    cursor: grab;
+    touch-action: none;
+  }
+  .dt-grab span {
+    width: 40px;
+    height: 4px;
+    border-radius: 99px;
+    background: rgba(0, 0, 0, 0.14);
+  }
+
+  /* X sheeta — 1:1 ze stylem karty kategorii (4.3) */
+  .dt-xm {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 3;
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+  }
+  .dt-xm:hover {
+    opacity: 0.55;
+  }
+  .dt-xm i {
+    position: relative;
+    width: 20px;
+    height: 20px;
+    display: block;
+  }
+  .dt-xm i b {
+    position: absolute;
+    top: 9px;
+    left: 0;
+    width: 20px;
+    height: 1.5px;
+    background: var(--ink);
+  }
+  .dt-xm i b:first-child {
+    transform: rotate(45deg);
+  }
+  .dt-xm i b:last-child {
+    transform: rotate(-45deg);
+  }
+
+  .dt-body {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    display: flex;
+    flex-direction: column;
+  }
+  .dt-body::-webkit-scrollbar {
+    display: none;
+  }
+
+  .dt-projnav {
+    display: none;
+  }
+
+  /* ── Podgląd pełnoekranowy (chrome; slajdy stylizuje blok is:global) ── */
+  .lb {
+    position: absolute;
+    inset: 0;
+    z-index: 5;
+    background: #000;
+    overflow: hidden;
+  }
+  .lb[hidden] {
+    display: none;
+  }
+  /* fokus programowy przy otwarciu idzie na kontener (nie na chevron —
+     iOS rysowałby na nim pierścień); to region, nie kontrolka */
+  .lb:focus {
+    outline: none;
+  }
+  .lb-back {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 3;
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+  }
+  .lb-back:hover {
+    opacity: 0.7;
+  }
+  .lb-back svg {
+    width: 24px;
+    height: 24px;
+  }
+  .lb-x {
+    display: none;
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    width: 44px;
+    height: 44px;
+    align-items: center;
+    justify-content: center;
+    z-index: 3;
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+  }
+  .lb-x:hover {
+    opacity: 0.7;
+  }
+  .lb-x i {
+    position: relative;
+    width: 20px;
+    height: 20px;
+    display: block;
+  }
+  .lb-x i b {
+    position: absolute;
+    top: 9px;
+    left: 0;
+    width: 20px;
+    height: 1.5px;
+    background: #fff;
+  }
+  .lb-x i b:first-child {
+    transform: rotate(45deg);
+  }
+  .lb-x i b:last-child {
+    transform: rotate(-45deg);
+  }
+
+  /* licznik mobile: pionowo — pod dolną krawędzią kadru, przy lewej
+     krawędzi ekranu (kadr 330/412 w pionie ogranicza szerokość, więc
+     połowa wysokości kadru = min(50svh, 100vw·412/660)); poziomo —
+     lewy dolny róg ekranu */
+  .lb-count {
+    font-family: var(--font-display), sans-serif;
+    font-weight: 500;
+    font-size: 11px;
+    line-height: 1;
+    letter-spacing: 0.18em;
+    color: #fff;
+  }
+  .lb-count--m {
+    position: absolute;
+    left: var(--pad);
+    top: calc(50% + min(50svh, 100vw * 412 / 660) + 14px);
+    z-index: 2;
+  }
+  @media (orientation: landscape) {
+    .lb-count--m {
+      top: auto;
+      bottom: 14px;
+    }
+  }
+
+  .lb-bar {
+    display: none;
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 2;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 26px;
+  }
+  .lb-nav {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .lb-nav button {
+    appearance: none;
+    padding: 0;
+    cursor: pointer;
+    width: 46px;
+    height: 46px;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.7);
+    background: rgba(255, 255, 255, 0.14);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition:
+      opacity 0.35s ease,
+      background 0.3s ease;
+  }
+  .lb-nav button:hover {
+    background: rgba(255, 255, 255, 0.3);
+  }
+  .lb-nav button[disabled] {
+    opacity: 0.35;
+    cursor: default;
+  }
+  .lb-nav svg {
+    width: 17px;
+    height: 17px;
+  }
+  .lb-side {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .lb-dashes {
+    display: flex;
+    gap: 6px;
+  }
+
+  /* ════ Desktop (≥1024): modal wyśrodkowany, galeria | treść ════ */
+  @media (min-width: 1024px) {
+    .dt-ov {
+      display: block;
+      background: rgba(12, 11, 10, 0.55);
+      backdrop-filter: blur(3px);
+    }
+    .dt {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: min(1200px, 92vw);
+      height: min(740px, 84vh);
+      border-radius: 0;
+      flex-direction: row;
+      box-shadow: 0 30px 90px rgba(0, 0, 0, 0.35);
+      opacity: 0;
+      transform: translate(-50%, -46%) scale(0.98);
+      transition:
+        opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1),
+        transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .dt-ov.is-open .dt {
+      transform: translate(-50%, -50%) scale(1);
+      opacity: 1;
+    }
+    .dt-grab {
+      display: none;
+    }
+    .dt-xm {
+      display: none;
+    }
+    .dt-body {
+      min-width: 0;
+      order: 1;
+    }
+
+    /* podgląd pełnoekranowy: desktop = chevron znika, X + pasek jak
+       galbar modala (strzałki / dashes / licznik na kadrze) */
+    .lb-back,
+    .lb-count--m {
+      display: none;
+    }
+    .lb-x {
+      display: flex;
+    }
+    .lb-bar {
+      display: flex;
+    }
+
+    .dt-projnav {
+      display: block;
+    }
+    .dt-pn {
+      appearance: none;
+      padding: 0;
+      cursor: pointer;
+      position: fixed;
+      top: 50%;
+      z-index: 2;
+      width: 54px;
+      height: 54px;
+      margin-top: -27px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      background: rgba(255, 255, 255, 0.12);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.3s ease;
+    }
+    .dt-pn:hover {
+      background: rgba(255, 255, 255, 0.28);
+    }
+    .dt-pn--prev {
+      left: 24px;
+    }
+    .dt-pn--next {
+      right: 24px;
+    }
+    .dt-pn svg {
+      width: 20px;
+      height: 20px;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .dt-ov,
+    .dt,
+    .dt-pn {
+      transition: none;
+    }
+  }
+</style>
+
+<style is:global>
+  /* Slajdy podglądu pełnoekranowego tworzy open-detail.ts w runtime
+     (klony kadrów galerii BEZ atrybutu scope Astro) — stąd is:global,
+     zawężone do #work-detail. Kadr trzyma format galerii (330/412),
+     wyśrodkowany na czarnym tle: pion → pasy góra/dół, poziom → pasy
+     po bokach (media realizacji mają zawsze ten sam format). */
+  #work-detail .lb-track {
+    display: flex;
+    height: 100%;
+  }
+  #work-detail .lb-slide {
+    flex: none;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+  }
+  #work-detail .lb-media {
+    position: relative;
+    aspect-ratio: 330 / 412;
+    width: min(100vw, calc(100svh * 330 / 412));
+    max-height: 100svh;
+    overflow: hidden;
+    background: #111;
+  }
+  #work-detail .lb-media img,
+  #work-detail .lb-media video {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  @media (max-width: 1023px) {
+    #work-detail .lb-track {
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      scrollbar-width: none;
+      -webkit-overflow-scrolling: touch;
+      /* pion zostaje dla gestu swipe-down zamykającego podgląd
+         (pointer events w open-detail.ts) */
+      touch-action: pan-x;
+    }
+    #work-detail .lb-track::-webkit-scrollbar {
+      display: none;
+    }
+  }
+  @media (min-width: 1024px) {
+    #work-detail .lb-track {
+      overflow: visible;
+      transition: transform 0.62s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+  }
+  #work-detail .lb-dashes button {
+    appearance: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    width: 26px;
+    height: 2px;
+    background: rgba(255, 255, 255, 0.35);
+    transition: background 0.35s ease;
+  }
+  #work-detail .lb-dashes button.on {
+    background: #fff;
+  }
+  /* grający film chowa ikonkę kamery (open-detail.ts toggluje klasę) */
+  #work-detail .lb-slide.is-playing [data-cam] {
+    display: none;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    #work-detail .lb-track,
+    #work-detail .lb-dashes button {
+      transition: none;
+    }
+  }
+</style>

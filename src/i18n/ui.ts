@@ -11,19 +11,9 @@ export const defaultLang = "pl";
 export const ui = {
   pl: {
     "meta.title": "Delung Meble — meble na wymiar",
-    "work.eyebrow": "NASZE REALIZACJE",
-    "work.cta": "Zobacz realizację",
-    "work.gallery": "Galeria",
-    "work.specs": "Szczegóły realizacji",
-    "work.close": "Zamknij",
     "workPage.title": "Realizacje — Delung Meble",
     "workPage.description":
       "Galeria zrealizowanych mebli na wymiar — kuchnie, szafy i garderoby, zabudowy łazienkowe i nietypowe projekty.",
-    "workPage.headlineLead": "wybrane",
-    "workPage.headlineAccent": "realizacje",
-    "workPage.intro":
-      "Przeglądaj wybrane realizacje. Kliknij, by zobaczyć szczegóły projektu.",
-    "workPage.ghost": "Kolejne realizacje wkrótce",
     "contact.meta": "Formularz · e-mail · telefon",
     "contact.ghost": "KONTAKT",
     "contact.kick": "Kontakt",

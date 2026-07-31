@@ -121,11 +121,10 @@ test.describe("kategorie mobile", () => {
     await page.locator(".kt-card").first().click();
     const sheet = page.locator(`#kat-${OFERTA_CATEGORIES[0].slug}`);
     await expect(sheet).toHaveClass(/is-open/);
-    // Deep-link filtra kategorii = decyzja części 4.4 (D-OK6) — dziś goły
-    // adres podstrony realizacji.
+    // Deep-link filtra /realizacje/#<slug> (część 4.4, D-R2).
     await expect(sheet.locator(".dt-more a")).toHaveAttribute(
       "href",
-      WORK_INDEX_PATH,
+      `${WORK_INDEX_PATH}#${OFERTA_CATEGORIES[0].slug}`,
     );
     const foot = sheet.locator(".dt-foot a");
     await expect(foot).toHaveAttribute("href", CONTACT_PATH);

@@ -175,7 +175,8 @@ const SPEC_ICONS = [
                 ))}
               </div>
               <div class="dt-more">
-                <a href={WORK_INDEX_PATH}>
+                {/* deep-link filtra realizacji (część 4.4, D-R2) */}
+                <a href={`${WORK_INDEX_PATH}#${c.slug}`}>
                   Zobacz realizacje z tej kategorii
                   <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
                     <path

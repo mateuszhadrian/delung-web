@@ -7,16 +7,12 @@
 // motion OK: scena przypięta 300vh — teksty przełączane postępem, stos
 // zdjęć odsłaniany clip-path (home-scroll.ts); fallback: kolumna kart.
 import { getCollection } from "astro:content";
-import { useTranslations } from "@/i18n/utils";
 import { WORK_INDEX_PATH } from "@/lib/routes";
 import { imgAt } from "@/lib/img";
 import { viewProject } from "@/components/sections/work/work-data";
 import WorkDetail from "@/components/sections/work/WorkDetail.astro";
-import Modal from "@/components/ui/Modal.astro";
-import BottomSheet from "@/components/ui/BottomSheet.astro";
+import WorkDetailOverlay from "@/components/sections/work/WorkDetailOverlay.astro";
 import HomeCta from "./HomeCta.astro";
-
-const t = useTranslations("pl");
 
 const entries = await getCollection("realizacje");
 // Strona główna pokazuje TYLKO pierwsze 3 realizacje (pełna lista i filtry:
@@ -119,46 +115,40 @@ const projects = entries
   {
     projects.map((project) => (
       <template data-work-detail={project.slug}>
-        <WorkDetail
-          project={project}
-          galleryLabel={t("work.gallery")}
-          specsLabel={t("work.specs")}
-        />
+        <WorkDetail project={project} />
       </template>
     ))
   }
-  <Modal id="work-modal" closeLabel={t("work.close")}>
-    <div data-work-host></div>
-  </Modal>
-  <BottomSheet id="work-sheet" closeLabel={t("work.close")}>
-    <div data-work-host></div>
-  </BottomSheet>
+  <WorkDetailOverlay />
 </section>
 
 <script>
-  // Klik/tap w kafel → detal we właściwej nakładce (wspólny helper —
-  // na desktopowej scenie przypiętej trafia zawsze bieżący, wierzchni
-  // kafel: clip-path przycina też hit-testing pozostałych).
+  // Klik/tap w kafel → detal w #work-detail (wspólny helper open-detail,
+  // część 4.4 — jeden overlay, wariant modal↔sheet w CSS przy 1024;
+  // zamknięcie przy zmianie progu obsługuje open-detail). Na desktopowej
+  // scenie przypiętej trafia zawsze bieżący, wierzchni kafel: clip-path
+  // przycina też hit-testing pozostałych.
   import {
     openWorkDetail,
-    sheetMQ,
+    setDetailContext,
   } from "@/components/sections/work/open-detail";
 
   const cards = document.querySelector<HTMLElement>("[data-recards]");
+  // Kontekst projnav/licznika detalu = 3 kafle zajawki.
+  setDetailContext(
+    Array.from(
+      cards?.querySelectorAll<HTMLElement>("[data-work-slug]") ?? [],
+    ).map((card) => ({
+      slug: card.dataset.workSlug ?? "",
+      name: card.dataset.workName ?? "",
+    })),
+  );
   cards?.addEventListener("click", (e) => {
     const card = (e.target as HTMLElement).closest<HTMLElement>(
       "[data-work-slug]",
     );
     if (!card?.dataset.workSlug) return;
     openWorkDetail(card.dataset.workSlug, card.dataset.workName ?? "");
-  });
-
-  // Zmiana progu (modal ↔ sheet) przy otwartej nakładce: zamknij, by nie
-  // zostawić niespójnego stanu między wariantami.
-  sheetMQ.addEventListener("change", () => {
-    if (!window.overlay?.isOpen()) return;
-    window.overlay.close("work-modal");
-    window.overlay.close("work-sheet");
   });
 </script>
 
