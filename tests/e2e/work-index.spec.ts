@@ -163,48 +163,30 @@ test.describe("mobile: BottomSheet na podstronie", () => {
   });
 });
 
-test.describe("dojście ze strony głównej — przyciski Więcej realizacji", () => {
-  // Sekcja Realizacje strony głównej (galeria/karuzela + „Więcej realizacji")
-  // powstaje w Etapie 4 — szkielet głównej jej nie ma. Odskipować przy porcie
-  // strony głównej (test EN do przepisania na PL-only przy tej okazji).
-  test.skip(() => true, "sekcja Realizacje na stronie głównej — Etap 4");
-
-  test("przyciski mają zlokalizowane adresy podstrony (PL i EN)", async ({
+test.describe("dojście ze strony głównej — linki Więcej realizacji", () => {
+  // Zajawka .re z części 4.2 (PL-only): linki „Więcej" w tekstach sceny
+  // desktopowej i CTA „Przeglądaj nasze realizacje" niosą [data-work-more]
+  // i prowadzą na podstronę.
+  test("wszystkie linki data-work-more prowadzą na podstronę", async ({
     page,
   }) => {
-    for (const { home, href } of [
-      { home: "/", href: "/realizacje/" },
-      { home: "/en/", href: "/en/projects/" },
-    ]) {
-      await gotoReady(page, home);
-      for (const a of await page.locator("a[data-work-more]").all()) {
-        await expect(a).toHaveAttribute("href", href);
-      }
+    await gotoReady(page);
+    const links = await page.locator("a[data-work-more]").all();
+    expect(links.length).toBeGreaterThan(0);
+    for (const a of links) {
+      await expect(a).toHaveAttribute("href", "/realizacje/");
     }
   });
 
-  test("desktop: kafel pod galerią nawiguje na podstronę", async ({
-    page,
-    isMobile,
-  }) => {
-    test.skip(!!isMobile, "kafel widoczny tylko na desktop");
+  test("CTA zajawki nawiguje na podstronę", async ({ page }) => {
     await gotoReady(page);
-    // Zwykła nawigacja stronicowa — Playwright doscrolluje do linku natywnie.
-    await page.locator(".work__more-wrap a[data-work-more]").click();
-    await expect(page).toHaveURL(/\/realizacje\/?$/);
-    await expect(page.locator(".wix-grid")).toBeVisible();
-  });
-
-  test("mobile: slajd karuzeli nawiguje na podstronę", async ({
-    page,
-    isMobile,
-  }) => {
-    test.skip(!isMobile, "slajd CTA żyje w karuzeli mobilnej");
-    await gotoReady(page);
-    const slide = page.locator(".wk-car a[data-work-more]");
-    await slide.scrollIntoViewIfNeeded();
-    await page.waitForTimeout(300);
-    await slide.click();
+    // Na desktopie CTA żyje w scenie przypiętej — dojazd na początek
+    // sekcji pokazuje pin z widocznym CTA; na mobile CTA stoi we flow.
+    const secTop = await page.evaluate(
+      () => document.querySelector<HTMLElement>("[data-home-re]")!.offsetTop,
+    );
+    await scrollPageTo(page, secTop + 10);
+    await page.locator(".re-cta a[data-work-more]").click();
     await expect(page).toHaveURL(/\/realizacje\/?$/);
     await expect(page.locator(".wix-grid")).toBeVisible();
   });

@@ -1,49 +1,44 @@
-// Sekcja Realizacje: kafle z Content Collections + otwieranie/zamykanie
-// WorkDetail. Desktop (≥761px): galeria `.work__gallery` → Modal. Mobile
-// (≤760px): karuzela `.wk-car` → BottomSheet. Strona główna pokazuje max 3.
+// Sekcja Realizacje NA STRONIE GŁÓWNEJ (zajawka .re z części 4.2,
+// docs/analiza-strona-glowna.md D-SG6): max 3 wpisy z Content Collections,
+// kafle otwierają WorkDetail w Modalu (desktop, scena przypięta) /
+// BottomSheet (mobile, karty w kolumnie) przez overlay.ts. Pokrycie
+// nakładek na podstronie /realizacje/ biega w work-index.spec.ts.
 import { readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { expect, test, type Page } from "@playwright/test";
-import { gotoReady } from "../helpers/scroll";
-
-// CAŁY spec dotyczy sekcji Realizacje NA STRONIE GŁÓWNEJ (galeria/karuzela
-// + nakładki) — sekcja powstaje w Etapie 4, szkielet głównej jej nie ma.
-// Pokrycie nakładek na podstronie /realizacje/ biega w work-index.spec.ts.
-// Odskipować (i zaadaptować selektory do designu delung) przy porcie
-// strony głównej.
-test.skip(() => true, "sekcja Realizacje na stronie głównej — Etap 4");
+import { expect, test } from "@playwright/test";
+import { usePreviewGuard } from "../helpers/guards";
+import { gotoReady, scrollPageTo } from "../helpers/scroll";
 
 const ENTRY_COUNT = readdirSync(
   fileURLToPath(new URL("../../src/content/realizacje", import.meta.url)),
 ).filter((f) => f.endsWith(".json")).length;
 
-// Strona główna kapuje listę do 3 (pełna lista: /realizacje/, work-index.spec.ts).
+// Strona główna kapuje listę do 3 (pełna lista: /realizacje/).
 const HOME_COUNT = Math.min(3, ENTRY_COUNT);
 
-/** Dociera do kafla i uspokaja scroll (guard „strona w ruchu" blokuje otwarcie
- *  nakładki przez ~110 ms po scrollu). Selektor zależny od layoutu. */
-async function revealFirstCard(page: Page, selector: string) {
-  const card = page.locator(selector).first();
-  await card.scrollIntoViewIfNeeded();
-  await page.waitForTimeout(300);
-  return card;
-}
+usePreviewGuard();
 
-test("galeria desktopowa pokazuje max 3 realizacje", async ({ page }) => {
+test("zajawka pokazuje max 3 realizacje", async ({ page }) => {
   await gotoReady(page);
-  await expect(page.locator(".work__gallery [data-work-slug]")).toHaveCount(
+  await expect(page.locator("[data-recards] [data-work-slug]")).toHaveCount(
     HOME_COUNT,
   );
 });
 
-test.describe("desktop: Modal", () => {
+test.describe("desktop: Modal ze sceny przypiętej", () => {
   test.skip(({ isMobile }) => !!isMobile, "modal tylko na desktop");
 
-  test("klik w kafel otwiera modal z treścią projektu, × i Escape zamykają", async ({
+  test("klik w stos otwiera modal bieżącej realizacji, × i Escape zamykają", async ({
     page,
   }) => {
     await gotoReady(page);
-    const card = await revealFirstCard(page, ".work__gallery [data-work-slug]");
+    // Początek sceny przypiętej → wierzchni (klikalny) kafel = pierwsza
+    // realizacja; clip-path pozostałych przycina też ich hit-testing.
+    const secTop = await page.evaluate(
+      () => document.querySelector<HTMLElement>("[data-home-re]")!.offsetTop,
+    );
+    await scrollPageTo(page, secTop + 10);
+    const card = page.locator("[data-recards] [data-work-slug]").first();
     const name = await card.getAttribute("data-work-name");
     const modal = page.locator("#work-modal");
 
@@ -64,14 +59,16 @@ test.describe("desktop: Modal", () => {
   });
 });
 
-test.describe("mobile: BottomSheet (karuzela)", () => {
+test.describe("mobile: BottomSheet z karty zajawki", () => {
   test.skip(({ isMobile }) => !isMobile, "sheet tylko na mobile");
 
-  test("tap w kartę karuzeli otwiera sheet; zamykanie przyciskiem", async ({
-    page,
-  }) => {
+  test("tap w kartę otwiera sheet; zamykanie przyciskiem", async ({ page }) => {
     await gotoReady(page);
-    const card = await revealFirstCard(page, ".wk-car [data-work-slug]");
+    // Dociera do karty i uspokaja scroll (guard „strona w ruchu" blokuje
+    // otwarcie nakładki przez ~110 ms po scrollu).
+    const card = page.locator("[data-recards] [data-work-slug]").first();
+    await card.scrollIntoViewIfNeeded();
+    await page.waitForTimeout(300);
     const sheet = page.locator("#work-sheet");
 
     await card.click();

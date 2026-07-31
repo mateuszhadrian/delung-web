@@ -1,67 +1,96 @@
 ---
-// Szkielet strony głównej (Etap 0) — „pusta ale żywa": navbar + hero-placeholder
-// + footer. Docelowe sekcje wg docs/design/index.html powstają w Etapie 4
-// (hero, zajawki oferta/proces/realizacje/o-nas, opinie, CTA kontaktu).
+// Strona główna (część 4.2) — port docs/design/index.html; decyzje:
+// docs/analiza-strona-glowna.md. Navbar w wariancie `over` (transparentny
+// nad hero, postęp --p mierzy [data-navref] w HomeHero). Ruch strony
+// (home-scroll.ts) ładowany dynamicznie tylko przy motion OK; stany
+// startowe animacji uzbraja klasa html.js-motion nadawana inline PRZED
+// paintem (zero CLS) — bez JS / przy reduce strona jest w pełni statyczna.
 import BaseLayout from "@/layouts/BaseLayout.astro";
 import Navbar from "@/components/navbar/Navbar.astro";
 import Footer from "@/components/Footer.astro";
+import HomeHero from "@/components/sections/home/HomeHero.astro";
+import HomeTrust from "@/components/sections/home/HomeTrust.astro";
+import HomeOferta from "@/components/sections/home/HomeOferta.astro";
+import HomeProces from "@/components/sections/home/HomeProces.astro";
+import HomeRealizacje from "@/components/sections/home/HomeRealizacje.astro";
+import HomeAbout from "@/components/sections/home/HomeAbout.astro";
+import HomeOpinie from "@/components/sections/home/HomeOpinie.astro";
+import HomeKontakt from "@/components/sections/home/HomeKontakt.astro";
+// Preload hero mobile (LCP): obraz startował ~1.9 s po TTFB — czekał
+// w kolejce za preloadowanymi fontami/CSS. imagesrcset IDENTYCZNY jak
+// w <source> HomeHero (zmieniać w parze).
+import heroMobile from "@/assets/home/hero-mobile.webp";
+import heroMobileSm from "@/assets/home/hero-mobile-sm.webp";
+
+// Opis = lead hero (spójny z opisami podstron; dotąd strona główna była
+// bez description — szkielet Etapu 0).
+const DESCRIPTION =
+  "Meble na wymiar dopasowane do Twojego wnętrza. Kompleksowo projektujemy " +
+  "i realizujemy kuchnie z wyposażeniem AGD, szafy, przestrzenie komercyjne " +
+  "oraz eleganckie dekoracje okienne.";
 ---
 
-<BaseLayout>
-  <Navbar />
+<BaseLayout description={DESCRIPTION}>
+  <link
+    slot="head"
+    rel="preload"
+    as="image"
+    media="(max-width: 1023px)"
+    imagesrcset={`${heroMobileSm.src} 1.8x, ${heroMobile.src} 3x`}
+    fetchpriority="high"
+  />
 
-  <main class="page">
-    <section class="hero-skeleton">
-      <p class="kicker">Delung Meble</p>
-      <h1>Meble na wymiar</h1>
-      <p class="lead">
-        Kuchnie, szafy i garderoby, zabudowy łazienkowe i nietypowe projekty —
-        strona w budowie.
-      </p>
-    </section>
+  <script is:inline>
+    // PRZED paintem: motion OK → html.js-motion (uzbraja stany startowe
+    // revealów i sceny przypięte — reszta w home-scroll.ts, ładowanym niżej).
+    if (window.matchMedia("(prefers-reduced-motion: no-preference)").matches) {
+      document.documentElement.classList.add("js-motion");
+    }
+  </script>
+
+  <Navbar variant="over" />
+
+  <main>
+    <HomeHero />
+    <HomeTrust />
+    <HomeOferta />
+    <HomeProces />
+    <HomeRealizacje />
+    <HomeAbout />
+    <HomeOpinie />
+    <HomeKontakt />
   </main>
 
   <Footer />
 </BaseLayout>
 
-<style>
-  .page {
-    position: relative;
-    z-index: 1;
-    /* pasek jest sticky w flow — hero wypełnia resztę pierwszego ekranu */
-    min-height: calc(100svh - var(--hdr-h, 74px));
-    display: flex;
-    flex-direction: column;
-  }
-  .hero-skeleton {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: flex-start;
-    gap: 1.2rem;
-    padding: clamp(6rem, 18vh, 9rem) clamp(1.5rem, 6vw, 5rem) 4rem;
-  }
-  .kicker {
-    margin: 0;
-    font-family: var(--font-mono), monospace;
-    font-size: 11px;
-    letter-spacing: 0.3em;
-    text-transform: uppercase;
-    color: var(--accent-ink);
-  }
-  h1 {
-    margin: 0;
-    font-family: var(--font-display), serif;
-    font-size: clamp(2.4rem, 6vw, 4.5rem);
-    line-height: 1.05;
-    color: var(--ink);
-  }
-  .lead {
-    margin: 0;
-    max-width: 42ch;
-    color: var(--muted);
-    font-family: var(--font-body), sans-serif;
-    line-height: 1.6;
+<style is:global>
+  /* Odsłanianie treści przy przewijaniu — tylko widok mobilny (desktop ma
+     własne animacje sekcji); stan startowy WYŁĄCZNIE pod html.js-motion
+     (bez JS / przy reduce treść od razu widoczna — reguła sections.md).
+     Globalnie: spany rv tworzą wszystkie sekcje home. */
+  @media (max-width: 1023px) {
+    html.js-motion [data-rev] {
+      opacity: 0;
+      transform: translateY(22px);
+      transition:
+        opacity 0.7s ease,
+        transform 0.8s cubic-bezier(0.22, 0.61, 0.36, 1);
+    }
+    html.js-motion [data-rev].rv-in {
+      opacity: 1;
+      transform: none;
+    }
+    html.js-motion [data-rev="soft"],
+    html.js-motion [data-rev="soft"].rv-in {
+      transform: none;
+    }
   }
 </style>
+
+<script>
+  // Ruch strony głównej — dynamicznie, tylko przy motion OK (D-SG9).
+  if (matchMedia("(prefers-reduced-motion: no-preference)").matches) {
+    import("@/components/sections/home/home-scroll");
+  }
+</script>

@@ -16,6 +16,18 @@ export default tseslint.config(
     },
   },
   {
+    rules: {
+      // Przewijane regiony (karuzele bez focusowalnych dzieci) MUSZĄ mieć
+      // tabindex — wymaga tego axe (scrollable-region-focusable, ratchet
+      // pustej allowlisty). Reguła zna z defaultu tylko "tabpanel" —
+      // dopuszczamy też landmark "region" (wzorzec: role + aria-label).
+      "astro/jsx-a11y/no-noninteractive-tabindex": [
+        "error",
+        { tags: [], roles: ["tabpanel", "region"] },
+      ],
+    },
+  },
+  {
     ignores: [
       "dist/",
       ".astro/",

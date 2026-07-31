@@ -1,0 +1,636 @@
+---
+// Hero strony głównej (docs/analiza-strona-glowna.md D-SG2/D-SG3).
+// Mobile (<1024): zdjęcie na resztę pierwszego ekranu (100dvh - pasek,
+// --hdr-h dostarcza navbar 4.1) + h1/lead/CTA, parallax data-par.
+// Desktop (≥1024): cztery pełnoekranowe kadry w pętli crossfade 26 s
+// (Ken Burns) + typografia SVG — nazwy kategorii wypełnione zdjęciem
+// (clip-path po tekście, glow/cień z eksportu, pan). [data-navref] mierzy
+// postęp wariantu `over` navbara. h1 dla desktopu wizualnie ukryty
+// (sr-only; desktopowy hero nie ma nagłówka tekstowego w designie).
+// prefers-reduced-motion: zostaje statyczny pierwszy kadr.
+import { CONTACT_PATH } from "@/lib/routes";
+// hero-mobile.webp = PRZYCIĘTY wycinek źródła w pełnej rozdzielczości
+// (jakość hero — korekta 4.2): kadr mobile pokazuje tylko pas zdjęcia,
+// więc zamiast pomniejszonej całości serwujemy sam pas 1:1.
+// Krop [left=240, width=1984, pełna wysokość] jest wyliczony pod
+// SKALIBROWANĄ kotwicę `--hero-x: 25%` tak, żeby dawała na KAŻDYM
+// viewporcie ten sam kadr co pełne zdjęcie. Reguła dla kotwicy P:
+// prawa krawędź R = 2944 − L·(1−P)/P (dla P=25%: R = 2944 − 3·L);
+// L dobrane z zapasem pod skrajne viewporty mobile (landscape ≤1023px).
+// Zmiana kalibracji kadru (--hero-zoom/--hero-x/--hero-up) = przelicz
+// krop od nowa na pełnym źródle. Regeneracja:
+//   node -e "require('sharp')('docs/design/assets/img/kaszmir-wood1.png')
+//     .extract({left:240,top:0,width:1984,height:1648})
+//     .webp({quality:78}).toFile('src/assets/home/hero-mobile.webp')"
+// Wariant gęstości ≤1.8x (LCP; ten sam krop, przeskalowany):
+//   node -e "require('sharp')('docs/design/assets/img/kaszmir-wood1.png')
+//     .extract({left:240,top:0,width:1984,height:1648})
+//     .resize({width:1240})
+//     .webp({quality:74}).toFile('src/assets/home/hero-mobile-sm.webp')"
+import heroMobile from "@/assets/home/hero-mobile.webp";
+import heroMobileSm from "@/assets/home/hero-mobile-sm.webp";
+import heroKuchnie from "@/assets/home/hero-kuchnie.webp";
+import heroLazienki from "@/assets/home/hero-lazienki.webp";
+import heroKomercyjne from "@/assets/home/hero-komercyjne.webp";
+import heroGarderoby from "@/assets/home/hero-garderoby.webp";
+
+// Pusty obrazek do <source> drugiego breakpointu (fix transferu — patrz
+// komentarz przy markupie). SVG bez przecinków: przecinek w data URI
+// rozbiłby parsowanie srcset.
+const BLANK_IMG =
+  "data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='1'%20height='1'/%3E";
+
+const H1 = "Twoja przestrzeń, twoje zasady";
+const LEAD =
+  "Meble na wymiar dopasowane do Twojego wnętrza. Kompleksowo projektujemy " +
+  "i realizujemy kuchnie z wyposażeniem AGD, szafy, przestrzenie komercyjne " +
+  "oraz eleganckie dekoracje okienne.";
+
+// Kadry hero desktop — kolejność i kadrowanie 1:1 z eksportu; teksty SVG
+// (nazwy kategorii) zdefiniowane wprost w markupie niżej (tspany kadru 3).
+const FRAMES = [
+  {
+    img: heroKuchnie,
+    alt: "Kuchnia na wymiar z jadalnią — fronty drewniane i kaszmirowe, podświetlenie LED",
+    pos: "45% 50%",
+    origin: "18% 82%",
+  },
+  {
+    img: heroLazienki,
+    alt: "Łazienka na wymiar — szafka podumywalkowa, lamele drewniane i marmur",
+    pos: "55% 50%",
+    origin: "82% 20%",
+  },
+  {
+    img: heroKomercyjne,
+    alt: "Wyposażenie salonu jubilerskiego — witryny i gabloty na wymiar",
+    pos: "50% 55%",
+    origin: "80% 78%",
+  },
+  {
+    img: heroGarderoby,
+    alt: "Garderoba na wymiar — półki z podświetleniem, drążek i witryna ryflowana",
+    pos: "42% 50%",
+    origin: "20% 22%",
+  },
+] as const;
+
+// Styl tekstu SVG — rola Helvetiki 900 z eksportu gra Archivo Variable.
+const SVG_TEXT_STYLE =
+  "font-family:'Archivo Variable',Helvetica,Arial,sans-serif;" +
+  "font-weight:900;font-size:144px;letter-spacing:-1.44px";
+---
+
+{
+  /* JEDYNY h1 strony — sr-only POZA gałęziami display:none obu wariantów
+     hero (smoke asertuje jeden widoczny `main h1` na każdym profilu;
+     Playwright: sr-only ma niepusty box). Widoczny nagłówek mobile niżej
+     to stylizowany <p> z tym samym tekstem. */
+}
+<h1 class="sr-only">{H1}</h1>
+
+{/* HERO desktop: cztery kadry + nazwy kategorii wypełnione zdjęciem */}
+{
+  /* <picture> z pustym <source> dla drugiego breakpointu: display:none NIE
+     zatrzymuje pobierania obrazów — bez tego telefon ściągał kadry
+     desktopowe, a desktop zdjęcie mobilne (fix transferu 4.2). */
+}
+<div class="hero-d" data-navref>
+  {
+    FRAMES.map((f, i) => (
+      <div class={`heroimg f${i}`}>
+        <picture>
+          {/* realny URL w <source media>, w img src blank — speculative
+               preload scanner Chromium pobiera img@src niezależnie od
+               dopasowania source'ów; w tym układzie podąża za media. */}
+          <source media="(min-width: 1024px)" srcset={f.img.src} />
+          <img
+            src={BLANK_IMG}
+            width={f.img.width}
+            height={f.img.height}
+            alt={f.alt}
+            fetchpriority={i === 0 ? "high" : undefined}
+            loading={i === 0 ? "eager" : "lazy"}
+            decoding="async"
+            style={`object-position:${f.pos};transform-origin:${f.origin}`}
+          />
+        </picture>
+      </div>
+    ))
+  }
+  <svg viewBox="0 0 1440 900" preserveAspectRatio="xMinYMid slice">
+    <defs>
+      <text id="hg-t0" x="96" y="562" style={SVG_TEXT_STYLE}>Kuchnie</text>
+      <clipPath id="hg-c0"><use href="#hg-t0"></use></clipPath>
+      <text id="hg-t1" x="96" y="562" style={SVG_TEXT_STYLE}>Łazienki</text>
+      <clipPath id="hg-c1"><use href="#hg-t1"></use></clipPath>
+      <text id="hg-t2" x="96" y="562" style={SVG_TEXT_STYLE}>
+        <tspan x="96" dy="-0.5em">Wnętrza</tspan>
+        <tspan x="96" dy="1.02em">komercyjne</tspan>
+      </text>
+      <clipPath id="hg-c2"><use href="#hg-t2"></use></clipPath>
+      <text id="hg-t3" x="96" y="562" style={SVG_TEXT_STYLE}>Garderoby</text>
+      <clipPath id="hg-c3"><use href="#hg-t3"></use></clipPath>
+      {
+        /* Poświata + cień tekstu (halo ×2 + przesunięty drop) — 1:1 z eksportu */
+      }
+      <filter id="hg-glow" x="-8%" y="-110%" width="116%" height="340%">
+        <feGaussianBlur in="SourceAlpha" stdDeviation="1" result="b1"
+        ></feGaussianBlur>
+        <feFlood flood-color="#ffffff" flood-opacity="0.5" result="c1"
+        ></feFlood>
+        <feComposite in="c1" in2="b1" operator="in" result="halo"></feComposite>
+        <feGaussianBlur in="SourceAlpha" stdDeviation="1" result="b2"
+        ></feGaussianBlur>
+        <feFlood flood-color="#ffffff" flood-opacity="0.7" result="c2"
+        ></feFlood>
+        <feComposite in="c2" in2="b2" operator="in" result="glow"></feComposite>
+        <feOffset in="SourceAlpha" dx="5" dy="18" result="o3"></feOffset>
+        <feGaussianBlur in="o3" stdDeviation="13" result="b3"></feGaussianBlur>
+        <feFlood flood-color="#000000" flood-opacity="1" result="c3"></feFlood>
+        <feComposite in="c3" in2="b3" operator="in" result="drop"></feComposite>
+        <feMerge>
+          <feMergeNode in="drop"></feMergeNode>
+          <feMergeNode in="glow"></feMergeNode>
+          <feMergeNode in="halo"></feMergeNode>
+        </feMerge>
+      </filter>
+    </defs>
+    {
+      FRAMES.map((f, i) => (
+        <g class={`herotxt f${i}`}>
+          <use href={`#hg-t${i}`} fill="#ffffff" filter="url(#hg-glow)" />
+          <g clip-path={`url(#hg-c${i})`}>
+            <rect x="0" y="0" width="1440" height="900" fill="#2a2320" />
+            {/* href wstrzykuje skrypt niżej TYLKO na desktopie — <image>
+                 w SVG ładuje się nawet w display:none (telefon pobierał
+                 wszystkie kadry). Bez JS tekst ma ciemne wypełnienie
+                 (rect) + glow — czytelna degradacja. */}
+            <image
+              class={`pan${i}`}
+              data-href={f.img.src}
+              x="-1962.5"
+              y="-293.1"
+              width="4002"
+              height="2240"
+              preserveAspectRatio="xMidYMid slice"
+            />
+          </g>
+        </g>
+      ))
+    }
+  </svg>
+</div>
+
+{/* HERO mobile */}
+<section class="hero" data-par-host>
+  <picture>
+    {
+      /* realny URL w <source media> — patrz komentarz przy kadrach wyżej.
+         Warianty gęstości (LCP na wolnych urządzeniach): ekrany DPR ≤1.8
+         (klasa Moto G — emulacja Lighthouse) dostają lżejszy plik 174 KB;
+         DPR ≥2 (iPhone/Pixel — kalibrowana jakość) pełny wycinek.
+         Preload w Home.astro trzyma IDENTYCZNY imagesrcset — zmiany
+         synchronizować w parze. */
+    }
+    <source
+      media="(max-width: 1023px)"
+      srcset={`${heroMobileSm.src} 1.8x, ${heroMobile.src} 3x`}
+    />
+    <img
+      class="hero-img"
+      src={BLANK_IMG}
+      width={heroMobile.width}
+      height={heroMobile.height}
+      alt="Zabudowa kuchenna ze zlewem i podświetleniem"
+      fetchpriority="high"
+      decoding="async"
+      data-par="0.07"
+    />
+  </picture>
+  <div class="hero-in">
+    <div class="hero-txt">
+      <p class="hero-head" data-rev>{H1}</p>
+      <div class="hero-rule" data-rev></div>
+      <p class="hero-lead" data-rev>{LEAD}</p>
+    </div>
+    <a class="hero-btn" href={CONTACT_PATH} data-rev>
+      <span>Skontaktuj się z nami</span>
+      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path
+          d="M6 18L18 6M18 6H8M18 6v10"
+          stroke="#fff"
+          stroke-width="1.5"
+          stroke-linecap="round"
+          stroke-linejoin="round"></path>
+      </svg>
+    </a>
+  </div>
+</section>
+
+<style>
+  /* h1 desktopu — wizualnie ukryty, obecny dla AT/SEO (smoke: main h1). */
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  /* ── HERO mobile ── */
+  .hero-d {
+    display: none;
+  }
+  .hero {
+    position: relative;
+    overflow: hidden;
+    background: #e5e1da;
+    /* svh, NIE dvh (eksport miał dvh): dvh żyje z chowanym paskiem URL —
+       hero zmieniało wysokość W TRAKCIE scrolla, a tekst (kotwiczony do
+       dołu sekcji) skakał po zdjęciu. svh = stała wysokość „małego"
+       viewportu (pasek widoczny); po schowaniu paska pod hero wcześniej
+       wjeżdża pasek zaufania — akceptowalny standard. */
+    height: calc(100vh - var(--hdr-h, 74px));
+    height: calc(100svh - var(--hdr-h, 74px));
+    min-height: 400px;
+  }
+  .hero-img {
+    /* ═══ KALIBRACJA KADRU HERO (strojenie: Mateusz) ═══════════════════
+       --hero-zoom : zbliżenie. 1 = zdjęcie dokładnie na wysokość sekcji
+                     (maksymalne oddalenie); większe = bliżej. Start 1.16.
+       --hero-x    : pozycja pozioma kadru 0–100% (mniej = w lewo,
+                     więcej = w prawo). Start 10%.
+       --hero-up   : podniesienie kadru w px (więcej = widzisz NIŻSZĄ
+                     część zdjęcia / kreska blatu wyżej; może być ujemne).
+                     Start 210px (≙ dotychczasowe „eksport + 130px").
+       Po kalibracji: wartości zostają, a plik hero-mobile.webp tniemy
+       ponownie do faktycznie używanego wycinka (procedura w analizie). */
+    --hero-zoom: 0.9;
+    --hero-x: 25%;
+    --hero-up: 270px;
+
+    position: absolute;
+    left: 0;
+    width: 100%;
+    /* 240px = zapas na parallax; +var(--hero-up) w wysokości gwarantuje,
+       że podniesienie kadru nigdy nie odsłoni dołu sekcji (dolna krawędź
+       obrazu zawsze ≥120px pod sekcją; --hero-up trzymać > -120px). */
+    height: calc(100% * var(--hero-zoom) + 240px + var(--hero-up));
+    top: calc((100% - 100% * var(--hero-zoom)) / 2 - 120px - var(--hero-up));
+    object-fit: cover;
+    object-position: var(--hero-x) 50%;
+  }
+  .hero-in {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    color: #fff;
+    padding-block: 26px 30px;
+    padding-inline: var(--pad);
+    width: 100%;
+    max-width: var(--col);
+    margin-inline: auto;
+  }
+  .hero-head {
+    font-family: var(--font-display), sans-serif;
+    font-weight: 200;
+    font-size: clamp(19px, 9.23vw, 40px);
+    line-height: 1.06;
+    letter-spacing: 0.01em;
+    text-shadow: 0 1px 10px rgba(0, 0, 0, 0.34);
+    text-wrap: pretty;
+  }
+  .hero-rule {
+    width: 44px;
+    height: 1px;
+    background: rgba(255, 255, 255, 0.65);
+    margin: 14px 0 18px;
+  }
+  /* klasa, nie `.hero p` — nagłówek .hero-head to też <p> (jedyny h1
+     strony jest sr-only nad wariantami); selektor elementowy wygrywałby
+     specyficznością i zgniatał nagłówek do rozmiaru leada */
+  .hero-lead {
+    margin-bottom: 26px;
+    font-family: var(--font-display), sans-serif;
+    font-weight: 200;
+    font-size: clamp(9px, 4.1vw, 17px);
+    line-height: 1.38;
+    width: 100%;
+    min-width: min(39ch, 100%);
+    max-width: 100%;
+    color: rgba(255, 255, 255, 0.94);
+    text-shadow: 0 1px 9px rgba(0, 0, 0, 0.67);
+    text-wrap: pretty;
+  }
+  .hero-btn {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    color: #fff;
+    border-radius: 999px;
+    padding: 13px 26px;
+    font-family: var(--font-body), sans-serif;
+    font-weight: 500;
+    font-size: clamp(14px, 4.1vw, 17px);
+    line-height: 1;
+    text-decoration: none;
+    backdrop-filter: blur(3px);
+    text-shadow: 0 1px 6px rgba(0, 0, 0, 0.3);
+  }
+  .hero-btn:hover {
+    background: rgba(255, 255, 255, 0.18);
+  }
+  .hero-btn svg {
+    width: 26px;
+    height: 26px;
+    flex: none;
+  }
+  /* od 431 px tekst wyżej o 80 px — przycisk zostaje (wzorzec eksportu) */
+  @media (min-width: 431px) and (max-width: 1023px) {
+    .hero-txt {
+      transform: translateY(-80px);
+    }
+  }
+
+  /* ── HERO desktop ≥1024 (para: HOME_DESKTOP_MIN_PX) ── */
+  @media (min-width: 1024px) {
+    .hero {
+      display: none;
+    }
+    .hero-d {
+      display: block;
+      position: relative;
+      height: 100vh;
+      height: 100dvh;
+      min-height: 620px;
+      overflow: hidden;
+      background: var(--bg-dark);
+    }
+    .heroimg {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      /* Baza BEZ animacji (reduce / freeze.css testów): widoczny pierwszy
+         kadr; pętla nadpisuje te wartości keyframe'ami. */
+      opacity: 0;
+    }
+    .heroimg.f0 {
+      opacity: 1;
+    }
+    .heroimg img {
+      position: absolute;
+      left: -3%;
+      top: -3%;
+      width: 106%;
+      height: 106%;
+      object-fit: cover;
+      will-change: transform;
+      backface-visibility: hidden;
+    }
+    .hero-d svg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    /* pętla 26 s: crossfade kadrów (f0–f3) + Ken Burns zdjęć */
+    .heroimg.f0 {
+      animation: hero-op0 26s linear -3s infinite;
+    }
+    .heroimg.f0 img {
+      animation: hero-kb0 26s linear -3s infinite;
+    }
+    .heroimg.f1 {
+      animation: hero-op1 26s linear -3s infinite;
+    }
+    .heroimg.f1 img {
+      animation: hero-kb1 26s linear -3s infinite;
+    }
+    .heroimg.f2 {
+      animation: hero-op2 26s linear -3s infinite;
+    }
+    .heroimg.f2 img {
+      animation: hero-kb2 26s linear -3s infinite;
+    }
+    .heroimg.f3 {
+      animation: hero-op3 26s linear -3s infinite;
+    }
+    .heroimg.f3 img {
+      animation: hero-kb3 26s linear -3s infinite;
+    }
+    .herotxt {
+      /* baza bez animacji jak .heroimg — widoczna pierwsza grupa tekstu */
+      opacity: 0;
+    }
+    .herotxt.f0 {
+      opacity: 1;
+      animation: hero-op0 26s linear -3s infinite;
+    }
+    .herotxt.f1 {
+      animation: hero-op1 26s linear -3s infinite;
+    }
+    .herotxt.f2 {
+      animation: hero-op2 26s linear -3s infinite;
+    }
+    .herotxt.f3 {
+      animation: hero-op3 26s linear -3s infinite;
+    }
+    /* pan obrazów w masce tekstu (kierunek/czas na przemian z eksportu) */
+    .hero-d svg image {
+      filter: brightness(1.25) contrast(1.05);
+    }
+    image.pan0 {
+      animation: hero-pan-r 22s ease-in-out infinite alternate;
+    }
+    image.pan1 {
+      animation: hero-pan-l 19s ease-in-out infinite alternate;
+    }
+    image.pan2 {
+      animation: hero-pan-r 24s ease-in-out infinite alternate;
+    }
+    image.pan3 {
+      animation: hero-pan-l 21s ease-in-out infinite alternate;
+    }
+  }
+
+  @keyframes hero-op0 {
+    0% {
+      opacity: 0;
+    }
+    6.15% {
+      opacity: 1;
+    }
+    25% {
+      opacity: 1;
+    }
+    31.15% {
+      opacity: 0;
+    }
+    100% {
+      opacity: 0;
+    }
+  }
+  @keyframes hero-op1 {
+    0%,
+    25% {
+      opacity: 0;
+    }
+    31.15%,
+    50% {
+      opacity: 1;
+    }
+    56.15%,
+    100% {
+      opacity: 0;
+    }
+  }
+  @keyframes hero-op2 {
+    0%,
+    50% {
+      opacity: 0;
+    }
+    56.15%,
+    75% {
+      opacity: 1;
+    }
+    81.15%,
+    100% {
+      opacity: 0;
+    }
+  }
+  @keyframes hero-op3 {
+    0% {
+      opacity: 1;
+    }
+    6.15%,
+    75% {
+      opacity: 0;
+    }
+    81.15%,
+    100% {
+      opacity: 1;
+    }
+  }
+  @keyframes hero-kb0 {
+    0% {
+      transform: scale(1) translate3d(0, 0, 0);
+    }
+    31.15% {
+      transform: scale(1.09) translate3d(-0.7%, 0.7%, 0);
+    }
+    100% {
+      transform: scale(1) translate3d(0, 0, 0);
+    }
+  }
+  @keyframes hero-kb1 {
+    0%,
+    25% {
+      transform: scale(1) translate3d(0, 0, 0);
+    }
+    56.15% {
+      transform: scale(1.09) translate3d(0.7%, -0.6%, 0);
+    }
+    100% {
+      transform: scale(1) translate3d(0, 0, 0);
+    }
+  }
+  @keyframes hero-kb2 {
+    0%,
+    50% {
+      transform: scale(1.09) translate3d(0.6%, 0.5%, 0);
+    }
+    81.15% {
+      transform: scale(1) translate3d(0, 0, 0);
+    }
+    100% {
+      transform: scale(1.09) translate3d(0.6%, 0.5%, 0);
+    }
+  }
+  @keyframes hero-kb3 {
+    0% {
+      transform: scale(1.0722) translate3d(-0.48%, -0.56%, 0);
+    }
+    6.15% {
+      transform: scale(1.09) translate3d(-0.6%, -0.7%, 0);
+    }
+    75% {
+      transform: scale(1) translate3d(0, 0, 0);
+    }
+    100% {
+      transform: scale(1.0722) translate3d(-0.48%, -0.56%, 0);
+    }
+  }
+  @keyframes hero-pan-r {
+    from {
+      transform: translateX(-100px);
+    }
+    to {
+      transform: translateX(100px);
+    }
+  }
+  @keyframes hero-pan-l {
+    from {
+      transform: translateX(100px);
+    }
+    to {
+      transform: translateX(-100px);
+    }
+  }
+
+  /* Reduce: statyczny pierwszy kadr (bez pętli, bez Ken Burns/pan). */
+  @media (prefers-reduced-motion: reduce) {
+    .heroimg,
+    .heroimg img,
+    .herotxt,
+    .hero-d svg image {
+      animation: none !important;
+    }
+    .heroimg,
+    .herotxt {
+      opacity: 0;
+    }
+    .heroimg.f0,
+    .herotxt.f0 {
+      opacity: 1;
+    }
+  }
+</style>
+
+<script>
+  // Kadry w masce SVG tylko dla desktopu: <image href> ładuje się nawet
+  // w poddrzewie display:none, więc telefon pobierał wszystkie kadry
+  // (672 KB). href wstrzykujemy przy ≥1024 (raz — przejście progu w górę
+  // też łapiemy); pliki są już w cache po <img> kadrów. Bez JS desktop
+  // pokazuje tekst z ciemnym wypełnieniem + glow (czytelna degradacja).
+  import { HOME_DESKTOP_MIN_PX } from "./home-config";
+
+  const mq = matchMedia(`(min-width:${HOME_DESKTOP_MIN_PX}px)`);
+  const fillSvgFrames = () => {
+    document
+      .querySelectorAll<SVGImageElement>(".hero-d image[data-href]")
+      .forEach((im) => {
+        im.setAttribute("href", im.dataset.href ?? "");
+        im.removeAttribute("data-href");
+      });
+  };
+  if (mq.matches) {
+    fillSvgFrames();
+  } else {
+    mq.addEventListener("change", (e) => e.matches && fillSvgFrames(), {
+      once: true,
+    });
+  }
+</script>

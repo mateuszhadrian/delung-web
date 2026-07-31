@@ -11,7 +11,7 @@ import {
   useChromium1920Only,
   usePreviewGuard,
 } from "../helpers/guards";
-import { gotoReady, scrollPageTo, settle } from "../helpers/scroll";
+import { gotoReady, scrollPageTo } from "../helpers/scroll";
 
 const SITE = "https://delung.pl";
 
@@ -113,26 +113,23 @@ for (const p of PAGES) {
 }
 
 test.describe("banner na stronie głównej", () => {
-  // Banner CTA kontaktu na stronie głównej (finał strony + crossfade RED)
-  // powstaje w Etapie 4 — szkielet głównej go nie ma. Odskipować przy porcie
-  // strony głównej.
-  test.skip(() => true, "banner kontaktu na stronie głównej — Etap 4");
-
+  // Banner CTA kontaktu (sekcja .ko z części 4.2, docs/analiza-strona-glowna.md
+  // D-SG8): kotwica #contact, CTA → /kontakt/ (desktop), wiersze/pigułki
+  // tel/mail składane w JS (antyscraping D-CH5 — surowy dist pilnuje osobno
+  // grep w contact.spec.ts).
   for (const p of PAGES) {
-    test(`${p.homePath}: status + button → ${p.path}, bez formularza`, async ({
+    test(`${p.homePath}: kotwica #contact — banner bez formularza, CTA → ${p.path}`, async ({
       page,
     }) => {
       await gotoReady(page, p.homePath);
       const banner = page.locator("#contact");
-      // Kotwica #contact zostaje (stare linki /#contact + crossfade RED),
-      // ale sekcja to już tylko banner — formularz żyje na podstronie.
+      // Kotwica #contact zostaje (stare linki /#contact), ale sekcja to
+      // tylko banner — formularz żyje na podstronie.
       await expect(banner).toBeAttached();
       await expect(banner.locator(".kt-form")).toHaveCount(0);
-      await expect(banner.locator(".kt-rev")).toHaveCount(0);
-      await expect(banner.locator(".kt-cta__status")).toContainText(
-        ui[p.lang]["contact.stOn"],
-      );
-      await expect(banner.locator(".kt-cta__btn")).toHaveAttribute(
+      // CTA (widoczne na desktopie; mobile ma wiersze tel/mail) prowadzi
+      // na podstronę kontaktu.
+      await expect(banner.locator(".ko-main a")).toHaveAttribute(
         "href",
         p.path,
       );
@@ -140,36 +137,30 @@ test.describe("banner na stronie głównej", () => {
       await expect(
         page.locator(`[data-nav] a[href="${p.path}"]`).first(),
       ).toBeAttached();
-      // Footer osadzony w sekcji bannera (finał strony: CTA na środku
-      // viewportu, stopka na jego dole).
-      await expect(page.locator("#contact .ktb-foot .ft")).toBeAttached();
+    });
+
+    test(`${p.homePath}: tel/mail bannera składane w JS (sloty D-CH5)`, async ({
+      page,
+    }) => {
+      await gotoReady(page, p.homePath);
+      const tel = page.locator("#contact a[data-tel]");
+      const mail = page.locator("#contact a[data-mail]");
+      // Wariant slotu wewnętrznego fillContactSlots: href na kotwicy,
+      // tekst w [data-slot] (ikona i etykieta wiersza zostają).
+      await expect(tel).toHaveAttribute("href", /^tel:\+48/);
+      await expect(tel.locator("[data-slot]")).toContainText("690");
+      await expect(mail).toHaveAttribute("href", /^mailto:/);
+      await expect(mail.locator("[data-slot]")).toContainText("@delung.pl");
     });
   }
 
-  test("desktop: CTA startuje zzoomowane i dojeżdża do skali 1 na dnie strony", async ({
+  test("desktop: klik w CTA bannera nawiguje na podstronę", async ({
     page,
-  }, testInfo) => {
-    test.skip(
-      testInfo.project.name !== "chromium-1920",
-      "odzoomowanie tylko desktop — jeden profil wystarczy",
-    );
-    const scaleOf = (m: string) =>
-      m === "none" ? 1 : Number(/matrix\(([-\d.]+)/.exec(m)?.[1] ?? 1);
+    isMobile,
+  }) => {
+    test.skip(!!isMobile, "CTA bannera widoczne tylko na desktopie");
     await gotoReady(page);
-    const cta = page.locator("#contact .kt-cta");
-    // Sekcja poza viewportem → stan startowy zooma (CSS .ktb.js / GSAP).
-    const before = await cta.evaluate((el) => getComputedStyle(el).transform);
-    expect(scaleOf(before)).toBeGreaterThan(1.2);
-    // Dno strony = koniec scruba → banner w formie docelowej (scale 1).
-    await scrollPageTo(page, 100_000);
-    await settle(page, 800);
-    const after = await cta.evaluate((el) => getComputedStyle(el).transform);
-    expect(scaleOf(after)).toBeCloseTo(1, 1);
-  });
-
-  test("klik w button bannera nawiguje na podstronę", async ({ page }) => {
-    await gotoReady(page);
-    const btn = page.locator("#contact .kt-cta__btn");
+    const btn = page.locator("#contact .ko-main a");
     await btn.scrollIntoViewIfNeeded();
     await page.waitForTimeout(300);
     await btn.click();
@@ -181,6 +172,6 @@ test.describe("banner na stronie głównej", () => {
     page,
   }) => {
     await gotoReady(page, "/#contact");
-    await expect(page.locator("#contact .kt-cta__head")).toBeVisible();
+    await expect(page.locator("#contact h2")).toBeVisible();
   });
 });

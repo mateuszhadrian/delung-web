@@ -137,9 +137,9 @@ treść/sekcje budowane od nowa wg `docs/design/`).
   `functions/api/kontakt.ts`, Resend + Turnstile + antyspam + KV quota);
   widok docelowy wg `docs/design/kontakt.html` w Etapie 5.
 - `src/scripts/` — `overlay.ts` (Modal/BottomSheet — focus-trap, Esc,
-  swipe-down), `smooth-scroll.ts` (Lenis; stałe desktop/touch rozdzielone
-  CELOWO — reguły), `section-helpers.ts`, `anchors.ts`, `back-link.ts`,
-  `bg-crossfade.ts`.
+  swipe-down), `smooth-scroll.ts` (Lenis TYLKO desktop; dotyk = scroll
+  natywny — decyzja 4.2, reguły), `section-helpers.ts`, `anchors.ts`,
+  `back-link.ts`, `bg-crossfade.ts`.
 - `src/lib/img.ts` — `imgAt()`: JEDYNE miejsce wiedzy o rozmiarach obrazów
   (Cloudflare Image Transformations na `media.delung.pl`; w dev pokazuje
   oryginały). Wideo BEZ transformacji — wprost z R2.
