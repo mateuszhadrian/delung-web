@@ -16,6 +16,11 @@ import HomeRealizacje from "@/components/sections/home/HomeRealizacje.astro";
 import HomeAbout from "@/components/sections/home/HomeAbout.astro";
 import HomeOpinie from "@/components/sections/home/HomeOpinie.astro";
 import HomeKontakt from "@/components/sections/home/HomeKontakt.astro";
+// Preload hero mobile (LCP): obraz startował ~1.9 s po TTFB — czekał
+// w kolejce za preloadowanymi fontami/CSS. imagesrcset IDENTYCZNY jak
+// w <source> HomeHero (zmieniać w parze).
+import heroMobile from "@/assets/home/hero-mobile.webp";
+import heroMobileSm from "@/assets/home/hero-mobile-sm.webp";
 
 // Opis = lead hero (spójny z opisami podstron; dotąd strona główna była
 // bez description — szkielet Etapu 0).
@@ -26,6 +31,15 @@ const DESCRIPTION =
 ---
 
 <BaseLayout description={DESCRIPTION}>
+  <link
+    slot="head"
+    rel="preload"
+    as="image"
+    media="(max-width: 1023px)"
+    imagesrcset={`${heroMobileSm.src} 1.8x, ${heroMobile.src} 3x`}
+    fetchpriority="high"
+  />
+
   <script is:inline>
     // PRZED paintem: motion OK → html.js-motion (uzbraja stany startowe
     // revealów i sceny przypięte — reszta w home-scroll.ts, ładowanym niżej).

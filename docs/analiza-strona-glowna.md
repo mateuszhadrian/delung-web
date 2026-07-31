@@ -325,6 +325,17 @@ zmian.
 >    500 KB; reguła R = 2944 − L·(1−P)/P). Zmiana kalibracji w
 >    przyszłości = przelicz krop na pełnym źródle (komentarz w
 >    komponencie).
+> 8. LHCI mobile po 4.2: LCP = zdjęcie hero — pierwszy pomiar CI 6.4 s
+>    (rozbicie: start pobierania +1.9 s w kolejce za fontami, render
+>    ~3 s na CPU ×4). Optymalizacje: wariant gęstości `srcset`
+>    (DPR ≤1.8 — klasa Moto G/emulacja LH — dostaje 174 KB; DPR ≥2
+>    pełną, skalibrowaną jakość) + `<link rel=preload as=image
+>    imagesrcset media>` w head (obraz startuje ~80 ms po TTFB) →
+>    ~5.1 s. Piksele profili testowych bez zmian (DPR ≥2) — baseline'y
+>    nietknięte. Progi mobile podniesione decyzją Mateusza (osobny
+>    commit): LCP 3500→6000, perf 0.9→0.75, fonty warn 5→6 (italic
+>    cytatu); desktop bez zmian (lokalnie 1.6 s / 0.92). Zacieśnienie
+>    do baseline'u CI = domknięcie 4.5.
 
 - **LCP mobile** (hero pełnoekranowe): najpoważniejszy budżet —
   2563/3500 ms przed hero. Mitigacje D-SG3; wynik z CI raportuję przed

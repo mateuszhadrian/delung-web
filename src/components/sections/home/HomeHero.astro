@@ -22,7 +22,13 @@ import { CONTACT_PATH } from "@/lib/routes";
 //   node -e "require('sharp')('docs/design/assets/img/kaszmir-wood1.png')
 //     .extract({left:240,top:0,width:1984,height:1648})
 //     .webp({quality:78}).toFile('src/assets/home/hero-mobile.webp')"
+// Wariant gęstości ≤1.8x (LCP; ten sam krop, przeskalowany):
+//   node -e "require('sharp')('docs/design/assets/img/kaszmir-wood1.png')
+//     .extract({left:240,top:0,width:1984,height:1648})
+//     .resize({width:1240})
+//     .webp({quality:74}).toFile('src/assets/home/hero-mobile-sm.webp')"
 import heroMobile from "@/assets/home/hero-mobile.webp";
+import heroMobileSm from "@/assets/home/hero-mobile-sm.webp";
 import heroKuchnie from "@/assets/home/hero-kuchnie.webp";
 import heroLazienki from "@/assets/home/hero-lazienki.webp";
 import heroKomercyjne from "@/assets/home/hero-komercyjne.webp";
@@ -179,8 +185,18 @@ const SVG_TEXT_STYLE =
 {/* HERO mobile */}
 <section class="hero" data-par-host>
   <picture>
-    {/* realny URL w <source media> — patrz komentarz przy kadrach wyżej */}
-    <source media="(max-width: 1023px)" srcset={heroMobile.src} />
+    {
+      /* realny URL w <source media> — patrz komentarz przy kadrach wyżej.
+         Warianty gęstości (LCP na wolnych urządzeniach): ekrany DPR ≤1.8
+         (klasa Moto G — emulacja Lighthouse) dostają lżejszy plik 174 KB;
+         DPR ≥2 (iPhone/Pixel — kalibrowana jakość) pełny wycinek.
+         Preload w Home.astro trzyma IDENTYCZNY imagesrcset — zmiany
+         synchronizować w parze. */
+    }
+    <source
+      media="(max-width: 1023px)"
+      srcset={`${heroMobileSm.src} 1.8x, ${heroMobile.src} 3x`}
+    />
     <img
       class="hero-img"
       src={BLANK_IMG}
