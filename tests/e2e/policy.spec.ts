@@ -93,18 +93,25 @@ test("strzałka „wstecz” wraca na stronę główną w zapamiętane miejsce",
   page,
 }) => {
   await gotoReady(page, "/");
-  // Playwright doscrolluje do linku natywnie przy kliknięciu — to zwykła
-  // nawigacja stronicowa (bez kotwic), więc sync Lenisa nie jest potrzebny.
-  await page.locator('.ft-leg a[href="/polityka-prywatnosci/"]').click();
+  const link = page.locator('.ft-leg a[href="/polityka-prywatnosci/"]');
+  // Doscrollowanie PRZED odczytem pozycji: klik i tak scrolluje link do
+  // viewportu, a mierzyć chcemy dokładnie pozycję, z której wychodzimy.
+  await link.scrollIntoViewIfNeeded();
+  const left = await page.evaluate(() => window.scrollY);
+  await link.click();
   await expect(page).toHaveURL(/\/polityka-prywatnosci\/?$/);
-  const saved = await page.evaluate(() => window.scrollY);
+  expect(await page.evaluate(() => window.scrollY)).toBe(0); // polityka od góry
 
   await page.locator("a[data-back]").click();
   await expect(page).toHaveURL(/\/$/);
   // history.back() → natywne scroll restoration przywraca pozycję sprzed
-  // przejścia (koniec strony, nie góra). Poll: przywrócenie bywa asynchroniczne.
+  // przejścia. Poll: przywrócenie bywa asynchroniczne. Na szkielecie główna
+  // mieści się w viewporcie (left ≈ 0) — asercja porównuje z zapamiętaną
+  // pozycją, więc zaostrzy się sama, gdy strona główna urośnie w Etapie 4.
   await expect
-    .poll(() => page.evaluate(() => window.scrollY), { timeout: 5000 })
-    .toBeGreaterThan(10000);
-  expect(saved).toBe(0); // sanity: polityka otwarta od góry
+    .poll(
+      async () => Math.abs((await page.evaluate(() => window.scrollY)) - left),
+      { timeout: 5000 },
+    )
+    .toBeLessThanOrEqual(2);
 });

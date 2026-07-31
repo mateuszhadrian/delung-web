@@ -10,12 +10,12 @@ test.describe("nawigacja desktop", () => {
 
   test("link Oferta nawiguje na podstronę /oferta/", async ({ page }) => {
     await gotoReady(page);
-    // Od migracji huba Oferty (docs/analiza-podstrona-oferta-hub.md)
-    // WSZYSTKIE pozycje navbara prowadzą na podstrony — w menu nie ma już
-    // ŻADNEJ kotwicy sekcji strony głównej.
+    // Wszystkie pozycje navbara delung prowadzą na podstrony (nav.ts) —
+    // strona główna ma tylko zajawki sekcji. Asercja treści celowo ogólna
+    // (main h1): przeżyje wymianę szkieletu na docelowy widok w Etapie 4.
     await page.locator('.nav-link[href="/oferta/"]').click();
     await expect(page).toHaveURL(/\/oferta\/?$/);
-    await expect(page.locator("#services .ofh-card")).toHaveCount(2);
+    await expect(page.locator("main h1")).toBeVisible();
   });
 
   test("link Realizacje nawiguje na podstronę /realizacje/", async ({
@@ -30,12 +30,22 @@ test.describe("nawigacja desktop", () => {
   test("pasek chowa się przy scrollu w dół i wraca przy scrollu w górę", async ({
     page,
   }) => {
-    await gotoReady(page);
+    // Na /realizacje/, nie na głównej: szkielet głównej mieści się w jednym
+    // viewporcie (100svh) i nie ma czym scrollować; zachowanie paska jest
+    // globalne (skrypt Navbara), więc długa podstrona wystarczy.
+    await gotoReady(page, "/realizacje/");
     const nav = page.locator("[data-nav]");
-    await scrollPageTo(page, 400);
-    await scrollPageTo(page, 1200);
+    // Pozycje z realnej wysokości strony (siatka rośnie z liczbą wpisów
+    // CMS): sztywne piksele przekraczały maxScroll — clamp przeglądarki
+    // dawał dy=0 i pasek „nie reagował" na scroll w górę.
+    const maxScroll = await page.evaluate(
+      () => document.documentElement.scrollHeight - window.innerHeight,
+    );
+    expect(maxScroll).toBeGreaterThan(200); // strażnik: jest czym scrollować
+    await scrollPageTo(page, maxScroll / 2);
+    await scrollPageTo(page, maxScroll);
     await expect(nav).toHaveAttribute("data-hidden", "");
-    await scrollPageTo(page, 700);
+    await scrollPageTo(page, maxScroll / 2);
     await expect(nav).not.toHaveAttribute("data-hidden", "");
   });
 });
@@ -61,19 +71,21 @@ test.describe("nawigacja mobile", () => {
   test("pozycja Oferta w panelu nawiguje na podstronę", async ({ page }) => {
     await gotoReady(page);
     await page.locator("[data-burger]").click();
-    // Od migracji huba Oferty menu nie ma już żadnej pozycji-kotwicy —
-    // wszystkie prowadzą na podstrony.
+    // Wszystkie pozycje panelu prowadzą na podstrony (nav.ts) — asercja
+    // treści ogólna (main h1), odporna na wymianę szkieletu w Etapie 4.
     await page.locator('.m-link[href="/oferta/"]').click();
     await expect(page).toHaveURL(/\/oferta\/?$/);
-    await expect(page.locator("#services .ofh-card")).toHaveCount(2);
+    await expect(page.locator("main h1")).toBeVisible();
   });
 
-  test("pozycja FAQ w panelu nawiguje na podstronę", async ({ page }) => {
+  test("pozycja Proces współpracy w panelu nawiguje na podstronę", async ({
+    page,
+  }) => {
     await gotoReady(page);
     await page.locator("[data-burger]").click();
-    await page.locator('.m-link[href="/faq/"]').click();
-    await expect(page).toHaveURL(/\/faq\/?$/);
-    await expect(page.locator(".fqf .fq-list")).toBeVisible();
+    await page.locator('.m-link[href="/proces-wspolpracy/"]').click();
+    await expect(page).toHaveURL(/\/proces-wspolpracy\/?$/);
+    await expect(page.locator("main h1")).toBeVisible();
   });
 
   test("pozycja Realizacje w panelu nawiguje na podstronę", async ({
@@ -100,7 +112,11 @@ test.describe("nawigacja mobile", () => {
   test("podstrona: otwarte menu podmienia BackButton na logo do strony głównej", async ({
     page,
   }) => {
-    await gotoReady(page, "/o-mnie/");
+    // /kontakt/, nie szkielet typu /o-nas/: wzorzec „BackButton w slocie
+    // brandu" mają na razie tylko widoki przejściowe (realizacje/kontakt/
+    // polityka) — szkielety pokazują zwykły brand. Po porcie podstron
+    // w Etapie 4 wzorzec obejmie wszystkie podstrony.
+    await gotoReady(page, "/kontakt/");
     const back = page.locator(".bkb");
     const brand = page.locator(".brand-menu");
 

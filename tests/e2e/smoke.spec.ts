@@ -1,38 +1,30 @@
-// Minimalny smoke (@prod-smoke): strona wstaje, hero renderuje, oba języki
-// odpowiadają, brak błędów konsoli. Ten sam kod biega w E2E na preview
-// i po deployu przeciw produkcji: pnpm test:smoke:prod (BASE_URL).
+// Minimalny smoke (@prod-smoke): strona wstaje, hero renderuje, formularz
+// w DOM, brak błędów konsoli. PL-only (delung). Ten sam kod biega w E2E na
+// preview i po deployu przeciw produkcji: pnpm test:smoke:prod (BASE_URL).
+// Selektory celowo ogólne (main h1, #contact .kt-form) — mają przeżyć
+// wymianę szkieletu na docelowe widoki w Etapie 4 bez edycji smoke'a.
 import { expect, test } from "@playwright/test";
 import { collectPageIssues } from "../helpers/guards";
 
 test.describe("smoke", { tag: "@prod-smoke" }, () => {
-  test("/ wstaje: 200, hero renderuje, bez błędów konsoli", async ({
+  test("/ wstaje: 200, lang=pl, hero renderuje, bez błędów konsoli", async ({
     page,
   }) => {
     const issues = collectPageIssues(page);
     const res = await page.goto("/", { waitUntil: "networkidle" });
     expect(res?.status()).toBe(200);
-    await expect(page.locator("#hero")).toBeVisible();
-    await expect(page.locator(".hero__eyebrow")).not.toBeEmpty();
+    await expect(page.locator("html")).toHaveAttribute("lang", "pl");
+    await expect(page.locator("main h1")).toBeVisible();
+    await expect(page.locator("main h1")).not.toBeEmpty();
     expect(issues()).toEqual([]);
   });
 
-  test("/en/ wstaje: 200, lang=en, bez błędów konsoli", async ({ page }) => {
-    const issues = collectPageIssues(page);
-    const res = await page.goto("/en/", { waitUntil: "networkidle" });
+  test("/kontakt/ wstaje: 200, formularz w DOM", async ({ page }) => {
+    // Podstrona z formularzem — deploy musi ją serwować; sam endpoint
+    // sonduje osobny test niżej.
+    const res = await page.goto("/kontakt/", { waitUntil: "networkidle" });
     expect(res?.status()).toBe(200);
-    await expect(page.locator("html")).toHaveAttribute("lang", "en");
-    await expect(page.locator("#hero")).toBeVisible();
-    expect(issues()).toEqual([]);
-  });
-
-  test("/kontakt/ wstaje: 200, formularz w DOM (PL + EN)", async ({ page }) => {
-    // Podstrona z formularzem (docs/analiza-podstrona-kontakt.md) — deploy
-    // musi ją serwować; sam endpoint sonduje osobny test niżej.
-    for (const path of ["/kontakt/", "/en/contact/"]) {
-      const res = await page.goto(path, { waitUntil: "networkidle" });
-      expect(res?.status(), path).toBe(200);
-      await expect(page.locator("#contact .kt-form")).toBeAttached();
-    }
+    await expect(page.locator("#contact .kt-form")).toBeAttached();
   });
 
   test("kluczowe zasoby odpowiadają", async ({ request }) => {
