@@ -4,8 +4,14 @@
    tle (#000/#070507) i czytają tokeny :root — bez tego override'u
    jasne tokeny delung dałyby ciemny tekst na ciemnym tle.
    Import per strona = override działa tylko w jej dokumencie.
-   NIE używać w nowych widokach delung. */
-:root {
+   NIE używać w nowych widokach delung.
+
+   Selektor html:root (nie :root): Astro inlinuje ten mały plik w <style>
+   PRZED linkowanymi bundlami CSS, więc przy równej specyficzności jasny
+   :root z global.css by wygrał (kolejność w dokumencie) — ciemny tekst
+   na czarnym tle. Wyższa specyficzność uniezależnia override od
+   kolejności wstrzykiwania stylów. */
+html:root {
   --ink: #f5f0ec;
   --muted: rgba(245, 240, 236, 0.58);
   --faint: rgba(245, 240, 236, 0.5);
