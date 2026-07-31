@@ -1,51 +1,46 @@
 // Lighthouse CI — profil MOBILE (domyślna emulacja LHCI: Moto G Power,
-// CPU 4×, sieć 4G) = nasz proxy „słabszego Androida" (analiza §II.2).
+// CPU 4×, sieć 4G) = nasz proxy „słabszego Androida".
 // Profil desktop: lighthouserc.desktop.cjs.
 //
 // Progi = RATCHET od baseline'u zmierzonego W CI (nie lokalnie — muszą
-// odpowiadać maszynie, która bramkuje): metryki czasowe ×1,15, wagi zasobów
-// +10%. Procedura pomiaru i tabela baseline'ów:
-// docs/testing-tools-and-environemnts-setup-analysis.md §III.5.
+// odpowiadać maszynie, która bramkuje). Procedura pomiaru: lhci collect
+// --numberOfRuns=5 + mediana (wzorzec z szablonu hadrianm, analiza §III.5).
 // Progi podnosimy wolno TYLKO świadomą decyzją Mateusza (osobny commit);
 // po każdej optymalizacji zacieśniamy do nowego baseline'u.
+//
+// Baseline CI 2026-07-31 (Etap 3, SZKIELET strony głównej; run 30622374361,
+// mediana z 3 przebiegów): perf 0.99, LCP 1965 ms, TBT 0 ms, CLS 0,
+// script 59 633 B, total 249 280 B, fonty 4. Progi ustawione Z ZAPASEM na
+// przyrost sekcji Etapu 4 (lekcja §D kroniki hadrianm — mniej PR-ów
+// „re-baseline"; pełna strona hadrianm wylądowała na LCP ~3100 ms
+// i script ~87 KB — to skala spodziewanego wzrostu). Po zbudowaniu
+// wszystkich sekcji zacieśniamy do nowego baseline'u.
 module.exports = {
   ci: {
     collect: {
       staticDistDir: "./dist",
-      url: ["/", "/en/"], // ścieżki w obrębie staticDistDir
+      // Sam „/": podstrony z mediami (/realizacje/) ładują obrazy z
+      // media.delung.pl — zewnętrzna sieć w CI = flaky (ta sama zasada co
+      // CHECK_REMOTE_MEDIA poza ścieżką PR).
+      url: ["/"],
       numberOfRuns: 3, // mediana — tłumi szum runnera
     },
     assert: {
-      // Baseline CI 2026-07-07 (run 28884218254, mediany z 5 przebiegów;
-      // gorszy z dwóch URL-i): perf 0.94, LCP 2573 ms, TBT 25 ms,
-      // CLS 0.0173, script 68 KB, total 1801 KB, fonty 4.
-      // Ratchet po etapie 7 (run 28894534750): perf 0.95/0.97,
-      // CLS 0.0007 (preload fontu) → zacieśnione minScore i CLS.
-      // Re-baseline LCP 2026-07-09: dryf runnerów GitHuba (~+13%) — TEN SAM
-      // SHA maina zmierzył 2745 ms o 14:01 i 3111 ms o 16:56 (re-run joba,
-      // run 29023439109); kod bez zmian, czysty dryf infry. Mediana pomiarów
-      // z 2026-07-09 (3017/3100/3101/3111) = 3100 → próg 3100 × 1,15 ≈ 3565.
       aggregationMethod: "median-run",
       assertions: {
         "categories:performance": ["error", { minScore: 0.9 }],
-        "largest-contentful-paint": ["error", { maxNumericValue: 3565 }],
-        // TBT ×1,15 dałoby 29 ms — próg-podłoga 150 ms, bo pojedyncze ms
-        // to czysty szum runnera; realna regresja JS i tak go przebije.
+        // Zapas: szkielet 1965 ms + hero/sekcje Etapu 4 (hadrianm: ~3100).
+        "largest-contentful-paint": ["error", { maxNumericValue: 3500 }],
+        // Baseline 0 ms — próg-podłoga 150 ms (pojedyncze ms to szum
+        // runnera; realna regresja JS i tak go przebije).
         "total-blocking-time": ["error", { maxNumericValue: 150 }],
-        "cumulative-layout-shift": ["error", { maxNumericValue: 0.005 }],
-        // Re-baseline 2026-07-10 po sekcji Oferta (PR #16, run 29109723817):
-        // services-scroll + config + handler kotwic podniosły script do
-        // 78 875 B (oba URL-e identycznie) → próg 78 875 × 1,1 ≈ 86 800.
-        // Re-baseline 2026-07-14 po komponencie Toast (reużywalny system
-        // powiadomień; ~1,1 KB gzip doliczane przy starcie, montowany globalnie
-        // w BaseLayout): zmierzone 86 941 B (run 29331137496) → próg
-        // 86 941 × 1,1 ≈ 95 700. Rozmiar bundle'a jest deterministyczny (nie
-        // dryf runnera). Po optymalizacji zacieśnić do nowego baseline'u.
-        "resource-summary:script:size": ["error", { maxNumericValue: 95700 }],
-        "resource-summary:total:size": [
-          "error",
-          { maxNumericValue: 2030000 }, // 1801 KB × 1,1
-        ],
+        // Baseline 0 — 0.02 zostawia miejsce na fonty/obrazy sekcji,
+        // wciąż daleko od progu „needs improvement" (0.1).
+        "cumulative-layout-shift": ["error", { maxNumericValue: 0.02 }],
+        // Szkielet 59 633 B; pełny bundle hadrianm ~87 KB → 100 KB.
+        "resource-summary:script:size": ["error", { maxNumericValue: 100000 }],
+        // Szkielet 249 KB; sekcje dodadzą obrazy WebP → 2 MB (hadrianm 1.8 MB).
+        "resource-summary:total:size": ["error", { maxNumericValue: 2000000 }],
         "resource-summary:font:count": ["warn", { maxNumericValue: 5 }],
       },
     },

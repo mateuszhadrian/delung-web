@@ -6,6 +6,13 @@ import { fileURLToPath } from "node:url";
 import { expect, test, type Page } from "@playwright/test";
 import { gotoReady } from "../helpers/scroll";
 
+// CAŁY spec dotyczy sekcji Realizacje NA STRONIE GŁÓWNEJ (galeria/karuzela
+// + nakładki) — sekcja powstaje w Etapie 4, szkielet głównej jej nie ma.
+// Pokrycie nakładek na podstronie /realizacje/ biega w work-index.spec.ts.
+// Odskipować (i zaadaptować selektory do designu delung) przy porcie
+// strony głównej.
+test.skip(() => true, "sekcja Realizacje na stronie głównej — Etap 4");
+
 const ENTRY_COUNT = readdirSync(
   fileURLToPath(new URL("../../src/content/realizacje", import.meta.url)),
 ).filter((f) => f.endsWith(".json")).length;

@@ -1,59 +1,56 @@
-// Dostępność: skan axe-core na / i /en/. Poziom bramkujący: zero naruszeń
-// critical/serious; pełny raport (wszystkie poziomy) ląduje w artefaktach
-// testu — ratchet jak w LHCI. Skan na jednym profilu desktop i jednym mobile
-// (układy się różnią); pozostałe projekty nie wnoszą nowych informacji.
+// Dostępność: skan axe-core na wszystkich trasach delung (PL-only). Poziom
+// bramkujący: zero naruszeń critical/serious; pełny raport (wszystkie
+// poziomy) ląduje w artefaktach testu — ratchet jak w LHCI. Skan na jednym
+// profilu desktop i jednym mobile (układy się różnią); pozostałe projekty
+// nie wnoszą nowych informacji.
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
+import {
+  ABOUT_PATH,
+  CONTACT_PATH,
+  HOME_PATH,
+  KATEGORIE_PATH,
+  OFERTA_PATH,
+  POLICY_PATH,
+  PROCESS_PATH,
+  WORK_INDEX_PATH,
+} from "../../src/lib/routes";
 import { gotoReady } from "../helpers/scroll";
 
 const A11Y_PROJECTS = ["chromium-1920", "chromium-pixel-5"];
 
-// RATCHET — Test bramkuje wyłącznie NOWE naruszenia; usunięcie wpisu stąd
-// wolno tylko po realnej poprawie kontrastu (wtedy ratchet się zacieśnia).
-//
-// 2026-07-13: token --faint podniesiony 0.34→0.5 (2.69:1 → ~4.8:1), więc cały
-// drobny druk (metki/kickery/liczniki, w tym dawne .work__eyebrow/.rz-card__year)
-// spełnia AA — te wpisy USUNIĘTE (ratchet zacieśniony).
-//
-// Pozostają .of-w / .acc: słowa akapitów intro Oferty w stanie startowym
-// animacji „czytania scrollem” (opacity 0.14, akcent .acc 0.24). Efekt istnieje
-// TYLKO przy prefers-reduced-motion: no-preference (reduce/no-JS = pełny
-// kontrast od razu), a czytnik ekranu ma pełny tekst zawsze; słowa rozjaśniają
-// się do --ink/--accent przy scrollu. Podniesienie krycia do AA (~0.49)
-// zabiłoby efekt → świadomy wyjątek. (.acc występuje tylko w tym intro.)
-const KNOWN_VIOLATIONS: Record<string, RegExp[]> = {
-  "color-contrast": [/\.of-w/, /\.acc\b/],
-};
+// RATCHET — allowlista znanych naruszeń startuje PUSTA (Etap 3) i taka ma
+// zostać: test bramkuje każde naruszenie critical/serious. Nowy wpis wolno
+// dodać WYŁĄCZNIE decyzją Mateusza (świadomy wyjątek z uzasadnieniem,
+// wzorzec: intro Oferty w hadrianm-web); usunięcie wpisu = zacieśnienie.
+const KNOWN_VIOLATIONS: Record<string, RegExp[]> = {};
 
 function isKnown(ruleId: string, target: string): boolean {
   return (KNOWN_VIOLATIONS[ruleId] ?? []).some((re) => re.test(target));
 }
 
-for (const path of [
-  "/",
-  "/en/",
-  "/realizacje/",
-  "/en/projects/",
-  "/dla-kogo/",
-  "/en/who-its-for/",
-  "/oferta/",
-  "/en/services/",
-  "/proces-wspolpracy/",
-  "/en/process/",
-  "/pakiety/",
-  "/en/packages/",
-  "/o-mnie/",
-  "/en/about/",
-  "/kontakt/",
-  "/en/contact/",
-  "/faq/",
-  "/en/faq/",
-]) {
+// /kategorie/ jest mobile-only — na desktopie inline skrypt w <head>
+// przekierowuje na /oferta/ przed paintem, więc skan desktopowy zmierzyłby
+// /oferta/ drugi raz. Skanujemy ją tylko na profilu mobilnym.
+const PATHS: { path: string; projects?: string[] }[] = [
+  { path: HOME_PATH },
+  { path: OFERTA_PATH },
+  { path: KATEGORIE_PATH, projects: ["chromium-pixel-5"] },
+  { path: WORK_INDEX_PATH },
+  { path: PROCESS_PATH },
+  { path: ABOUT_PATH },
+  { path: CONTACT_PATH },
+  { path: POLICY_PATH },
+];
+
+for (const { path, projects } of PATHS) {
   test(`axe: brak naruszeń critical/serious na ${path}`, async ({
     page,
   }, testInfo) => {
+    const allowed = projects ?? A11Y_PROJECTS;
     test.skip(
-      !A11Y_PROJECTS.includes(testInfo.project.name),
+      !A11Y_PROJECTS.includes(testInfo.project.name) ||
+        !allowed.includes(testInfo.project.name),
       "skan a11y tylko na chromium-1920 i chromium-pixel-5",
     );
     await gotoReady(page, path);

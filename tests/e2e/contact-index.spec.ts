@@ -131,6 +131,11 @@ for (const p of PAGES) {
 }
 
 test.describe("banner na stronie głównej", () => {
+  // Banner CTA kontaktu na stronie głównej (finał strony + crossfade RED)
+  // powstaje w Etapie 4 — szkielet głównej go nie ma. Odskipować przy porcie
+  // strony głównej.
+  test.skip(() => true, "banner kontaktu na stronie głównej — Etap 4");
+
   for (const p of PAGES) {
     test(`${p.homePath}: status + button → ${p.path}, bez formularza`, async ({
       page,

@@ -184,6 +184,11 @@ test.describe("mobile: BottomSheet na podstronie", () => {
 });
 
 test.describe("dojście ze strony głównej — przyciski Więcej realizacji", () => {
+  // Sekcja Realizacje strony głównej (galeria/karuzela + „Więcej realizacji")
+  // powstaje w Etapie 4 — szkielet głównej jej nie ma. Odskipować przy porcie
+  // strony głównej (test EN do przepisania na PL-only przy tej okazji).
+  test.skip(() => true, "sekcja Realizacje na stronie głównej — Etap 4");
+
   test("przyciski mają zlokalizowane adresy podstrony (PL i EN)", async ({
     page,
   }) => {

@@ -41,7 +41,7 @@ const c = {
       h: "Administrator danych",
       pre: [
         "Administratorem Twoich danych osobowych jest <strong>Adam Delung</strong>, prowadzący działalność gospodarczą pod firmą Delung Meble Adam Delung, Strażacka 27a, 98-300 Gaszyn, NIP: 7312021984 — operator strony delung.pl.",
-        'W sprawach dotyczących danych osobowych napisz na adres <span data-pp-mail></span>, zadzwoń pod <a href="tel:+48690291143">+48 690 291 143</a> albo skorzystaj z <a href="/kontakt/">formularza kontaktowego</a>.',
+        'W sprawach dotyczących danych osobowych napisz na adres <span data-pp-mail></span>, zadzwoń pod <span data-pp-phone></span> albo skorzystaj z <a href="/kontakt/">formularza kontaktowego</a>.',
       ],
     },
     {
@@ -176,14 +176,21 @@ const c = {
 
 <script>
   // Antyscraping (kontrakt: tests/e2e/contact.spec.ts — grep dist bez pełnego
-  // adresu): e-mail składany z fragmentów jak w contact-ui.ts. Bez JS zostaje
-  // fallback wskazujący sekcję kontakt.
+  // adresu ANI numeru): e-mail i telefon składane z fragmentów jak
+  // w contact-ui.ts. Bez JS zostaje fallback wskazujący sekcję kontakt.
   const FR = ["kontakt", "delung", "pl"];
   const addr = `${FR[0]}@${FR[1]}.${FR[2]}`;
   document.querySelectorAll("[data-pp-mail]").forEach((el) => {
     const a = document.createElement("a");
     a.href = `mailto:${addr}`;
     a.textContent = addr;
+    el.replaceWith(a);
+  });
+  const PH = ["690", "291", "143"];
+  document.querySelectorAll("[data-pp-phone]").forEach((el) => {
+    const a = document.createElement("a");
+    a.href = `tel:+48${PH.join("")}`;
+    a.textContent = `+48 ${PH.join(" ")}`;
     el.replaceWith(a);
   });
 </script>
