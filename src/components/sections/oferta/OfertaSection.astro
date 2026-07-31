@@ -1,0 +1,810 @@
+---
+// Sekcja oferty (część 4.3; eksport: .of z docs/design/oferta.html).
+// Mobile: head + karuzela 3 kafli (gotchas sections.md) + kafel „zobacz
+// pełną ofertę" → /kategorie/ + pasek postępu; kafel KONKRETNEJ kategorii
+// linkuje /kategorie/#<slug> — hash otwiera tam kartę kategorii
+// (kategorie.ts; korekta Mateusza po testach 4.3). Desktop: head dwukolumnowy
+// + zakładki (wzorzec ARIA tabs, D-OK2) + panel kategorii; panel 01
+// aktywny w SSR (bez JS widać pierwszą kategorię). Animacje przełączenia
+// panelu = keyframes CSS odpalane klasą .anim (oferta.ts) — bez GSAP;
+// pierwszy render bez animacji (jak w eksporcie), reduce je wyłącza.
+// Treści: oferta-content.ts (D-OK1), kadry: oferta-images.ts (D-OK9).
+import { categoryLabel } from "@/lib/categories";
+import { KATEGORIE_PATH, WORK_INDEX_PATH } from "@/lib/routes";
+import { OFERTA_CATEGORIES, OFERTA_KAFLE_MOBILE } from "./oferta-content";
+import { ofertaImage } from "./oferta-images";
+
+const kafle = OFERTA_CATEGORIES.slice(0, OFERTA_KAFLE_MOBILE);
+---
+
+<section class="of">
+  <div class="of-in">
+    <div class="of-head">
+      <div class="of-headL">
+        <p class="of-kick">OFERTA</p>
+        <h1>Co tworzymy?</h1>
+        <div class="of-rule" aria-hidden="true"></div>
+      </div>
+      <p class="of-lead of-lead--m">
+        Wychodzimy poza ramy tradycyjnego stolarstwa. Kompleksowo urządzamy domy
+        oraz lokale biznesowe – dostarczając precyzyjne meble, sprzęt AGD i
+        eleganckie dekoracje okienne. Sprawdź naszą ofertę.
+      </p>
+      <p class="of-lead of-lead--d">
+        Wybierz kategorię, aby zobaczyć szczegóły.
+      </p>
+    </div>
+
+    {/* ── desktop: zakładki + panele (ARIA tabs — D-OK2) ── */}
+    <div class="of-tabs" role="tablist" aria-label="Kategorie oferty">
+      {
+        OFERTA_CATEGORIES.map((c, i) => (
+          <button
+            class:list={["of-tab", { on: i === 0 }]}
+            id={`of-tab-${c.slug}`}
+            type="button"
+            role="tab"
+            aria-selected={i === 0 ? "true" : "false"}
+            aria-controls={`of-panel-${c.slug}`}
+            tabindex={i === 0 ? 0 : -1}
+            data-oftab
+          >
+            {c.tab}
+          </button>
+        ))
+      }
+    </div>
+    <div class="of-panels">
+      {
+        OFERTA_CATEGORIES.map((c, i) => {
+          const img = ofertaImage(c.slug);
+          return (
+            <div
+              class:list={["of-panel", { on: i === 0 }]}
+              id={`of-panel-${c.slug}`}
+              role="tabpanel"
+              aria-labelledby={`of-tab-${c.slug}`}
+              data-ofpanel
+            >
+              <div class="of-pic">
+                <img
+                  src={img.src}
+                  width={img.width}
+                  height={img.height}
+                  alt={c.title}
+                  loading={i === 0 ? undefined : "lazy"}
+                  fetchpriority={i === 0 ? "high" : undefined}
+                  decoding="async"
+                  style={`object-position:${c.pos}`}
+                />
+              </div>
+              <div class="of-txt">
+                <p class="of-pnum" data-panelitem style="--i:0">
+                  <span>{c.num}</span>
+                  <b>KATEGORIA</b>
+                </p>
+                <h2 class="of-ptitle" data-panelitem style="--i:1">
+                  {c.title}
+                </h2>
+                <p class="of-pdesc" data-panelitem style="--i:2">
+                  {c.desc}
+                </p>
+                {/* Karta CTA — wariant „niski desktop" (≤820px wysokości):
+                    w prawej kolumnie pod opisem, dopchnięta do dołu (dolna
+                    krawędź = dół zdjęcia). Celowy DUPLIKAT karty z .of-more
+                    (style scoped + grid-areas nie pozwalają przenieść
+                    jednego węzła między kolumnami samym CSS); widoczny
+                    jest zawsze dokładnie jeden z dwóch. */}
+                <div class="of-cta of-cta--side" data-panelitem style="--i:3">
+                  <a class="of-ctaCard" href={WORK_INDEX_PATH}>
+                    <span>
+                      <span class="k">REALIZACJE</span>
+                      <span class="t">
+                        Przeglądaj realizacje z kategorii{" "}
+                        <b>{categoryLabel(c.slug).toUpperCase()}</b>
+                      </span>
+                    </span>
+                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                      <path
+                        d="M6 18L18 6M18 6H8M18 6v10"
+                        stroke="#256f47"
+                        stroke-width="1.6"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      />
+                    </svg>
+                  </a>
+                </div>
+              </div>
+              <div class="of-more">
+                <div class="of-specs">
+                  {c.det.map((d, k) => (
+                    <div data-panelitem style={`--i:${3 + k}`}>
+                      <span>{d.label}</span>
+                      <p>{d.text}</p>
+                    </div>
+                  ))}
+                </div>
+                <div class="of-cta of-cta--wide" data-panelitem style="--i:7">
+                  <a class="of-ctaCard" href={WORK_INDEX_PATH}>
+                    <span>
+                      <span class="k">REALIZACJE</span>
+                      <span class="t">
+                        Przeglądaj realizacje z kategorii{" "}
+                        <b>{categoryLabel(c.slug).toUpperCase()}</b>
+                      </span>
+                    </span>
+                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                      <path
+                        d="M6 18L18 6M18 6H8M18 6v10"
+                        stroke="#256f47"
+                        stroke-width="1.6"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      />
+                    </svg>
+                  </a>
+                </div>
+              </div>
+            </div>
+          );
+        })
+      }
+    </div>
+
+    {/* ── mobile: karuzela kategorii (gotchas sections.md) ── */}
+    <div class="of-rail" data-rail data-rev data-lenis-prevent-horizontal>
+      {
+        kafle.map((c) => {
+          const img = ofertaImage(c.slug);
+          return (
+            <a class="of-card" href={`${KATEGORIE_PATH}#${c.slug}`}>
+              <img
+                src={img.src}
+                width={img.width}
+                height={img.height}
+                alt=""
+                loading="lazy"
+                decoding="async"
+                style={`object-position:${c.pos}`}
+              />
+              <span class="tint" aria-hidden="true" />
+              <b>
+                {c.card.map((line, j) => (
+                  <>
+                    {j > 0 && <br />}
+                    {line}
+                  </>
+                ))}
+              </b>
+              <i aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none">
+                  <path
+                    d="M6 18L18 6M18 6H8M18 6v10"
+                    stroke="#1a1a1a"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+              </i>
+            </a>
+          );
+        })
+      }
+      <a class="of-all" href={KATEGORIE_PATH}>
+        <i aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none">
+            <path
+              d="M6 18L18 6M18 6H8M18 6v10"
+              stroke="#1a1a1a"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"></path>
+          </svg>
+        </i>
+        <span>zobacz pełną ofertę</span>
+      </a>
+    </div>
+    <div class="of-barwrap" aria-hidden="true">
+      <div class="of-bar"><i data-barfill></i></div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .of {
+    background: #fff;
+  }
+  /* karuzela idzie na całą szerokość okna — kontener 560 px nakładamy
+     na poszczególne bloki */
+  .of-in {
+    width: 100%;
+    margin-inline: auto;
+  }
+  .of-head {
+    width: 100%;
+    max-width: var(--col);
+    margin-inline: auto;
+    padding-inline: var(--pad);
+    padding-block: clamp(18px, 6.15vw, 26px) clamp(15px, 5.13vw, 22px);
+  }
+  .of-kick {
+    font-family: var(--font-display), sans-serif;
+    font-weight: 500;
+    font-size: clamp(10px, 2.82vw, 12px);
+    line-height: 1;
+    letter-spacing: 0.2em;
+    /* eksport .5 — podbite do --faint (drobny druk, ratchet axe) */
+    color: var(--faint);
+    margin-bottom: 14px;
+  }
+  h1 {
+    font-family: var(--font-display), sans-serif;
+    font-weight: 200;
+    font-size: clamp(28px, 8.72vw, 38px);
+    line-height: 1.12;
+  }
+  .of-rule {
+    width: 44px;
+    height: 1px;
+    background: rgba(26, 26, 26, 0.3);
+    margin: 16px 0;
+  }
+  .of-lead {
+    font-family: var(--font-display), sans-serif;
+    font-weight: 200;
+    font-size: clamp(13.5px, 3.97vw, 17px);
+    line-height: 1.48;
+    color: var(--muted);
+    text-wrap: pretty;
+  }
+  .of-lead--d {
+    display: none;
+  }
+  .of-tabs,
+  .of-panels {
+    display: none;
+  }
+
+  /* ── karuzela kategorii (mobile) ── */
+  .of-rail {
+    display: flex;
+    gap: clamp(10px, 3.08vw, 14px);
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    scroll-padding-inline: var(--pad);
+    padding-block: 6px 4px;
+    padding-inline: var(--pad);
+    scrollbar-width: none;
+  }
+  .of-rail::-webkit-scrollbar {
+    display: none;
+  }
+  .of-card,
+  .of-all {
+    position: relative;
+    flex: none;
+    width: clamp(232px, 75.9vw, 320px);
+    aspect-ratio: 296 / 470;
+    border-radius: 8px;
+    overflow: hidden;
+    scroll-snap-align: start;
+    /* gotcha sections.md: kafel po kaflu, bez przelotów */
+    scroll-snap-stop: always;
+    text-decoration: none;
+    color: inherit;
+  }
+  .of-card {
+    background: #e5e1da;
+  }
+  .of-card img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .of-card .tint {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      180deg,
+      rgba(0, 0, 0, 0) 42%,
+      rgba(0, 0, 0, 0.65) 100%
+    );
+  }
+  .of-card b {
+    position: absolute;
+    left: clamp(15px, 5.13vw, 22px);
+    bottom: clamp(17px, 5.64vw, 24px);
+    right: clamp(62px, 17.9vw, 76px);
+    font-family: var(--font-display), sans-serif;
+    font-weight: 300;
+    font-size: clamp(17px, 5.38vw, 23px);
+    line-height: 1.24;
+    color: #fff;
+    text-shadow: 0 1px 8px rgba(0, 0, 0, 0.45);
+  }
+  .of-card i,
+  .of-all i {
+    position: absolute;
+    right: clamp(12px, 4.1vw, 18px);
+    bottom: clamp(12px, 4.1vw, 18px);
+    width: clamp(38px, 11.8vw, 50px);
+    aspect-ratio: 1;
+    background: #fff;
+    border-radius: 999px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+  }
+  .of-card svg,
+  .of-all svg {
+    width: 44%;
+    height: 44%;
+  }
+  .of-all {
+    border: 1px solid rgba(26, 26, 26, 0.3);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(12px, 4.6vw, 20px);
+  }
+  .of-all:hover {
+    background: rgba(26, 26, 26, 0.03);
+  }
+  .of-all i {
+    position: static;
+    width: clamp(44px, 13.3vw, 56px);
+    background: none;
+    border: 1px solid rgba(26, 26, 26, 0.4);
+    box-shadow: none;
+  }
+  .of-all span {
+    font-family: var(--font-display), sans-serif;
+    font-weight: 300;
+    font-size: clamp(15px, 4.36vw, 19px);
+  }
+  .of-barwrap {
+    width: 100%;
+    max-width: var(--col);
+    margin: 18px auto 0;
+    padding-inline: var(--pad);
+  }
+  .of-bar {
+    height: 2px;
+    background: rgba(26, 26, 26, 0.1);
+    overflow: hidden;
+  }
+  .of-bar i {
+    display: block;
+    width: 25%;
+    height: 100%;
+    background: var(--ink);
+    transition: transform 0.15s ease-out;
+  }
+
+  /* ── przypadek szczególny: szeroki, niski ekran w widoku mobilnym
+        (telefon/tablet w poziomie, 835–1023 px) — head dwukolumnowo,
+        kafle dopasowane wysokością, cała karuzela bez przewijania ── */
+  @media (min-width: 835px) and (max-width: 1023px) and (max-height: 700px) {
+    .of-head {
+      max-width: none;
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: clamp(22px, 3.6vw, 44px);
+      padding-block: 16px 14px;
+    }
+    .of-headL {
+      flex: 1 1 auto;
+      min-width: 0;
+    }
+    h1 {
+      font-size: clamp(26px, 3.6vw, 34px);
+    }
+    .of-rule {
+      margin: 12px 0 0;
+    }
+    .of-lead--m {
+      flex: 0 1 46%;
+      max-width: 46%;
+      font-size: clamp(12.5px, 1.68vw, 15px);
+      line-height: 1.45;
+    }
+    .of-rail {
+      padding-block: 2px 2px;
+    }
+    .of-card,
+    .of-all {
+      width: auto;
+      height: max(
+        160px,
+        min(470px, calc(100svh - var(--hdr-h, 100px) - 142px))
+      );
+      aspect-ratio: 296 / 470;
+    }
+    .of-card b {
+      left: 12px;
+      right: 38px;
+      bottom: 11px;
+      font-size: 15px;
+      line-height: 1.2;
+    }
+    .of-card i,
+    .of-all i {
+      right: 8px;
+      bottom: 8px;
+      width: 32px;
+    }
+    .of-all {
+      gap: 10px;
+    }
+    .of-all i {
+      width: 36px;
+    }
+    .of-all span {
+      font-size: 14px;
+    }
+    .of-barwrap {
+      max-width: none;
+      margin-top: 12px;
+    }
+  }
+
+  /* ════ DESKTOP ≥1024 (para: OFERTA_DESKTOP_MIN_PX) ════ */
+  @media (min-width: 1024px) {
+    .of {
+      background: var(--bg-cream);
+    }
+    .of-in {
+      display: flex;
+      flex-direction: column;
+      min-height: calc(100svh - var(--hdr-h, 92px));
+      padding-block: clamp(28px, 3.06vw, 44px) clamp(30px, 3.33vw, 48px);
+      padding-inline: var(--pad);
+    }
+    .of-head {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: clamp(28px, 4.17vw, 60px);
+      flex: none;
+      max-width: none;
+      padding: 0 0 clamp(18px, 1.81vw, 26px);
+    }
+    .of-headL {
+      max-width: 52.8vw;
+    }
+    .of-kick {
+      font-size: clamp(11px, 0.83vw, 12px);
+      letter-spacing: 0.22em;
+      /* eksport --gr (~4.0:1 na cream) → --accent-ink (ratchet axe) */
+      color: var(--accent-ink);
+      margin-bottom: clamp(10px, 0.97vw, 14px);
+    }
+    h1 {
+      font-size: clamp(34px, 3.61vw, 52px);
+      line-height: 1.06;
+    }
+    .of-rule,
+    .of-lead--m {
+      display: none;
+    }
+    .of-lead--d {
+      display: block;
+      font-size: clamp(13.5px, 1.15vw, 16.5px);
+      line-height: 1.6;
+      max-width: clamp(260px, 27.8vw, 400px);
+    }
+    .of-rail,
+    .of-barwrap {
+      display: none;
+    }
+
+    .of-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: clamp(7px, 0.69vw, 10px);
+      flex: none;
+      padding: 0 0 clamp(18px, 1.81vw, 26px);
+    }
+    .of-tab {
+      background: none;
+      border: 1px solid rgba(26, 26, 26, 0.25);
+      border-radius: 999px;
+      padding: clamp(9px, 0.76vw, 11px) clamp(14px, 1.39vw, 20px);
+      font-family: var(--font-body), sans-serif;
+      font-weight: 500;
+      font-size: clamp(11.5px, 0.94vw, 13.5px);
+      line-height: 1;
+      color: var(--ink);
+      white-space: nowrap;
+      cursor: pointer;
+      transition:
+        background 0.35s ease,
+        color 0.35s ease,
+        border-color 0.35s ease;
+    }
+    .of-tab:hover {
+      border-color: rgba(26, 26, 26, 0.5);
+    }
+    .of-tab.on {
+      background: var(--ink);
+      color: #fff;
+      border-color: var(--ink);
+    }
+
+    .of-panels {
+      display: flex;
+      flex-direction: column;
+      flex: 1 1 auto;
+      min-height: 0;
+    }
+    .of-panel {
+      display: none;
+    }
+    .of-panel.on {
+      display: grid;
+      flex: 1 1 auto;
+      min-height: 0;
+      grid-template-columns: minmax(0, 44.03fr) minmax(0, 55.97fr);
+      grid-template-rows: auto minmax(0, 1fr);
+      grid-template-areas:
+        "pic txt"
+        "pic more";
+      column-gap: clamp(26px, 3.89vw, 56px);
+    }
+    .of-pic {
+      grid-area: pic;
+      position: relative;
+      border-radius: 8px;
+      overflow: hidden;
+      background: #e5e1da;
+      min-height: clamp(280px, 26vw, 420px);
+    }
+    .of-pic img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .of-txt {
+      grid-area: txt;
+      padding-top: 2px;
+    }
+    .of-more {
+      grid-area: more;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+    .of-pnum {
+      display: flex;
+      align-items: baseline;
+      gap: clamp(9px, 0.97vw, 14px);
+      margin-bottom: clamp(8px, 0.83vw, 12px);
+    }
+    .of-pnum span {
+      font-family: var(--font-mono), monospace;
+      font-weight: 500;
+      font-size: clamp(11.5px, 0.9vw, 13px);
+      line-height: 1;
+      /* eksport --gr → --accent-ink (drobny druk, ratchet axe) */
+      color: var(--accent-ink);
+    }
+    .of-pnum b {
+      font-family: var(--font-display), sans-serif;
+      font-weight: 500;
+      font-size: clamp(9.5px, 0.76vw, 11px);
+      line-height: 1;
+      letter-spacing: 0.2em;
+      /* eksport .45 → --faint (ratchet axe) */
+      color: var(--faint);
+    }
+    .of-ptitle {
+      font-family: var(--font-display), sans-serif;
+      font-weight: 200;
+      font-size: clamp(26px, 2.78vw, 40px);
+      line-height: 1.1;
+      text-wrap: pretty;
+    }
+    .of-pdesc {
+      margin: clamp(12px, 1.25vw, 18px) 0 clamp(18px, 1.81vw, 26px);
+      font-family: var(--font-display), sans-serif;
+      font-weight: 200;
+      font-size: clamp(13.5px, 1.15vw, 16.5px);
+      line-height: 1.6;
+      color: var(--muted);
+      text-wrap: pretty;
+      max-width: 56ch;
+    }
+    .of-specs {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: clamp(15px, 1.53vw, 22px) clamp(22px, 2.36vw, 34px);
+      border-top: 1px solid rgba(26, 26, 26, 0.14);
+      padding-top: clamp(16px, 1.67vw, 24px);
+    }
+    .of-specs span {
+      display: block;
+      font-family: var(--font-display), sans-serif;
+      font-weight: 500;
+      font-size: clamp(9.5px, 0.73vw, 10.5px);
+      line-height: 1.5;
+      letter-spacing: 0.16em;
+      /* eksport --gr → --accent-ink (drobny druk, ratchet axe) */
+      color: var(--accent-ink);
+      margin-bottom: 8px;
+    }
+    .of-specs p {
+      font-family: var(--font-display), sans-serif;
+      font-weight: 200;
+      font-size: clamp(13px, 1.04vw, 15px);
+      line-height: 1.55;
+      color: var(--muted);
+      text-wrap: pretty;
+    }
+    .of-cta {
+      margin-top: auto;
+      padding-top: clamp(16px, 1.67vw, 24px);
+    }
+    /* wariant „obok zdjęcia" żyje tylko na niskim desktopie (media ≤820px
+       wysokości niżej) — w układzie domyślnym ukryty */
+    .of-cta--side {
+      display: none;
+    }
+    .of-ctaCard {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: clamp(14px, 1.39vw, 20px);
+      /* Dłuższa etykieta kategorii ROZPYCHA kartę w prawo (fit-content
+         + nowrap na .t), zamiast zawijać tekst; krótsza nie zwęża karty
+         poniżej szerokości z eksportu (min-width = dawny max-width). */
+      width: fit-content;
+      min-width: clamp(340px, 36.1vw, 520px);
+      max-width: 100%;
+      background: #fff;
+      border: 1px solid rgba(26, 26, 26, 0.1);
+      border-radius: 8px;
+      padding: clamp(13px, 1.11vw, 16px) clamp(14px, 1.25vw, 18px)
+        clamp(13px, 1.11vw, 16px) clamp(16px, 1.53vw, 22px);
+      text-decoration: none;
+      color: inherit;
+      transition:
+        border-color 0.35s ease,
+        box-shadow 0.35s ease;
+    }
+    .of-ctaCard:hover {
+      border-color: rgba(26, 26, 26, 0.3);
+      box-shadow: 0 10px 26px rgba(0, 0, 0, 0.07);
+    }
+    .of-ctaCard .k {
+      display: block;
+      font-family: var(--font-display), sans-serif;
+      font-weight: 500;
+      font-size: clamp(9.5px, 0.73vw, 10.5px);
+      line-height: 1;
+      letter-spacing: 0.18em;
+      /* eksport .45 → --faint (ratchet axe) */
+      color: var(--faint);
+      margin-bottom: 6px;
+    }
+    .of-ctaCard .t {
+      display: block;
+      font-family: var(--font-body), sans-serif;
+      font-weight: 500;
+      font-size: clamp(13.5px, 1.08vw, 15.5px);
+      line-height: 1.2;
+      white-space: nowrap;
+    }
+    .of-ctaCard .t b {
+      font-weight: 500;
+      letter-spacing: 0.04em;
+    }
+    .of-ctaCard svg {
+      width: clamp(16px, 1.25vw, 18px);
+      height: clamp(16px, 1.25vw, 18px);
+      flex: none;
+      transition: transform 0.55s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .of-ctaCard:hover svg {
+      transform: translate(5px, -5px);
+    }
+
+    /* ── animacje przełączenia panelu (D-OK2): keyframes odpala klasa
+          .anim (oferta.ts, dopiero od pierwszej interakcji) + restart
+          przez display:none→grid; baza = stan końcowy (freeze.css
+          i brak JS zostawiają panel w pełni widoczny) ── */
+    .of-panel.on.anim [data-panelitem] {
+      animation: of-item-rise 0.85s cubic-bezier(0.16, 1, 0.3, 1) both;
+      animation-delay: calc(var(--i) * 0.06s);
+    }
+    .of-panel.on.anim .of-pic {
+      animation: of-pic-reveal 1s cubic-bezier(0.84, 0, 0.16, 1) both;
+    }
+    .of-panel.on.anim .of-pic img {
+      animation: of-pic-zoom 1.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+  }
+
+  /* ── desktop na niskim ekranie (≤820px wysokości): tytuł + opis + CTA
+        obok zdjęcia (dolna krawędź CTA = dół zdjęcia), spece pełną
+        szerokością pod spodem. Całość MIEŚCI SIĘ w viewporcie: wiersz
+        zdjęcia (1fr) ugina się razem z wysokością okna, a zdjęcie kurczy
+        aż do min. 180px (kadr tnie object-fit) — dopiero niżej pojawia
+        się naturalny scroll. ── */
+  @media (min-width: 1024px) and (max-height: 820px) {
+    .of-panel.on {
+      grid-template-areas:
+        "pic txt"
+        "more more";
+      /* 1fr = minmax(auto, 1fr): wiersz kurczy się z viewportem, ale nie
+         poniżej min-content treści (zdjęcie trzyma 180px przez min-height,
+         kolumna tekstu swojej wysokości — bez nakładania na spece). */
+      grid-template-rows: 1fr auto;
+      row-gap: clamp(18px, 1.81vw, 26px);
+    }
+    .of-pic {
+      min-height: 180px;
+    }
+    /* CTA w prawej kolumnie, dopchnięta do dołu wiersza zdjęcia */
+    .of-txt {
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+    .of-cta--side {
+      display: block;
+      margin-top: auto;
+      padding-top: clamp(14px, 1.4vw, 20px);
+    }
+    .of-cta--wide {
+      display: none;
+    }
+    .of-specs {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+
+  @keyframes of-item-rise {
+    from {
+      opacity: 0;
+      transform: translateY(26px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  @keyframes of-pic-reveal {
+    from {
+      clip-path: inset(0% 0% 100% 0%);
+    }
+    to {
+      clip-path: inset(0% 0% 0% 0%);
+    }
+  }
+  @keyframes of-pic-zoom {
+    from {
+      transform: scale(1.14);
+    }
+    to {
+      transform: none;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .of-panel.on.anim [data-panelitem],
+    .of-panel.on.anim .of-pic,
+    .of-panel.on.anim .of-pic img {
+      animation: none;
+    }
+  }
+</style>

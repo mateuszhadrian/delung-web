@@ -1,0 +1,70 @@
+---
+// Widok /oferta/ (część 4.3) — port docs/design/oferta.html; decyzje:
+// docs/analiza-oferta-kategorie.md. Navbar `plain` (jak w eksporcie).
+// Interakcje funkcjonalne (zakładki, pasek karuzeli) ładowane zawsze
+// (oferta.ts); ruch (reveale, parallax) za bramką motion
+// (oferta-motion.ts) — stany startowe uzbraja html.js-motion inline
+// przed paintem, bez JS / przy reduce strona jest w pełni statyczna.
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import Navbar from "@/components/navbar/Navbar.astro";
+import Footer from "@/components/Footer.astro";
+import OfertaSection from "@/components/sections/oferta/OfertaSection.astro";
+import OfertaLogos from "@/components/sections/oferta/OfertaLogos.astro";
+import OfertaProcesCta from "@/components/sections/oferta/OfertaProcesCta.astro";
+
+const DESCRIPTION =
+  "Oferta mebli na wymiar: kuchnie, szafy i garderoby, wnętrza komercyjne, " +
+  "dekoracje okienne, zabudowy łazienkowe i meble nietypowe.";
+---
+
+<BaseLayout title="Oferta — Delung Meble" description={DESCRIPTION}>
+  <script is:inline>
+    // PRZED paintem: motion OK → html.js-motion (uzbraja stany startowe
+    // revealów — reszta w oferta-motion.ts, ładowanym niżej).
+    if (window.matchMedia("(prefers-reduced-motion: no-preference)").matches) {
+      document.documentElement.classList.add("js-motion");
+    }
+  </script>
+
+  <Navbar />
+
+  <main>
+    <OfertaSection />
+    <OfertaLogos />
+    <OfertaProcesCta />
+  </main>
+
+  <Footer />
+</BaseLayout>
+
+<style is:global>
+  /* Odsłanianie treści przy przewijaniu — tylko widok mobilny; stan
+     startowy WYŁĄCZNIE pod html.js-motion (bez JS / przy reduce treść
+     od razu widoczna — reguła sections.md; wzorzec Home.astro 4.2). */
+  @media (max-width: 1023px) {
+    html.js-motion [data-rev] {
+      opacity: 0;
+      transform: translateY(22px);
+      transition:
+        opacity 0.7s ease,
+        transform 0.8s cubic-bezier(0.22, 0.61, 0.36, 1);
+    }
+    html.js-motion [data-rev].rv-in {
+      opacity: 1;
+      transform: none;
+    }
+    html.js-motion [data-rev="soft"],
+    html.js-motion [data-rev="soft"].rv-in {
+      transform: none;
+    }
+  }
+</style>
+
+<script>
+  import "@/components/sections/oferta/oferta";
+
+  // Ruch — dynamicznie, tylko przy motion OK (wzorzec D-SG9).
+  if (matchMedia("(prefers-reduced-motion: no-preference)").matches) {
+    import("@/components/sections/oferta/oferta-motion");
+  }
+</script>

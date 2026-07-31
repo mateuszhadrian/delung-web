@@ -111,8 +111,32 @@ treść/sekcje budowane od nowa wg `docs/design/`).
   (`page.request.get`) — DOM po JS celowo zawiera numer; tokeny
   `--pad`/`--col` w global.css; `color-scheme: only light` (fix
   wymuszanego ciemnienia na Androidzie; legacy-dark nadpisuje na `dark`).
-  UWAGA na 4.2: mobilny LCP 2563 ms przy progu 3500 (hero = nowy LCP).
-- Etapy 4.2–7 — przed nami (widoki → formularz → SEO/pomiar → przekazanie).
+- **Etap 4.2 (strona główna) — WYKONANY** (2026-07-31, PR #8 + fix
+  strażnika prod-smoke PR #9; decyzje i KOREKTY po testach na fizycznych
+  telefonach: `docs/analiza-strona-glowna.md` — czytać PRZED pracą przy
+  stronie głównej): sekcje `src/components/sections/home/*` (hero
+  mobile/desktop z typografią SVG, trust+logos, zajawki oferta/proces/
+  realizacje/o-nas, opinie, banner `#contact`); sceny przypięte i cały
+  ruch BEZ GSAP (`home-scroll.ts`, bramka `html.js-motion` inline przed
+  paintem; bez JS/reduce strona w pełni statyczna); zajawka realizacji →
+  Modal/BottomSheet przez współdzielony `open-detail` (próg 760
+  świadomie do wyrównania w 4.4); tel/mail bannera wg D-CH5 (wariant
+  `[data-slot]` w `fillContactSlots`); **Lenis TYLKO desktop — dotyk
+  natywny** (decyzja po klatkowaniu; reguły scroll-lenis.md); hero
+  mobile: `100svh` + parallax ze stałej wysokości (sonda svh — pasek URL
+  nie szarpie), kadr SKALIBROWANY parametrami `--hero-zoom/x/up`
+  w `HomeHero.astro` (zmiana = przelicz krop na pełnym źródle, komenda
+  w komentarzu), `<picture>`+preload z wariantem gęstości (mobile
+  pobiera tylko swój plik, desktop tylko kadry); jedyny h1 = sr-only nad
+  wariantami hero (smoke/strict mode); gwiazdki jako SVG i kontrasty pod
+  pustą allowlistę axe; szablonowe `Work*`/`KontaktBaner*` usunięte.
+  Progi LHCI mobile podniesione (osobny commit, decyzja Mateusza): LCP
+  3500→6000, perf 0.9→0.75, fonty warn 6 — zmierzone CI po
+  optymalizacjach: **LCP 3695 ms / perf 0.89** → zacieśnić przy
+  domknięciu 4.5. Nowy spec `tests/visual/index.spec.ts` (zrzuty sekcji
+  na 6 profilach + sweep scen na chromium-1920; mikro-scroll przed
+  zrzutem = wymuszenie re-rasteryzacji sticky paska w WebKit).
+- Etapy 4.3–7 — przed nami (widoki → formularz → SEO/pomiar → przekazanie).
 - PRZEJŚCIOWE dziedzictwo szablonu (do wymiany w Etapach 4–5): widoki
   `/realizacje/` `/kontakt/` `/polityka-prywatnosci/` na ciemnym motywie
   (`src/styles/legacy-dark.css` — strona delung jest JASNA; kafle/detal
@@ -129,6 +153,9 @@ treść/sekcje budowane od nowa wg `docs/design/`).
   `docs/design/*.html` powstają w Etapie 4 (po jednym PR na widok).
 - `src/lib/categories.ts` — 7 kategorii oferty (decyzja D2) — JEDNO źródło
   prawdy dla /oferta/, /kategorie/, filtrów realizacji i selecta w CMS.
+- `src/components/sections/home/` — sekcje strony głównej (4.2):
+  `Home*.astro` + `home-config.ts` (HOME_DESKTOP_MIN_PX=1024, importują
+  testy) + `home-scroll.ts` (ruch bez GSAP, motion-gate `js-motion`).
 - `src/components/sections/work/` — Realizacje: dane z Content Collections
   (`src/content/realizacje/*.json`; schema Zod: `src/content.schema.ts` —
   źródło prawdy, `content.config.ts` tylko ją importuje). Detal =

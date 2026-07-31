@@ -1,0 +1,84 @@
+---
+// Widok /kategorie/ (część 4.3) — port docs/design/kategorie.html;
+// decyzje: docs/analiza-oferta-kategorie.md. Widok TYLKO mobile (design
+// nie ma wariantu desktop): na desktopie (≥1024 px) client-side redirect
+// na /oferta/ PRZED paintem (inline skrypt w slocie head — mechanizm
+// z Etapu 0, NIE RUSZAĆ) + canonical wskazuje /oferta/ (brak duplicate
+// content). Lenis wyłączony (strona mobile-only — dotyk = scroll
+// natywny). Karty kategorii: overlay.ts (bundlowany przez Navbar).
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import Navbar from "@/components/navbar/Navbar.astro";
+import Footer from "@/components/Footer.astro";
+import KategorieSection from "@/components/sections/oferta/KategorieSection.astro";
+import { OFERTA_PATH } from "@/lib/routes";
+
+const DESCRIPTION =
+  "Pełna lista kategorii oferty Delung Meble — kuchnie, szafy i garderoby, " +
+  "wnętrza komercyjne, dekoracje okienne, zabudowy łazienkowe i meble " +
+  "nietypowe.";
+---
+
+<BaseLayout
+  title="Kategorie oferty — Delung Meble"
+  description={DESCRIPTION}
+  canonicalPath={OFERTA_PATH}
+  smoothScroll={false}
+>
+  <Fragment slot="head">
+    <script is:inline>
+      // Desktop nie ma tego widoku — natychmiastowy redirect na /oferta/
+      // (location.replace: bez wpisu w historii). Breakpoint 1024px spójny
+      // z designami; skrypt stoi na początku <head>, więc odpala przed
+      // paintem — mobile nie płaci nic, desktop nie widzi mignięcia.
+      if (matchMedia("(min-width:1024px)").matches)
+        location.replace("/oferta/");
+    </script>
+  </Fragment>
+
+  <script is:inline>
+    // PRZED paintem: motion OK → html.js-motion (uzbraja stany startowe
+    // revealów — reszta w oferta-motion.ts, ładowanym niżej).
+    if (window.matchMedia("(prefers-reduced-motion: no-preference)").matches) {
+      document.documentElement.classList.add("js-motion");
+    }
+  </script>
+
+  <Navbar />
+
+  <main>
+    <KategorieSection />
+  </main>
+
+  <Footer />
+</BaseLayout>
+
+<style is:global>
+  /* Odsłanianie treści przy przewijaniu; stan startowy WYŁĄCZNIE pod
+     html.js-motion (bez JS / przy reduce treść od razu widoczna —
+     reguła sections.md; wzorzec Home.astro 4.2). Strona jest mobile-only
+     (desktop redirectuje), więc bez media query. */
+  html.js-motion [data-rev] {
+    opacity: 0;
+    transform: translateY(22px);
+    transition:
+      opacity 0.7s ease,
+      transform 0.8s cubic-bezier(0.22, 0.61, 0.36, 1);
+  }
+  html.js-motion [data-rev].rv-in {
+    opacity: 1;
+    transform: none;
+  }
+  html.js-motion [data-rev="soft"],
+  html.js-motion [data-rev="soft"].rv-in {
+    transform: none;
+  }
+</style>
+
+<script>
+  import "@/components/sections/oferta/kategorie";
+
+  // Ruch — dynamicznie, tylko przy motion OK (wzorzec D-SG9).
+  if (matchMedia("(prefers-reduced-motion: no-preference)").matches) {
+    import("@/components/sections/oferta/oferta-motion");
+  }
+</script>
