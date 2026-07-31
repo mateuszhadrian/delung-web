@@ -3,7 +3,7 @@
 Strona firmowa klienta **Delung Meble** (meble na wymiar) — `delung.pl`.
 Astro 6 **static** (bez SSR), **PL-only** (bez `/en/`). Hosting: Cloudflare
 Pages, deploy automatyczny z gałęzi `main` → **main = produkcja** (od
-Etapu 1). Main będzie chroniony (required checks: `quality`, `e2e`,
+Etapu 1). Main jest chroniony (required checks: `quality`, `e2e`,
 `lighthouse` — komplet od Etapu 3) — zmiany idą przez feature branch → PR
 → zielone checki → merge; bez pracy wprost na main.
 
@@ -83,9 +83,21 @@ treść/sekcje budowane od nowa wg `docs/design/`).
     (widget `file` wgrywa MP4 do R2; range requests OK); docelowy schemat
     kolekcji w trzech miejscach + test kontraktu selecta kategorii;
     5 testowych wpisów (dane z designu, media-placeholdery w R2).
-- Etapy 3–7 — przed nami (testy/CI → widoki → formularz → SEO/pomiar →
-  przekazanie).
-- PRZEJŚCIOWE dziedzictwo szablonu (do wymiany w Etapach 3–5): widoki
+- **Etap 3 (testy/CI na szkielecie) — WYKONANY** (2026-07-31, PR #3):
+  specy e2e zaadaptowane do tras delung (PL-only; testy sekcji strony
+  głównej = `test.skip` do odskipowania w Etapie 4); allowlista axe PUSTA
+  (ratchet od zera) — kontrasty naprawione w tokenach (`--faint` 0.64,
+  `--accent-ink` dla kickerów); FIX produkcji: `html:root`
+  w `legacy-dark.css` (inlinowany override przegrywał kolejnością
+  z tokenami global.css → ciemny tekst na czarnym tle); telefon w polityce
+  składany w JS (antyscraping); sitemapa bez `/kategorie/` (canonical →
+  `/oferta/`); pierwsze baseline'y wizualne (36 linux + 36 darwin, święta
+  kolejność); budżety LHCI od baseline'u szkieletu Z ZAPASEM na sekcje
+  (run 30622374361: mobile perf 0.99 / LCP 1965 ms, desktop 1.0 / 492 ms,
+  script 59,6 KB) — ratchet AKTYWNY; required checks `quality`+`e2e`+
+  `lighthouse` w rulesecie. Od teraz pełny daily workflow.
+- Etapy 4–7 — przed nami (widoki → formularz → SEO/pomiar → przekazanie).
+- PRZEJŚCIOWE dziedzictwo szablonu (do wymiany w Etapach 4–5): widoki
   `/realizacje/` `/kontakt/` `/polityka-prywatnosci/` na ciemnym motywie
   (`src/styles/legacy-dark.css` — strona delung jest JASNA; kafle/detal
   realizacji = tymczasowe kafle zdjęciowe), breakpointy 760/861
