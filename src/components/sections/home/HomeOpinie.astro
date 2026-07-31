@@ -1,0 +1,429 @@
+---
+// Opinie (eksport: .op). Mobile: certyfikat + ocena + karuzela 3 kart
+// + link do opinii Google. Desktop: dwa przeciwbieżne marquee (2×3 opinie,
+// pętla przez duplikat aria-hidden). Korekty pod pustą allowlistę axe
+// (D-SG7): gwiazdki jako SVG aria-hidden (znak ★ #f2a90c ≈2:1 na bieli),
+// tła inicjałów przyciemnione do AA (#7d8a94→#59656f, #e8710a→#a34f07,
+// #5f9a41→#457533), drobne teksty na tokenie --faint.
+import certImg from "@/assets/home/cert-firma-godna.webp";
+
+const OPINIE = [
+  {
+    i: "P",
+    c: "#6a4fbf",
+    n: "Paweł Kowalczyk",
+    m: "1 opinia · 4 zdjęcia",
+    t: "Z całego serca polecamy Pana Adama! Wykonane meble kuchenne są na najwyższym poziomie. Wszystko zostało dopracowane z ogromną precyzją, dbałością o każdy, nawet najmniejszy szczegół. Widać ogromne doświadczenie, profesjonalizm i pasję do swojej pracy.",
+  },
+  {
+    i: "M",
+    c: "#59656f",
+    n: "Magda Lena",
+    m: "3 opinie · 7 zdjęć",
+    t: "Serdecznie i z czystym sumieniem możemy polecić Pana Adama. Jest profesjonalistą i najlepszym fachowcem, z jakim udało nam się współpracować w czasie wykończenia naszego wymarzonego domu. Świetny kontakt, dokładność i sumienność.",
+  },
+  {
+    i: "M",
+    c: "#a34f07",
+    n: "Magdalena Kotyś",
+    m: "4 opinie · 1 zdjęcie",
+    t: "Polecam z całego serca! Pan Adam urzeczywistnił nasze meblowe marzenia – od kuchni, przez salon, aż po wymarzoną garderobę! Piękne, starannie wykonane i funkcjonalne meble. Doradztwo na najwyższym poziomie, przyjazna atmosfera.",
+  },
+  {
+    i: "A",
+    c: "#9334e6",
+    n: "Anna Szlaska",
+    m: "5 opinii",
+    t: "Jestem bardzo zadowolona ze współpracy z panem Adamem. Meble kuchenne zostały wykonane z najwyższą starannością, dokładnie tak, jak sobie wymarzyłam. Cała realizacja przebiegła sprawnie, terminowo i bez żadnych problemów.",
+  },
+  {
+    i: "E",
+    c: "#5b6dcd",
+    n: "Ewa",
+    m: "2 opinie",
+    t: "Pan Adam Delung to profesjonalista pod każdym względem. Wszystko przebiegło perfekcyjnie od pomiaru przez projekt aż do wykonania i montażu mebli. Fachowiec pełen pasji i serca. Polecam serdecznie.",
+  },
+  {
+    i: "J",
+    c: "#457533",
+    n: "Jakub Nalichowski",
+    m: "9 opinii · 9 zdjęć",
+    t: "Bardzo polecam. Dobry kontakt, szybka realizacja, dobra cena, super jakość.",
+  },
+] as const;
+
+type Opinia = (typeof OPINIE)[number];
+const MARQ1 = OPINIE.slice(0, 3);
+const MARQ2 = OPINIE.slice(3);
+
+const GOOGLE_URL = "https://www.google.com/search?q=Delung+Meble";
+const STAR_PATH =
+  "M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17.2l-6.1 3.4 1.4-6.8L2.2 9.1l6.9-.8z";
+---
+
+<section class="op" data-home-op>
+  <div class="op-in">
+    <img
+      class="op-cert"
+      src={certImg.src}
+      width={certImg.width}
+      height={certImg.height}
+      alt="Certyfikat Firma Godna Zaufania Gold 2026"
+      loading="lazy"
+      decoding="async"
+      data-rev="soft"
+    />
+    <h2 data-rev>Nie musisz wierzyć nam na słowo.</h2>
+    <p class="op-rate" data-rev>
+      <span>Google</span>
+      <span>5,0</span>
+      <span class="op-stars" aria-hidden="true">
+        {
+          [0, 1, 2, 3, 4].map(() => (
+            <svg viewBox="0 0 24 24">
+              <path d={STAR_PATH} fill="#f2a90c" />
+            </svg>
+          ))
+        }
+      </span>
+    </p>
+  </div>
+
+  {
+    [MARQ1, MARQ2].map((list, mi) => (
+      <div class:list={["op-marq", { "op-marq2": mi === 1 }]}>
+        {[false, true].map((clone) => (
+          <div class="op-set" aria-hidden={clone ? "true" : undefined}>
+            {list.map((r: Opinia) => (
+              <article class="oc">
+                <div class="oc-top">
+                  <span
+                    class="oc-av"
+                    style={`background:${r.c}`}
+                    aria-hidden="true"
+                  >
+                    {r.i}
+                  </span>
+                  <span class="oc-who">
+                    <span class="oc-name">{r.n}</span>
+                    <span class="oc-meta">{r.m}</span>
+                  </span>
+                </div>
+                <div class="oc-stars" aria-hidden="true">
+                  {[0, 1, 2, 3, 4].map(() => (
+                    <svg viewBox="0 0 24 24">
+                      <path d={STAR_PATH} fill="#f2a90c" />
+                    </svg>
+                  ))}
+                </div>
+                <p class="oc-txt">{r.t}</p>
+              </article>
+            ))}
+          </div>
+        ))}
+      </div>
+    ))
+  }
+
+  {
+    /* tabindex + role: przewijana karuzela musi być osiągalna klawiaturą
+       (axe scrollable-region-focusable — karty nie mają focusowalnych
+       dzieci); rola "region" dopuszczona dla tej reguły w eslint.config. */
+  }
+  <div
+    class="op-car"
+    data-rev
+    data-lenis-prevent-horizontal
+    tabindex="0"
+    role="region"
+    aria-label="Opinie klientów"
+  >
+    {
+      MARQ1.map((r: Opinia) => (
+        <article class="oc">
+          <div class="oc-top">
+            <span class="oc-av" style={`background:${r.c}`} aria-hidden="true">
+              {r.i}
+            </span>
+            <span class="oc-who">
+              <span class="oc-name">{r.n}</span>
+              <span class="oc-meta">{r.m}</span>
+            </span>
+          </div>
+          <div class="oc-stars" aria-hidden="true">
+            {[0, 1, 2, 3, 4].map(() => (
+              <svg viewBox="0 0 24 24">
+                <path d={STAR_PATH} fill="#f2a90c" />
+              </svg>
+            ))}
+          </div>
+          <p class="oc-txt">{r.t}</p>
+        </article>
+      ))
+    }
+  </div>
+
+  <a class="op-link" data-rev href={GOOGLE_URL} target="_blank" rel="noopener">
+    Zobacz więcej opinii w Google
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path
+        d="M6 18L18 6M18 6H8M18 6v10"
+        stroke="#1a1a1a"
+        stroke-width="1.5"
+        stroke-linecap="round"
+        stroke-linejoin="round"></path>
+    </svg>
+  </a>
+</section>
+
+<style>
+  .op {
+    margin-top: 48px;
+    background: var(--bg-cream);
+    padding: 40px 0 44px;
+    overflow: hidden;
+  }
+  .op-in {
+    width: 100%;
+    max-width: var(--col);
+    margin-inline: auto;
+    padding-inline: var(--pad);
+  }
+  .op-cert {
+    display: block;
+    width: clamp(76px, 21.5vw, 104px);
+    height: auto;
+    margin-bottom: 16px;
+    filter: drop-shadow(0 0 14px rgba(255, 255, 255, 0.95))
+      drop-shadow(0 0 38px rgba(255, 255, 255, 0.7))
+      drop-shadow(0 6px 18px rgba(0, 0, 0, 0.28));
+  }
+  h2 {
+    font-family: var(--font-display), sans-serif;
+    font-weight: 200;
+    font-size: clamp(22px, 6.67vw, 29px);
+    line-height: 1.27;
+    text-wrap: pretty;
+  }
+  .op-rate {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 14px 0 20px;
+    font-family: var(--font-body), sans-serif;
+    font-weight: 600;
+    font-size: clamp(13px, 3.59vw, 15px);
+    line-height: 1;
+  }
+  .op-stars,
+  .oc-stars {
+    display: inline-flex;
+    gap: 2px;
+  }
+  .op-stars svg {
+    width: 14px;
+    height: 14px;
+  }
+  .oc-stars svg {
+    width: 12.5px;
+    height: 12.5px;
+  }
+  .op-marq {
+    display: none;
+  }
+  .op-car {
+    display: flex;
+    gap: 14px;
+    overflow-x: auto;
+    padding-block: 2px 6px;
+    padding-inline: var(--pad);
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+  }
+  .op-car::-webkit-scrollbar {
+    display: none;
+  }
+  .oc {
+    flex: none;
+    width: min(290px, 80vw);
+    border-radius: 8px;
+    padding: 18px;
+    background: #fff;
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+    box-sizing: border-box;
+  }
+  .oc-top {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+  }
+  .oc-av {
+    width: 38px;
+    height: 38px;
+    border-radius: 999px;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-body), sans-serif;
+    font-weight: 500;
+    font-size: 16px;
+    line-height: 1;
+    flex: none;
+  }
+  .oc-who {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .oc-name {
+    font-family: var(--font-body), sans-serif;
+    font-weight: 600;
+    font-size: 14px;
+    line-height: 1.2;
+  }
+  .oc-meta {
+    font-family: var(--font-body), sans-serif;
+    font-weight: 400;
+    font-size: 11.5px;
+    line-height: 1.2;
+    /* eksport .5 — podbite do --faint (drobny druk, ratchet axe) */
+    color: var(--faint);
+  }
+  .oc-txt {
+    font-family: var(--font-display), sans-serif;
+    font-weight: 300;
+    font-size: clamp(12.5px, 3.46vw, 14px);
+    line-height: 1.48;
+    color: rgba(26, 26, 26, 0.85);
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .op-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-block: 22px 0;
+    margin-inline: var(--pad);
+    font-family: var(--font-body), sans-serif;
+    font-weight: 500;
+    font-size: 14px;
+    line-height: 1;
+    color: var(--ink);
+    text-decoration: none;
+    border-bottom: 1px solid rgba(26, 26, 26, 0.35);
+    padding-bottom: 6px;
+  }
+  .op-link:hover {
+    opacity: 0.6;
+  }
+  .op-link svg {
+    width: 16px;
+    height: 16px;
+    flex: none;
+  }
+
+  /* ════ DESKTOP ≥1024 (para: HOME_DESKTOP_MIN_PX) ════ */
+  @media (min-width: 1024px) {
+    .op {
+      margin: 0;
+      /* cream sekcji opinii z eksportu (ciut ciemniejszy od --bg-cream) */
+      background: #f0eee9;
+      padding: clamp(70px, 6.94vw, 100px) 0 clamp(78px, 7.64vw, 110px);
+    }
+    .op-in {
+      max-width: var(--col);
+      text-align: center;
+    }
+    .op-cert {
+      width: clamp(96px, 8.3vw, 120px);
+      margin: 0 auto clamp(18px, 1.81vw, 26px);
+    }
+    h2 {
+      font-size: clamp(32px, 3.06vw, 44px);
+      line-height: 1.2;
+    }
+    .op-rate {
+      justify-content: center;
+      gap: 12px;
+      margin: 18px 0 46px;
+      font-size: clamp(14px, 1.11vw, 16px);
+    }
+    .op-stars svg {
+      width: 16px;
+      height: 16px;
+    }
+    .op-car {
+      display: none;
+    }
+    .op-marq {
+      display: flex;
+      width: max-content;
+      animation: op-marq 46s linear infinite;
+    }
+    .op-marq.op-marq2 {
+      animation: op-marq-rev 46s linear infinite;
+      margin-top: 20px;
+    }
+    .op-set {
+      display: flex;
+    }
+    .op-marq .oc {
+      width: clamp(340px, 29.9vw, 430px);
+      padding: 24px;
+      gap: 11px;
+      margin-right: 20px;
+    }
+    .op-marq .oc-av {
+      width: 40px;
+      height: 40px;
+      font-size: 17px;
+    }
+    .op-marq .oc-name {
+      font-size: 14.5px;
+    }
+    .op-marq .oc-meta {
+      font-size: 12px;
+    }
+    .op-marq .oc-stars svg {
+      width: 13px;
+      height: 13px;
+    }
+    .op-marq .oc-txt {
+      font-size: 14px;
+      line-height: 1.5;
+      -webkit-line-clamp: 3;
+    }
+    .op-link {
+      display: none;
+    }
+  }
+
+  @keyframes op-marq {
+    to {
+      transform: translateX(-50%);
+    }
+  }
+  @keyframes op-marq-rev {
+    from {
+      transform: translateX(-50%);
+    }
+    to {
+      transform: translateX(0);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .op-marq,
+    .op-marq.op-marq2 {
+      animation: none;
+    }
+  }
+</style>

@@ -12,15 +12,7 @@ export const ui = {
   pl: {
     "meta.title": "Delung Meble — meble na wymiar",
     "work.eyebrow": "NASZE REALIZACJE",
-    "work.headlineLead": "zobacz nasze",
-    "work.headlineAccent": "realizacje",
     "work.cta": "Zobacz realizację",
-    "work.more": "Więcej realizacji",
-    "work.moreBig": "Więcej",
-    "work.moreSub": "realizacji",
-    "work.prev": "Poprzednia realizacja",
-    "work.next": "Następna realizacja",
-    "work.goto": "Przejdź do slajdu",
     "work.gallery": "Galeria",
     "work.specs": "Szczegóły realizacji",
     "work.close": "Zamknij",
@@ -85,9 +77,6 @@ export const ui = {
     "contact.toastOkTitle": "Wiadomość wysłana",
     "contact.toastOkMsg": "Odezwiemy się w ciągu 24h w dni robocze.",
     "contact.policyHref": "/polityka-prywatnosci/",
-    "contact.bannerIntro":
-      "Chcesz wycenić kuchnię, szafę albo inną zabudowę na wymiar? Przejdź do sekcji kontaktowej — napisz wiadomość lub zadzwoń i opowiedz, czego dokładnie potrzebujesz.",
-    "contact.bannerCta": "Skontaktuj się z nami",
     "contactPage.title": "Kontakt — Delung Meble",
     "contactPage.description":
       "Skontaktuj się z nami — formularz kontaktowy, e-mail i telefon. Napisz, czego potrzebujesz: kuchnia, szafa, garderoba czy inna zabudowa na wymiar. Odpowiadamy do 24 h w dni robocze.",

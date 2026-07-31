@@ -1,0 +1,400 @@
+---
+// Zajawka procesu współpracy (eksport: .pr). Mobile: pionowa oś 4 kroków
+// + linia postępu (scaleY z home-scroll) + CTA. Desktop: naprzemienna oś
+// czasu tekst↔zdjęcie, reveal kroków (klasa .rev z home-scroll), wielka
+// cyfra w tle; CTA za designem TYLKO mobile (desktop linkuje proces
+// wyłącznie stopką — D-CH4/D-SG5). Numery kroków: dwa spany (KROK 01 /
+// 01) przełączane CSS — eksport synchronizował je JS.
+import { PROCESS_PATH } from "@/lib/routes";
+import HomeCta from "./HomeCta.astro";
+import proces1 from "@/assets/home/proces-1.webp";
+import proces2 from "@/assets/home/proces-2.webp";
+import proces3 from "@/assets/home/proces-3.webp";
+import proces4 from "@/assets/home/proces-4.webp";
+
+const KROKI = [
+  {
+    n: "01",
+    tag: "PIERWSZY KONTAKT I DARMOWY POMIAR",
+    t: "Rozmowa i darmowy pomiar",
+    tD: "Rozmowa i pomiar",
+    d: "Poznajemy Twoją wizję i precyzyjnie wymiarujemy przestrzeń.",
+    dD: "Poznajemy Twoją wizję — telefonicznie jesteśmy dostępni 24/7. Przyjeżdżamy na miejsce, precyzyjnie wymiarujemy przestrzeń i doradzamy najlepsze rozwiązania.",
+    img: proces1,
+    pos: "50% 45%",
+  },
+  {
+    n: "02",
+    tag: "PROJEKT, DETALE I WYCENA",
+    t: "Projekt i wycena",
+    tD: "Projektowanie i dobór materiałów",
+    d: "Dobieramy fronty, blaty, AGD i tkaniny — aż wszystko gra.",
+    dD: "Przekładamy pomysły na konkretny plan: fronty, blaty, AGD i tkaniny. Po akceptacji projektu i wyceny zabieramy się do pracy.",
+    img: proces2,
+    pos: "50% 50%",
+  },
+  {
+    n: "03",
+    tag: "PRODUKCJA I BEZKOMPROMISOWA JAKOŚĆ",
+    t: "Rzemieślnicza produkcja",
+    tD: "Rzemieślnicza produkcja",
+    d: "Topowe maszyny, niezawodne okucia i rygorystyczna kontrola.",
+    dD: "W naszej stolarni nie idziemy na skróty — topowe maszyny, niezawodne okucia i rygorystyczna kontrola każdego elementu.",
+    img: proces3,
+    pos: "50% 55%",
+  },
+  {
+    n: "04",
+    tag: "MONTAŻ",
+    t: "Czysty montaż „pod klucz”",
+    tD: "Czysty montaż „pod klucz”",
+    d: "Zabezpieczamy dom i zostawiamy gotowe, lśniące wnętrze.",
+    dD: "Zabezpieczamy dom, montujemy zabudowę, podłączamy AGD i zostawiamy po sobie gotowe, lśniące wnętrze.",
+    img: proces4,
+    pos: "50% 55%",
+  },
+] as const;
+---
+
+<section class="pr" data-home-pr>
+  <div class="pr-in">
+    <div class="pr-head">
+      <p class="kick" data-rev>PROCES WSPÓŁPRACY</p>
+      <h2 class="mOnly" data-rev>Jak wygląda współpraca?</h2>
+      <h2 class="dOnly">Od rozmowy do gotowego wnętrza</h2>
+    </div>
+    <div class="pr-body" data-prbody>
+      <div class="pr-line" aria-hidden="true"><b data-prline></b></div>
+      <div class="pr-steps">
+        {
+          KROKI.map((s) => (
+            <div class="st" data-rev>
+              <div class="st-txt">
+                <p class="st-num" aria-hidden="true">
+                  <span class="mOnlyI">KROK {s.n}</span>
+                  <span class="dOnlyI">{s.n}</span>
+                </p>
+                <p class="st-tag">{s.tag}</p>
+                <h3 class="st-t">{s.t}</h3>
+                <h3 class="st-tD">{s.tD}</h3>
+                <p class="st-d">{s.d}</p>
+                <p class="st-dD">{s.dD}</p>
+              </div>
+              <span class="st-dot" aria-hidden="true" />
+              <div class="st-img">
+                <img
+                  src={s.img.src}
+                  width={s.img.width}
+                  height={s.img.height}
+                  alt={s.tD}
+                  loading="lazy"
+                  decoding="async"
+                  style={`object-position:${s.pos}`}
+                />
+                <span class="st-cover" aria-hidden="true" />
+              </div>
+            </div>
+          ))
+        }
+      </div>
+    </div>
+    <div class="pr-cta" data-rev>
+      <HomeCta href={PROCESS_PATH} variant="out">
+        Zobacz proces współpracy
+      </HomeCta>
+    </div>
+  </div>
+</section>
+
+<style>
+  .pr {
+    margin-top: 44px;
+    background: var(--bg-cream);
+    padding: 40px 0 44px;
+  }
+  .pr-in {
+    width: 100%;
+    max-width: var(--col);
+    margin-inline: auto;
+    padding-inline: var(--pad);
+  }
+  .kick {
+    font-family: var(--font-display), sans-serif;
+    font-weight: 500;
+    font-size: clamp(10px, 2.82vw, 12px);
+    line-height: 1;
+    letter-spacing: 0.2em;
+    color: var(--accent-ink);
+    margin-bottom: 14px;
+  }
+  h2 {
+    font-family: var(--font-display), sans-serif;
+    font-weight: 200;
+    font-size: clamp(23px, 7.18vw, 31px);
+    line-height: 1.21;
+    text-wrap: pretty;
+  }
+  .dOnly,
+  .dOnlyI {
+    display: none;
+  }
+  .pr-body {
+    display: flex;
+    gap: 18px;
+    margin-top: 24px;
+    position: relative;
+  }
+  .pr-line {
+    position: relative;
+    width: 2px;
+    flex: none;
+    border-radius: 2px;
+    background: rgba(26, 26, 26, 0.12);
+  }
+  .pr-line b {
+    position: absolute;
+    inset: 0;
+    background: var(--accent);
+    transform: scaleY(0);
+    transform-origin: top;
+    border-radius: 2px;
+  }
+  .pr-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    flex: 1;
+    padding: 2px 0;
+  }
+  .st-num {
+    font-family: var(--font-mono), monospace;
+    font-weight: 500;
+    font-size: 10px;
+    line-height: 1;
+    letter-spacing: 0.14em;
+    color: var(--accent-ink);
+  }
+  .st-tag {
+    display: none;
+  }
+  .st-t {
+    margin-top: 6px;
+    font-family: var(--font-display), sans-serif;
+    font-weight: 300;
+    font-size: clamp(15.5px, 4.49vw, 19px);
+  }
+  .st-d {
+    margin-top: 4px;
+    font-family: var(--font-display), sans-serif;
+    font-weight: 200;
+    font-size: clamp(12.5px, 3.46vw, 14.5px);
+    line-height: 1.48;
+    color: rgba(26, 26, 26, 0.7);
+    text-wrap: pretty;
+  }
+  .st-tD,
+  .st-dD,
+  .st-img,
+  .st-dot,
+  .st-cover {
+    display: none;
+  }
+  .pr-cta {
+    margin-top: 26px;
+  }
+
+  /* ════ DESKTOP ≥1024 (para: HOME_DESKTOP_MIN_PX) ════ */
+  @media (min-width: 1024px) {
+    .pr {
+      margin: 0;
+      background: #fff;
+      padding: clamp(84px, 8.33vw, 120px) 0 clamp(70px, 6.94vw, 100px);
+    }
+    .mOnly,
+    .mOnlyI {
+      display: none;
+    }
+    .dOnly {
+      display: block;
+    }
+    .dOnlyI {
+      display: inline;
+    }
+    .pr-head {
+      text-align: center;
+    }
+    .kick {
+      font-size: clamp(10.5px, 0.83vw, 12px);
+      letter-spacing: 0.22em;
+      margin-bottom: 18px;
+    }
+    h2 {
+      margin-bottom: 30px;
+      font-size: clamp(38px, 3.89vw, 56px);
+      line-height: 1.1;
+    }
+    .pr-body {
+      display: block;
+      margin-top: 40px;
+    }
+    .pr-line {
+      position: absolute;
+      left: 50%;
+      top: 0;
+      bottom: 0;
+      width: 1px;
+      background: rgba(26, 26, 26, 0.12);
+    }
+    .pr-steps {
+      display: block;
+      padding: 0;
+    }
+    .st {
+      display: grid;
+      grid-template-columns: 1fr 96px 1fr;
+      align-items: center;
+      padding: clamp(30px, 3.19vw, 46px) 0;
+      position: relative;
+    }
+    .st-txt {
+      grid-row: 1;
+      position: relative;
+    }
+    .st:nth-child(odd) .st-txt {
+      grid-column: 1;
+    }
+    .st:nth-child(even) .st-txt {
+      grid-column: 3;
+    }
+    .st:nth-child(odd) .st-img {
+      grid-column: 3;
+    }
+    .st:nth-child(even) .st-img {
+      grid-column: 1;
+    }
+    .st-num {
+      position: absolute;
+      top: -58px;
+      left: -6px;
+      font-family: var(--font-display), sans-serif;
+      font-weight: 200;
+      letter-spacing: 0;
+      font-size: clamp(78px, 8.33vw, 120px);
+      line-height: 1;
+      color: rgba(26, 26, 26, 0.08);
+      pointer-events: none;
+    }
+    .st-tag {
+      display: block;
+      font-family: var(--font-display), sans-serif;
+      font-weight: 500;
+      font-size: 11px;
+      line-height: 1.6;
+      letter-spacing: 0.18em;
+      color: var(--accent-ink);
+      position: relative;
+    }
+    .st-t {
+      display: none;
+    }
+    .st-tD {
+      display: block;
+      margin-top: 12px;
+      font-family: var(--font-display), sans-serif;
+      font-weight: 200;
+      font-size: clamp(26px, 2.5vw, 36px);
+      line-height: 1.15;
+      position: relative;
+    }
+    .st-d {
+      display: none;
+    }
+    .st-dD {
+      display: block;
+      margin-top: 16px;
+      font-family: var(--font-display), sans-serif;
+      font-weight: 200;
+      font-size: clamp(14px, 1.11vw, 16px);
+      line-height: 1.55;
+      color: var(--muted);
+      text-wrap: pretty;
+      position: relative;
+      max-width: 48ch;
+    }
+    .st-dot {
+      display: block;
+      grid-column: 2;
+      grid-row: 1;
+      justify-self: center;
+      align-self: center;
+      width: 11px;
+      height: 11px;
+      border-radius: 99px;
+      background: var(--accent);
+      border: 3px solid #fff;
+      box-shadow: 0 0 0 1px rgba(47, 143, 91, 0.35);
+      position: relative;
+      z-index: 2;
+    }
+    .st-img {
+      display: block;
+      grid-row: 1;
+      position: relative;
+      height: clamp(240px, 25vw, 360px);
+      overflow: hidden;
+      border-radius: 8px;
+      background: #e5e1da;
+    }
+    .st-img img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transform: scale(1.18);
+      transition: transform 1.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .st-cover {
+      display: block;
+      position: absolute;
+      inset: 0;
+      background: #fff;
+      transform-origin: top;
+      transition: transform 1s cubic-bezier(0.76, 0, 0.24, 1);
+    }
+    .st-txt {
+      transform: translateY(46px);
+      opacity: 0;
+      transition:
+        transform 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.15s,
+        opacity 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.15s;
+    }
+    .st.rev .st-img img {
+      transform: scale(1);
+    }
+    .st.rev .st-cover {
+      transform: scaleY(0);
+    }
+    .st.rev .st-txt {
+      transform: none;
+      opacity: 1;
+    }
+    .pr-cta {
+      display: none;
+    }
+
+    /* Fallback bez ruchu (reduce / bez JS): kroki od razu widoczne. */
+    :global(html:not(.js-motion)) .st-txt {
+      transform: none;
+      opacity: 1;
+      transition: none;
+    }
+    :global(html:not(.js-motion)) .st-img img {
+      transform: none;
+      transition: none;
+    }
+    :global(html:not(.js-motion)) .st-cover {
+      display: none;
+    }
+  }
+</style>

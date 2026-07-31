@@ -21,17 +21,21 @@ export const buildEmail = (): string =>
   "." +
   EMAIL_PARTS[2];
 
-/** Wypełnia sloty telefonu/maila w DOM (chrome renderuje je puste+hidden). */
+/** Wypełnia sloty telefonu/maila w DOM (chrome renderuje je puste+hidden).
+ *  Kotwica z wewnętrznym [data-slot] (wiersze bannera kontaktu — ikona
+ *  i etykieta zostają) dostaje tekst do slotu; bez slotu — jak dotąd,
+ *  w textContent całej kotwicy. */
 export function fillContactSlots(root: ParentNode = document): void {
-  root.querySelectorAll<HTMLAnchorElement>("a[data-tel]").forEach((a) => {
-    a.href = buildPhoneHref();
-    a.textContent = buildPhoneDisplay();
+  const fill = (a: HTMLAnchorElement, href: string, text: string) => {
+    a.href = href;
+    (a.querySelector<HTMLElement>("[data-slot]") ?? a).textContent = text;
     a.hidden = false;
-  });
+  };
+  root
+    .querySelectorAll<HTMLAnchorElement>("a[data-tel]")
+    .forEach((a) => fill(a, buildPhoneHref(), buildPhoneDisplay()));
   root.querySelectorAll<HTMLAnchorElement>("a[data-mail]").forEach((a) => {
     const email = buildEmail();
-    a.href = "mailto:" + email;
-    a.textContent = email;
-    a.hidden = false;
+    fill(a, "mailto:" + email, email);
   });
 }

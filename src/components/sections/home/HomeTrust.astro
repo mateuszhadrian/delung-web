@@ -1,0 +1,155 @@
+---
+// Pasek zaufania + marquee logotypów dostawców (eksport: .trust/.logos).
+// Gwiazdka oceny jako SVG aria-hidden (znak ★ #f2a90c to tekst ~2:1 —
+// wywaliłby pustą allowlistę axe; D-SG7). Drugi obieg marquee aria-hidden.
+// Wysokości logotypów per breakpoint w CSS (eksport synchronizował je JS).
+import logoBlum from "@/assets/home/logo-blum.webp";
+import logoGtv from "@/assets/home/logo-gtv.webp";
+import logoWurth from "@/assets/home/logo-wurth.webp";
+import logoPeka from "@/assets/home/logo-peka.webp";
+import logoFestool from "@/assets/home/logo-festool.webp";
+import logoMakita from "@/assets/home/logo-makita.webp";
+
+// [obraz, alt, wysokość desktop px, wysokość mobile px] — z eksportu.
+const LOGOS = [
+  [logoBlum, "Blum", 24, 15],
+  [logoGtv, "GTV", 21, 13],
+  [logoWurth, "Würth", 26, 16],
+  [logoPeka, "Peka", 22, 14],
+  [logoFestool, "Festool", 19, 12],
+  [logoMakita, "Makita", 24, 15],
+] as const;
+---
+
+<div class="trust" data-rev="soft">
+  <span class="trust-rate">
+    <svg class="star" viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17.2l-6.1 3.4 1.4-6.8L2.2 9.1l6.9-.8z"
+        fill="#f2a90c"></path>
+    </svg>
+    5,0 W GOOGLE
+  </span>
+  <i aria-hidden="true"></i>
+  <span>OD 2014</span>
+  <i aria-hidden="true"></i>
+  <span>SETKI REALIZACJI</span>
+</div>
+
+<div class="logos" data-rev="soft">
+  <div class="logos-row">
+    {
+      [false, true].map((clone) => (
+        <div class="logos-set" aria-hidden={clone ? "true" : undefined}>
+          {LOGOS.map(([img, alt, hd, hm]) => (
+            <img
+              src={img.src}
+              width={img.width}
+              height={img.height}
+              alt={clone ? "" : alt}
+              loading="lazy"
+              decoding="async"
+              style={`--hd:${hd}px;--hm:${hm}px`}
+            />
+          ))}
+        </div>
+      ))
+    }
+  </div>
+</div>
+
+<style>
+  .trust {
+    background: var(--bg-cream);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 15px 12px;
+  }
+  .trust span {
+    font-family: var(--font-display), sans-serif;
+    font-weight: 500;
+    font-size: clamp(9.5px, 2.7vw, 11px);
+    line-height: 1;
+    letter-spacing: 0.14em;
+    /* eksport .62 — podbite do tokenu --faint (AA na cream, ratchet axe) */
+    color: var(--faint);
+  }
+  .trust-rate {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .star {
+    width: 12px;
+    height: 12px;
+    flex: none;
+  }
+  .trust i {
+    width: 4px;
+    height: 4px;
+    border-radius: 999px;
+    background: var(--accent);
+    flex: none;
+  }
+
+  .logos {
+    padding: 26px 0 0;
+    overflow: hidden;
+    background: #fff;
+  }
+  .logos-row {
+    display: flex;
+    align-items: center;
+    width: max-content;
+    animation: logos-marquee 26s linear infinite;
+  }
+  .logos-set {
+    display: flex;
+    align-items: center;
+  }
+  .logos-set img {
+    display: block;
+    width: auto;
+    height: var(--hm);
+    margin-right: 46px;
+    filter: grayscale(1) opacity(0.55);
+  }
+
+  @media (min-width: 1024px) {
+    .trust {
+      gap: 18px;
+      padding: 20px 12px;
+    }
+    .trust span {
+      font-size: clamp(11px, 0.83vw, 12px);
+      letter-spacing: 0.16em;
+    }
+    .logos {
+      padding: 30px 0;
+      border-bottom: 1px solid rgba(26, 26, 26, 0.06);
+    }
+    .logos-row {
+      animation-duration: 30s;
+    }
+    .logos-set img {
+      height: var(--hd);
+      margin-right: clamp(48px, 6.11vw, 88px);
+      filter: grayscale(1) opacity(0.5);
+    }
+  }
+
+  @keyframes logos-marquee {
+    to {
+      transform: translateX(-50%);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .logos-row {
+      animation: none;
+    }
+  }
+</style>
