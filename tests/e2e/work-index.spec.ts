@@ -1,7 +1,8 @@
 // Podstrona realizacji (/realizacje/): pełna lista wpisów z Content
 // Collections, nakładki WorkDetail (Modal >760 px / BottomSheet ≤760 px),
-// scroll NATYWNY (bez Lenisa). PL-only (delung); pełna adaptacja speców
-// do widoków delung — Etap 3/4 instrukcji.
+// scroll NATYWNY (bez Lenisa), chrome globalny 4.1 (sticky pasek + stopka
+// ft). PL-only (delung); pełna adaptacja speców do widoków delung —
+// Etap 3/4 instrukcji.
 import { readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { expect, test, type Page } from "@playwright/test";
@@ -83,53 +84,32 @@ for (const p of PAGES) {
       const work = page.locator(`.nav-link[href="${p.path}"]`);
       await expect(work).toBeAttached();
       await expect(work).toHaveAttribute("aria-current", "page");
-      // Stopka: współdzielony Footer (ten sam co finał strony głównej) —
-      // link polityki prywatności we właściwym języku + social media.
+      // Stopka: współdzielony Footer (chrome globalny 4.1) — link polityki
+      // prywatności + social media (Instagram).
       await expect(
         page.locator(
-          `.wix-foot .ft-leg a[href="${ui[p.lang]["contact.policyHref"]}"]`,
+          `.wix-foot .ft-nav a[href="${ui[p.lang]["contact.policyHref"]}"]`,
         ),
       ).toBeAttached();
       await expect(page.locator(".wix-foot .ft-soc a").first()).toBeAttached();
     });
 
-    test(`back button w miejscu brandu, widoczny mimo schowanego paska`, async ({
+    test(`sticky pasek z logo — widoczny u góry także po scrollu`, async ({
       page,
     }) => {
       await gotoReady(page, p.path);
-      // Brand ustępuje miejsca przyciskowi „wstecz" (fallback → strona główna).
-      // W PASKU brandu nie ma — jego slot zajmuje przyklejony BackButton.
-      await expect(page.locator(".brand:not(.brand-menu)")).toHaveCount(0);
-      // Brand „tylko w menu" jest w DOM, ale odsłania go dopiero otwarte
-      // menu mobilne (na desktopie: display:none) — patrz Navbar.astro.
-      await expect(page.locator(".brand-menu")).toBeHidden();
-      const back = page.locator("a[data-back]");
-      await expect(back).toHaveAttribute("href", p.homePath);
-      await expect(back).toBeVisible();
-      // Pasek chowa się przy scrollu w dół; przycisk jest fixed POZA barem
-      // i ma zostać przyklejony u góry viewportu.
-      await scrollPageTo(page, 200);
+      // Chrome 4.1: logo ZAWSZE w pasku (design), BackButton poza chrome
+      // (D-CH8 w docs/analiza-chrome-globalny.md), pasek sticky bez
+      // chowania przy scrollu (koniec data-hidden z szablonu).
+      const logo = page.locator(".hdr-logo");
+      await expect(logo).toBeVisible();
+      await expect(logo).toHaveAttribute("href", p.homePath);
       await scrollPageTo(page, 600);
-      await expect(page.locator("[data-nav]")).toHaveAttribute(
-        "data-hidden",
-        "",
-      );
-      await expect(back).toBeVisible();
-      const box = await back.boundingBox();
+      const nav = page.locator("[data-nav]");
+      await expect(nav).toBeVisible();
+      const box = await nav.boundingBox();
       expect(box).not.toBeNull();
-      expect(box!.y).toBeGreaterThanOrEqual(0);
-      expect(box!.y).toBeLessThan(80);
-    });
-
-    test(`back button wraca na stronę główną (history.back)`, async ({
-      page,
-    }) => {
-      await gotoReady(page, p.homePath);
-      await page.locator(`.nav-link[href="${p.path}"]`).click();
-      await expect.poll(() => new URL(page.url()).pathname).toBe(p.path);
-      await page.locator("a[data-back]").click();
-      // history.back() → wracamy na stronę główną (przywrócona historia).
-      await expect.poll(() => new URL(page.url()).pathname).toBe(p.homePath);
+      expect(box!.y).toBe(0);
     });
 
     test(`strona ładuje się bez błędów konsoli i 404`, async ({ page }) => {

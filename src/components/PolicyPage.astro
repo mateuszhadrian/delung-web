@@ -5,17 +5,15 @@
 // (9 sekcji, dane administratora z designu — decyzja D4); znaczniki
 // „[do uzupełnienia]" designu wypełnione realnym stackiem (Cloudflare/
 // Resend/OVH — sekcje 04–05 wg faktycznej architektury, wzorzec z szablonu źródłowego).
-// Chrome strony wg wzorca podstron (Navbar bez brandu, BackButton w miejscu
-// brandu, współdzielony Footer), BEZ warstwy AmbientBackground.
+// Chrome globalny (Navbar + Footer — część 4.1), BEZ warstwy
+// AmbientBackground.
 // E-mail administratora składany z fragmentów w JS (skrypt niżej) — pełny
 // adres nie może wystąpić w dist (kontrakt antyscrapingowy w
 // tests/e2e/contact.spec.ts); fallback bez JS wskazuje formularz kontaktowy.
 import "@/styles/legacy-dark.css";
 import BaseLayout from "@/layouts/BaseLayout.astro";
 import Navbar from "@/components/navbar/Navbar.astro";
-import BackButton from "@/components/ui/BackButton.astro";
 import Footer from "@/components/Footer.astro";
-import { HOME_PATH } from "@/lib/routes";
 
 type Section = {
   h: string;
@@ -34,7 +32,6 @@ const c = {
   effective: "Obowiązuje od 11 lipca 2026 r.",
   intro:
     "Ta polityka opisuje, jak przetwarzamy dane osobowe przekazane przez formularz kontaktowy na stronie delung.pl. Piszemy prostym językiem — bez prawniczego szumu, ale z kompletem informacji wymaganych przez RODO.",
-  back: "Wróć",
   mailFallback: "adres e-mail na stronie kontaktu",
   sections: [
     {
@@ -117,18 +114,7 @@ const c = {
 ---
 
 <BaseLayout title={c.title} description={c.description} smoothScroll="desktop">
-  <Navbar showBrand={false} />
-
-  {
-    /* „Wstecz" w miejscu brandu — CELOWO poza barem navbara: fixed, więc nie
-       chowa się razem z nim przy scrollu; działa jak wstecz przeglądarki
-       (globalny mechanizm a[data-back], fallback → strona główna). Wrapper,
-       nie klasa na komponencie: scoped CSS (strategia atrybutowa) nie łapie
-       elementów renderowanych przez komponent potomny. */
-  }
-  <div class="pp-back">
-    <BackButton href={HOME_PATH} label={c.back} />
-  </div>
+  <Navbar />
 
   <div class="pp">
     <main class="pp-art">
@@ -167,10 +153,7 @@ const c = {
       }
     </main>
 
-    {/* Współdzielony footer strony (ten sam co finał strony głównej). */}
-    <div class="pp-foot">
-      <Footer />
-    </div>
+    <Footer />
   </div>
 </BaseLayout>
 
@@ -211,26 +194,12 @@ const c = {
     font-family: var(--font-body), sans-serif;
   }
 
-  /* Pozycja = slot brandu w navbarze (te same clampy paddingu paska);
-     korekta -12px centruje 46-px kółko na linii treści paska. z-index nad
-     nav-root (50), bo przycisk ma być widoczny ZAWSZE — także gdy pasek
-     schowa się przy scrollu w dół. */
-  .pp-back {
-    position: fixed;
-    z-index: 60;
-    /* Sam wrapper nie łapie klików (wzorzec .nav-root z Navbar.astro):
-       przy otwartym menu jego box zasłaniałby logo, mimo że przycisk
-       jest już ukryty. Klik przejmuje .bkb (pointer-events: auto). */
-    pointer-events: none;
-    left: clamp(1.25rem, 4vw, 2.75rem);
-    top: calc(clamp(1.25rem, 3.2vh, 1.9rem) - 12px);
-  }
-
   .pp-art {
     max-width: 760px;
     margin: 0 auto;
-    /* góra: prześwit pod fixed navbar (pasek ~60–80px zależnie od clampów) */
-    padding: 120px 24px 90px;
+    /* PRZEJŚCIOWE: odstęp z czasów fixed navbara — po zmianie chrome'u na
+       sticky zmniejszony; docelowo wg portu widoku (4.5). */
+    padding: 48px 24px 90px;
   }
   .pp-mono {
     font-family: var(--font-mono), monospace;
@@ -332,18 +301,11 @@ const c = {
     text-decoration-color: var(--accent);
   }
 
-  /* ── Stopka: kontener współdzielonego Footer.astro (szerokość jak na
-     pozostałych podstronach; sam footer jest bezmarginesowy — rodzic
-     kontroluje layout) ── */
-  .pp-foot {
-    max-width: 1320px;
-    margin: 0 auto;
-    padding: 0 5vw 42px;
-  }
+  /* Stopka full-bleed — Footer.astro sam kontroluje kontener/wrap. */
 
   @media (max-width: 640px) {
     .pp-art {
-      padding-top: 104px;
+      padding-top: 40px;
     }
     .pp-sec {
       margin-top: 44px;

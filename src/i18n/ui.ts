@@ -32,7 +32,6 @@ export const ui = {
     "workPage.intro":
       "Przeglądaj wybrane realizacje. Kliknij, by zobaczyć szczegóły projektu.",
     "workPage.ghost": "Kolejne realizacje wkrótce",
-    "workPage.back": "Wróć",
     "contact.meta": "Formularz · e-mail · telefon",
     "contact.ghost": "KONTAKT",
     "contact.kick": "Kontakt",
@@ -92,6 +91,5 @@ export const ui = {
     "contactPage.title": "Kontakt — Delung Meble",
     "contactPage.description":
       "Skontaktuj się z nami — formularz kontaktowy, e-mail i telefon. Napisz, czego potrzebujesz: kuchnia, szafa, garderoba czy inna zabudowa na wymiar. Odpowiadamy do 24 h w dni robocze.",
-    "contactPage.back": "Wróć",
   },
 } as const;

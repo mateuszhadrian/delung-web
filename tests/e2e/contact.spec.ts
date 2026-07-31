@@ -425,10 +425,13 @@ test("antyscraping: pełny e-mail i telefon nie występują w źródle ani bundl
   );
   const FORBIDDEN = ["kontakt@delung.pl", "690291143", "690 291 143"];
 
-  // HTML serwowany do przeglądarki (przed jakimkolwiek revealem).
-  await gotoReady(page, CONTACT_PATH);
-  const html = await page.content();
-  for (const s of FORBIDDEN) expect(html).not.toContain(s);
+  // SUROWY HTML z sieci (bez wykonania JS) — to widzi scraper. Celowo NIE
+  // page.content(): od chrome'u 4.1 stopka/pasek składają tel i mail w JS
+  // po załadowaniu (design pokazuje je na stałe — D-CH5 w
+  // docs/analiza-chrome-globalny.md), więc DOM po JS ZAWIERA pełne ciągi.
+  // Kontrakt pilnuje statycznego źródła: HTML z sieci + cały dist niżej.
+  const raw = await (await page.request.get(CONTACT_PATH)).text();
+  for (const s of FORBIDDEN) expect(raw).not.toContain(s);
 
   // Cały build: HTML + bundle JS/CSS (dynamiczne chunki też).
   const dist = fileURLToPath(new URL("../../dist/", import.meta.url));

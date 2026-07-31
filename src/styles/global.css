@@ -63,4 +63,17 @@ html {
   /* Docelowa SUMA odstępu wizualnego na granicy dwóch sekcji strony głównej
      (padding-bottom sekcji górnej + padding-top sekcji dolnej). */
   --section-gap: clamp(56px, 7vw, 96px);
+
+  /* Layout z eksportów designów: margines boczny + maks. szerokość kolumny
+     treści (wzorce 390/1440). Wartości desktop w @media niżej — próg 1024
+     to breakpoint projektu (para ze stałą NAV_DESKTOP_MIN_PX). */
+  --pad: clamp(18px, 6.67vw, 26px);
+  --col: 560px;
+}
+
+@media (min-width: 1024px) {
+  :root {
+    --pad: clamp(34px, 3.89vw, 56px);
+    --col: 1520px;
+  }
 }

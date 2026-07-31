@@ -21,8 +21,8 @@ async function prepare(page: Page) {
 
 test("podstrona realizacje: widok startowy vs baseline", async ({ page }) => {
   await prepare(page);
-  // Zrzut viewportu: navbar bez brandu + przyklejony back button + nagłówek
-  // na warstwie ambientu (blue).
+  // Zrzut viewportu: sticky pasek chrome'u 4.1 (logo + linki/MENU) +
+  // nagłówek na warstwie ambientu (blue).
   await expect(page).toHaveScreenshot("work-index-top.png");
 });
 
