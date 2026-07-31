@@ -33,6 +33,13 @@ html {
    Dziedziczone przez wszystkie komponenty; lokalne nadpisania tylko gdy
    element naprawdę odbiega od marki. ── */
 :root {
+  /* Strona delung jest ZAWSZE jasna (designy; mobile bez wariantu ciemnego).
+     Jawna deklaracja z „only" wyłącza WYMUSZANE ciemnienie przeglądarek
+     Androida (Chrome Auto-Dark / Samsung Internet dark mode), które bez
+     niej inwertowało biały navbar/tło na S20 FE (korekta po 4.1).
+     Przejściowe ciemne widoki nadpisują na `dark` w legacy-dark.css. */
+  color-scheme: only light;
+
   /* foreground — strona delung jest JASNA (białe tło, ciemny tekst) */
   --ink: #1a1a1a;
   --muted: rgba(26, 26, 26, 0.78);
