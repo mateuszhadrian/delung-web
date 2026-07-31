@@ -28,7 +28,12 @@ jobs:
           # HTML + 404 na nowym CSS → console.error). Deploy uznajemy za
           # świeży dopiero, gdy prod-HTML zawiera wszystkie assety buildu
           # i KAŻDY z nich odpowiada 200.
-          assets=$(grep -oE '/_astro/[^"]+' dist/index.html | sort -u)
+          # Wzorzec ucina też na spacji i przecinku: atrybuty srcset/
+          # imagesrcset (hero 4.2) trzymają w jednej wartości ścieżkę +
+          # deskryptor gęstości ("…webp 1.8x, …webp 3x") — [^"]+ łykał
+          # całość, a word-splitting robił z deskryptorów śmieciowe tokeny
+          # i strażnik curl-ował "delung.pl1.8x," aż do timeoutu.
+          assets=$(grep -oE '/_astro/[^" ,]+' dist/index.html | sort -u)
           if [ -z "$assets" ]; then
             echo "Nie znalazłem zahashowanych assetów w dist/index.html" >&2
             exit 1
