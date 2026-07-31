@@ -28,9 +28,17 @@ module.exports = {
     assert: {
       aggregationMethod: "median-run",
       assertions: {
-        "categories:performance": ["error", { minScore: 0.9 }],
-        // Zapas: szkielet 1965 ms + hero/sekcje Etapu 4 (hadrianm: ~3100).
-        "largest-contentful-paint": ["error", { maxNumericValue: 3500 }],
+        // 0.9 → 0.75 (decyzja Mateusza, 4.2): strona główna dostała
+        // fotograficzne hero = nowy LCP (niżej); mediana CI/lokalnie
+        // ~0.80–0.82, a zimny pierwszy run potrafi spaść do ~0.5 —
+        // median-run to wyrównuje, próg z małym zapasem.
+        "categories:performance": ["error", { minScore: 0.75 }],
+        // 3500 → 6000 (decyzja Mateusza, 4.2): LCP = pełnoekranowe zdjęcie
+        // hero (jakość kadru > metryka — kalibrowany wycinek 500 KB dla
+        // DPR≥2; wariant 174 KB dla DPR≤1.8 + preload w <head>). Pomiar po
+        // optymalizacjach: ~5.1 s (lokalnie, symulacja jak CI; przed:
+        // 6.4 s). Ratchet: zacieśnić do baseline'u CI przy domknięciu 4.5.
+        "largest-contentful-paint": ["error", { maxNumericValue: 6000 }],
         // Baseline 0 ms — próg-podłoga 150 ms (pojedyncze ms to szum
         // runnera; realna regresja JS i tak go przebije).
         "total-blocking-time": ["error", { maxNumericValue: 150 }],
@@ -41,7 +49,8 @@ module.exports = {
         "resource-summary:script:size": ["error", { maxNumericValue: 100000 }],
         // Szkielet 249 KB; sekcje dodadzą obrazy WebP → 2 MB (hadrianm 1.8 MB).
         "resource-summary:total:size": ["error", { maxNumericValue: 2000000 }],
-        "resource-summary:font:count": ["warn", { maxNumericValue: 5 }],
+        // 5 → 6 (4.2): doszły subsety italic Cormoranta (cytat o-nas).
+        "resource-summary:font:count": ["warn", { maxNumericValue: 6 }],
       },
     },
     upload: { target: "temporary-public-storage" },
