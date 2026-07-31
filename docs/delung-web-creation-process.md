@@ -359,6 +359,13 @@ zdjęcia i wideo lądują w R2, testowe realizacje wgrane ścieżką docelową.
 
 ### Etap 4 — widoki (po jednym PR)
 
+> **Tryb pracy (decyzja po Etapie 3):** etap rozbity na CZĘŚCI 4.1–4.5,
+> każda prowadzona w OSOBNEJ, świeżej sesji Claude Code — prompty
+> startowe per część + kontekst wspólny (lekcje Etapu 3, definition of
+> done): **`docs/etap-4-prompty.md`**. Między częściami Mateusz testuje
+> zmergowany widok sam (preview/produkcja/fizyczny telefon); poprawki
+> osobnym promptem korekty (szablon tamże).
+
 Pętla dla każdego widoku: mini-analiza w `docs/` (decyzje portu z
 referencji, jak `analiza-*` w hadrianm) → implementacja → testy
 unit/e2e/visual → baseline'y darwin+linux → PR. Kolejność:
