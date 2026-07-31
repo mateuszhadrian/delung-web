@@ -1,0 +1,95 @@
+---
+// Marquee logotypów dostawców na /oferta/ (eksport: .mq — TYLKO desktop).
+// Reuse plików logo-*.webp z 4.2, ale własny markup/CSS (D-OK4):
+// HomeTrust zostaje nietknięty — jego zmiana odświeżałaby baseline'y
+// strony głównej. Drugi obieg pętli aria-hidden; przy reduce marquee
+// stoi (statyczny pierwszy obieg).
+import logoBlum from "@/assets/home/logo-blum.webp";
+import logoGtv from "@/assets/home/logo-gtv.webp";
+import logoWurth from "@/assets/home/logo-wurth.webp";
+import logoPeka from "@/assets/home/logo-peka.webp";
+import logoFestool from "@/assets/home/logo-festool.webp";
+import logoMakita from "@/assets/home/logo-makita.webp";
+
+// [obraz, alt, wysokość px] — z eksportu (LOGOTYPY).
+const LOGOS = [
+  [logoBlum, "Blum", 24],
+  [logoGtv, "GTV", 21],
+  [logoWurth, "Würth", 26],
+  [logoPeka, "Peka", 22],
+  [logoFestool, "Festool", 19],
+  [logoMakita, "Makita", 24],
+] as const;
+---
+
+<div class="mq">
+  <div class="mq-track">
+    {
+      [false, true].map((clone) => (
+        <div class="mq-set" aria-hidden={clone ? "true" : undefined}>
+          {LOGOS.map(([img, alt, h]) => (
+            <img
+              src={img.src}
+              width={img.width}
+              height={img.height}
+              alt={clone ? "" : alt}
+              loading="lazy"
+              decoding="async"
+              style={`--h:${h}px`}
+            />
+          ))}
+        </div>
+      ))
+    }
+  </div>
+</div>
+
+<style>
+  .mq {
+    display: none;
+  }
+
+  /* ════ DESKTOP ≥1024 (para: OFERTA_DESKTOP_MIN_PX) ════ */
+  @media (min-width: 1024px) {
+    .mq {
+      display: block;
+      overflow: hidden;
+      background: #fff;
+      padding-block: clamp(20px, 2.08vw, 30px);
+      border-top: 1px solid rgba(26, 26, 26, 0.08);
+      border-bottom: 1px solid rgba(26, 26, 26, 0.08);
+    }
+    .mq-track {
+      display: flex;
+      align-items: center;
+      width: max-content;
+      animation: mq-move 34s linear infinite;
+    }
+    .mq-set {
+      display: flex;
+      align-items: center;
+    }
+    .mq-set img {
+      display: block;
+      width: auto;
+      height: max(
+        calc(var(--h) * 0.74),
+        min(var(--h), calc(var(--h) / 14.4 * 1vw))
+      );
+      margin-right: clamp(46px, 5.97vw, 86px);
+      filter: grayscale(1) opacity(0.45);
+    }
+  }
+
+  @keyframes mq-move {
+    to {
+      transform: translateX(-50%);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .mq-track {
+      animation: none;
+    }
+  }
+</style>
