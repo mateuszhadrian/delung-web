@@ -22,23 +22,36 @@ jobs:
       - run: pnpm build
       - name: Czekaj na świeży deploy Cloudflare Pages
         run: |
-          asset=$(grep -oE '/_astro/[^"]+' dist/index.html | head -1)
-          if [ -z "$asset" ]; then
-            echo "Nie znalazłem zahashowanego assetu w dist/index.html" >&2
+          # KOMPLET assetów z buildu, nie pierwszy z brzegu: pierwszym bywa
+          # font (stały hash między buildami → strażnik zawsze „świeży"),
+          # przez co smoke startował w środku propagacji (2026-07-31: nowy
+          # HTML + 404 na nowym CSS → console.error). Deploy uznajemy za
+          # świeży dopiero, gdy prod-HTML zawiera wszystkie assety buildu
+          # i KAŻDY z nich odpowiada 200.
+          assets=$(grep -oE '/_astro/[^"]+' dist/index.html | sort -u)
+          if [ -z "$assets" ]; then
+            echo "Nie znalazłem zahashowanych assetów w dist/index.html" >&2
             exit 1
           fi
-          echo "Czekam, aż https://delung.pl poda: $asset"
+          echo "Czekam, aż https://delung.pl poda komplet:"
+          echo "$assets"
           for i in $(seq 1 30); do
             html=$(curl -s -H "Cache-Control: no-cache" https://delung.pl/)
-            if echo "$html" | grep -q "$asset"; then
+            fresh=1
+            for a in $assets; do
+              if ! echo "$html" | grep -q "$a"; then fresh=0; break; fi
+              code=$(curl -s -o /dev/null -w '%{http_code}' "https://delung.pl$a")
+              if [ "$code" != "200" ]; then fresh=0; break; fi
+            done
+            if [ "$fresh" = "1" ]; then
               ray=$(curl -sI https://delung.pl/ | tr -d '\r' | grep -i '^cf-ray' || true)
               echo "Deploy świeży (próba $i; $ray)"
               exit 0
             fi
-            echo "  próba $i/30 — jeszcze stary build, czekam 20 s…"
+            echo "  próba $i/30 — build niekompletny na produkcji, czekam 20 s…"
             sleep 20
           done
-          echo "Timeout (10 min): produkcja nadal nie serwuje $asset" >&2
+          echo "Timeout (10 min): produkcja nadal nie serwuje kompletu assetów" >&2
           exit 1
       - name: Playwright version (klucz cache)
         id: pw
