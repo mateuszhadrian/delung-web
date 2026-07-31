@@ -96,7 +96,23 @@ treść/sekcje budowane od nowa wg `docs/design/`).
   (run 30622374361: mobile perf 0.99 / LCP 1965 ms, desktop 1.0 / 492 ms,
   script 59,6 KB) — ratchet AKTYWNY; required checks `quality`+`e2e`+
   `lighthouse` w rulesecie. Od teraz pełny daily workflow.
-- Etapy 4–7 — przed nami (widoki → formularz → SEO/pomiar → przekazanie).
+- **Etap 4.1 (chrome globalny) — WYKONANY** (2026-07-31, PR #6; decyzje:
+  `docs/analiza-chrome-globalny.md`): navbar sticky wg designów (warianty
+  `plain`/`over` — `over` czeka na hero 4.2; BEZ hide-on-scroll; stała
+  `NAV_DESKTOP_MIN_PX=1024` w `navbar/nav-config.ts` + `@media` w parze;
+  `--hdr-h` na `<html>`), menu mobile = bottom sheet na `overlay.ts`
+  (swipe-down/Esc/scrim; markup w Navbarze), stopka `ft` (IG także na
+  desktopie, polityka też na mobile, kontrasty AA), nawigacja = 4 pozycje
+  wg designu („Proces współpracy" TYLKO w stopce do czasu CTA 4.2/4.3);
+  BackButton POZA chrome (decyzja Mateusza — brak w designach; mechanizm
+  `data-back`/`back-link.ts` uśpiony w BaseLayout, `ui/BackButton.astro`
+  nieużywany); tel/mail chrome'u składane w JS (`lib/contact-details.ts`),
+  kontrakt antyscrapingowy w `contact.spec.ts` przeszedł na SUROWY HTML
+  (`page.request.get`) — DOM po JS celowo zawiera numer; tokeny
+  `--pad`/`--col` w global.css; `color-scheme: only light` (fix
+  wymuszanego ciemnienia na Androidzie; legacy-dark nadpisuje na `dark`).
+  UWAGA na 4.2: mobilny LCP 2563 ms przy progu 3500 (hero = nowy LCP).
+- Etapy 4.2–7 — przed nami (widoki → formularz → SEO/pomiar → przekazanie).
 - PRZEJŚCIOWE dziedzictwo szablonu (do wymiany w Etapach 4–5): widoki
   `/realizacje/` `/kontakt/` `/polityka-prywatnosci/` na ciemnym motywie
   (`src/styles/legacy-dark.css` — strona delung jest JASNA; kafle/detal

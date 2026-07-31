@@ -12,6 +12,11 @@
    na czarnym tle. Wyższa specyficzność uniezależnia override od
    kolejności wstrzykiwania stylów. */
 html:root {
+  /* Widok jest ciemny NATYWNIE — nadpisuje `only light` z global.css:
+     natywne kontrolki/scrollbary w ciemnym wariancie, a jawna deklaracja
+     nadal wyłącza wymuszane ciemnienie przeglądarek Androida. */
+  color-scheme: dark;
+
   --ink: #f5f0ec;
   --muted: rgba(245, 240, 236, 0.58);
   --faint: rgba(245, 240, 236, 0.5);

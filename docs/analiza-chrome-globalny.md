@@ -264,6 +264,16 @@ motywu przejściowego. Importów `legacy-dark.css` w tym PR nie ruszam
 
 ## 6. Ryzyka i weryfikacja na fizycznym telefonie
 
+> **Korekta po testach 4.1 (2026-07-31, Samsung Galaxy S20 FE):** brak
+> deklaracji `color-scheme` pozwalał przeglądarkom Androida (Chrome
+> Auto-Dark / Samsung Internet dark mode) wymuszać ciemnienie jasnej
+> strony — navbar renderował się ciemny. Fix: `color-scheme: only light`
+> w `:root` global.css (strona delung jest zawsze jasna) + nadpisanie
+> `color-scheme: dark` w `legacy-dark.css` dla przejściowych ciemnych
+> widoków. Zero zmian w pikselach na CI (baseline'y nietknięte).
+> Zastrzeżenie: opcji „ciemny motyw na wszystkich stronach" w Samsung
+> Internet (wymuszona inwersja użytkownika) strona nie może nadpisać.
+
 - **Sheet na dotyku**: swipe-down (próg/flick), czy grab-handle łapie
   się wygodnie; blur(22px) nad zdjęciem = warstwa GPU — sprawdzić na
   Androidzie (limit warstw), czy otwarcie/zamknięcie nie klatkuje.
