@@ -21,8 +21,8 @@ async function prepare(page: Page) {
 
 test("podstrona kontakt: widok startowy vs baseline", async ({ page }) => {
   await prepare(page);
-  // Zrzut viewportu: navbar bez brandu + przyklejony back button + nagłówek
-  // sekcji na warstwie ambientu (red).
+  // Zrzut viewportu: sticky pasek chrome'u 4.1 (logo + linki/MENU) +
+  // nagłówek sekcji na warstwie ambientu (red).
   await expect(page).toHaveScreenshot("contact-index-top.png");
 });
 

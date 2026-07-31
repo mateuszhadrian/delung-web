@@ -26,18 +26,17 @@ const { title, description, kicker, heading, lead } = Astro.props;
       {lead && <p class="lead">{lead}</p>}
       <slot />
     </section>
-
-    <div class="foot-wrap">
-      <Footer />
-    </div>
   </main>
+
+  <Footer />
 </BaseLayout>
 
 <style>
   .skel {
     position: relative;
     z-index: 1;
-    min-height: 100svh;
+    /* pasek jest sticky w flow — hero wypełnia resztę pierwszego ekranu */
+    min-height: calc(100svh - var(--hdr-h, 74px));
     display: flex;
     flex-direction: column;
   }
@@ -73,8 +72,5 @@ const { title, description, kicker, heading, lead } = Astro.props;
     color: var(--muted);
     font-family: var(--font-body), sans-serif;
     line-height: 1.6;
-  }
-  .foot-wrap {
-    padding: 0 clamp(1.5rem, 6vw, 5rem) clamp(1.5rem, 4vh, 2.5rem);
   }
 </style>

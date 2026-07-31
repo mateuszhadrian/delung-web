@@ -1,10 +1,9 @@
 ---
 // Podstrona „Kontakt" (PL: /kontakt/, EN: /en/contact/) — sekcja Contact
 // z formularzem przeniesiona W CAŁOŚCI ze strony głównej (tam został banner
-// KontaktBaner.astro); plan: docs/analiza-podstrona-kontakt.md. Wzorzec
-// chrome'u strony = AboutPage.astro (BackButton w miejscu brandu,
-// współdzielony Footer, jedna statyczna warstwa ambientu — RED, jak tło
-// sekcji na głównej), scroll NATYWNY (smoothScroll={false}, jak
+// KontaktBaner.astro); plan: docs/analiza-podstrona-kontakt.md. Chrome
+// globalny (Navbar + Footer — część 4.1), jedna statyczna warstwa ambientu
+// (RED, jak tło sekcji na głównej), scroll NATYWNY (smoothScroll={false}, jak
 // /realizacje/) — sekcja nie ma pinowanych scen, a formularz najlepiej
 // czuje się bez pośrednika (fokus pól, autoscroll do błędów walidacji).
 import "@/styles/legacy-dark.css";
@@ -12,10 +11,8 @@ import BaseLayout from "@/layouts/BaseLayout.astro";
 import Navbar from "@/components/navbar/Navbar.astro";
 import AmbientBackground from "@/components/backgrounds/AmbientBackground.astro";
 import Contact from "@/components/sections/contact/Contact.astro";
-import BackButton from "@/components/ui/BackButton.astro";
 import Footer from "@/components/Footer.astro";
 import { useTranslations } from "@/i18n/utils";
-import { HOME_PATH } from "@/lib/routes";
 
 const t = useTranslations("pl");
 ---
@@ -29,18 +26,7 @@ const t = useTranslations("pl");
     <AmbientBackground variant="red" />
   </div>
 
-  <Navbar showBrand={false} />
-
-  {
-    /* „Wstecz" w miejscu brandu — CELOWO poza barem navbara: fixed, więc nie
-       chowa się razem z nim przy scrollu; działa jak wstecz przeglądarki
-       (globalny mechanizm a[data-back], fallback → strona główna). Wrapper,
-       nie klasa na komponencie: scoped CSS (strategia atrybutowa) nie łapie
-       elementów renderowanych przez komponent potomny. */
-  }
-  <div class="ktp-back">
-    <BackButton href={HOME_PATH} label={t("contactPage.back")} />
-  </div>
+  <Navbar />
 
   <main class="ktp">
     <Contact lang="pl" />
@@ -67,34 +53,15 @@ const t = useTranslations("pl");
     pointer-events: none;
   }
 
-  /* Pozycja = slot brandu w navbarze (te same clampy paddingu paska);
-     korekta -12px centruje 46-px kółko na linii treści paska. z-index nad
-     nav-root (50), bo przycisk ma być widoczny ZAWSZE — także gdy pasek
-     schowa się przy scrollu w dół. */
-  .ktp-back {
-    position: fixed;
-    z-index: 60;
-    /* Sam wrapper nie łapie klików (wzorzec .nav-root z Navbar.astro):
-       przy otwartym menu jego box zasłaniałby logo, mimo że przycisk
-       jest już ukryty. Klik przejmuje .bkb (pointer-events: auto). */
-    pointer-events: none;
-    left: clamp(1.25rem, 4vw, 2.75rem);
-    top: calc(clamp(1.25rem, 3.2vh, 1.9rem) - 12px);
-  }
-
   .ktp {
     position: relative;
     z-index: 1;
   }
 
-  /* ── Stopka: kontener współdzielonego Footer.astro (szerokość jak na
-     pozostałych podstronach; sam footer jest bezmarginesowy — rodzic
-     kontroluje layout) ── */
+  /* ── Stopka: full-bleed (Footer.astro sam kontroluje kontener/wrap);
+     z-index tylko wynosi ją nad warstwę ambientu. ── */
   .ktp-foot {
     position: relative;
     z-index: 1;
-    max-width: 1320px;
-    margin: 0 auto;
-    padding: 0 5vw 42px;
   }
 </style>

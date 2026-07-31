@@ -1,132 +1,347 @@
 ---
-// Footer strony — współdzielony przez stronę główną i podstrony.
-// Komponent renderuje linię + wiersz (© / social media / polityka + „Do
-// góry"); marginesy i szerokość kontenera kontroluje rodzic.
-// Social: tylko Instagram (decyzja D4 — Facebook usunięty).
-import { POLICY_PATH } from "@/lib/routes";
-
-const socials = [
-  { name: "Instagram", href: "https://www.instagram.com/delung_meble/" },
-];
+// Stopka `ft` wg designów (docs/design/index.html; decyzje D-CH5/D-CH7
+// w docs/analiza-chrome-globalny.md). Ciemna, full-bleed — strony renderują
+// ją bez własnych wrapperów z paddingiem. Dewiacje od eksportu (świadome):
+// Instagram widoczny też na desktopie (w kolumnie kontaktowej), link
+// polityki i „O nas" widoczne też na mobile (pełna mapa strony + „Proces
+// współpracy" — D-CH4), kontrasty drobnych tekstów podbite do AA (ratchet
+// axe), tel/mail składane w JS (antyscraping — D-CH5). Kolory lokalne,
+// niezależne od tokenów strony (legacy-dark nadpisuje --ink; D-CH9).
+import { footerNavItems } from "@/i18n/nav";
+import { CONTACT_PATH, HOME_PATH, POLICY_PATH } from "@/lib/routes";
+import logoLight from "@/assets/logo/delung-logo-footer.webp";
 ---
 
 <footer class="ft">
-  <div class="ft-line" aria-hidden="true"></div>
-  <div class="ft-row">
-    <div class="ft-c">© 2026 Delung Meble — delung.pl</div>
-    <nav class="ft-soc" aria-label="Social media">
+  <div class="wrap ft-in">
+    <div>
+      <a class="ft-logo" href={HOME_PATH}>
+        <img
+          src={logoLight.src}
+          width={logoLight.width}
+          height={logoLight.height}
+          alt="Delung"
+        />
+      </a>
+      <p class="ft-desc">
+        Producent mebli na wymiar. Kompleksowo urządzamy domy i lokale biznesowe
+        — od projektu po czysty montaż.
+      </p>
+    </div>
+    <nav class="ft-nav" aria-label="Stopka — strony">
+      <span class="ft-h dOnly">Strony</span>
       {
-        socials.map((s) => (
-          <a href={s.href} target="_blank" rel="noopener noreferrer">
-            {s.name}{" "}
-            <span class="ft-aw" aria-hidden="true">
-              ↗
-            </span>
+        footerNavItems.map((item) => (
+          <a href={item.href} class:list={[item.href === POLICY_PATH && "dim"]}>
+            {item.label}
           </a>
         ))
       }
     </nav>
-    <div class="ft-leg">
-      <a href={POLICY_PATH}>Polityka prywatności</a>
-      <a class="ft-up" href="#top">Do góry ↑</a>
+    <div class="ft-call">
+      <span class="ft-h">Zadzwoń do nas</span>
+      {
+        /* numer/adres i href składane w JS (antyscraping, D-CH5);
+           placeholder href/tekst = poprawny link także bez JS (i tak
+           hidden do czasu złożenia) */
+      }
+      <a class="ft-tel" data-tel href={CONTACT_PATH} hidden>Telefon</a>
+      <a class="ft-mail" data-mail href={CONTACT_PATH} hidden>E-mail</a>
+      <span class="ft-hours">Pod telefonem pn–pt praktycznie całą dobę</span>
+      <div class="ft-soc">
+        <a
+          href="https://www.instagram.com/delung_meble/"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <rect
+              x="2"
+              y="2"
+              width="20"
+              height="20"
+              rx="5"
+              stroke="currentColor"
+              stroke-width="1.5"></rect>
+            <circle
+              cx="12"
+              cy="12"
+              r="4"
+              stroke="currentColor"
+              stroke-width="1.5"></circle>
+            <circle cx="17.5" cy="6.5" r="1" fill="currentColor"></circle>
+          </svg>
+          Instagram
+        </a>
+      </div>
     </div>
+  </div>
+  <div class="wrap ft-bot">
+    <p>© 2026 Delung Meble. Wszystkie prawa zastrzeżone.</p>
+    <p class="ft-legal">
+      Delung Meble Adam Delung · Strażacka 27a, 98-300 Gaszyn · NIP 7312021984
+    </p>
+    <p class="ft-cred">
+      Realizacja: <a href="https://hadrianm.pl" target="_blank" rel="noopener"
+        >hadrianm</a
+      > — pracownia stron i aplikacji
+    </p>
   </div>
 </footer>
 
 <style>
   .ft {
-    position: relative;
+    /* kolory stopki NIEZALEŻNE od tokenów strony (D-CH9) */
+    --ft-bg: #161616;
+    /* alphy drobnych tekstów podbite względem eksportu (.28–.45 → AA) */
+    --ft-dim: rgba(255, 255, 255, 0.64);
+    --ft-soft: rgba(255, 255, 255, 0.75);
+    --ft-hair: rgba(255, 255, 255, 0.14);
+    background: var(--ft-bg);
+    color: #fff;
+    padding-top: 46px;
+    padding-bottom: 26px;
   }
   .ft a {
+    color: inherit;
     text-decoration: none;
   }
   .ft a:focus-visible {
-    outline: 1px solid var(--accent);
-    outline-offset: 4px;
+    outline: 2px solid #fff;
+    outline-offset: 3px;
   }
-  .ft-line {
-    height: 1px;
-    background: var(--line);
-  }
-  .ft-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 24px;
-    padding-top: 26px;
-    font-family: var(--font-mono), monospace;
-    font-size: 10px;
-    letter-spacing: 0.22em;
-    text-transform: uppercase;
-  }
-  .ft-c {
-    color: var(--faint);
-  }
-  .ft-soc {
-    display: flex;
-    gap: 36px;
-  }
-  .ft-soc a {
-    color: var(--muted);
-    display: inline-flex;
-    align-items: baseline;
-    gap: 7px;
-  }
-  .ft-aw {
-    color: var(--accent);
-  }
-  .ft-soc a:hover {
-    color: var(--ink);
-  }
-  .ft-leg {
-    display: flex;
-    gap: 36px;
-    align-items: center;
-  }
-  .ft-leg a {
-    color: var(--faint);
-  }
-  .ft-leg a:hover {
-    color: var(--ink);
-  }
-  .ft-leg .ft-up {
-    color: var(--muted);
-  }
-  .ft-leg .ft-up:hover {
-    color: var(--ink);
+  .wrap {
+    width: 100%;
+    max-width: var(--col);
+    margin-inline: auto;
+    padding-inline: var(--pad);
   }
 
-  /* Mobile — ten sam próg co sekcja kontakt (CONTACT_DESKTOP_MIN_PX = 861,
-     wartość zaszyta też w @media Contact.astro — utrzymywana W PARZE). */
-  @media (max-width: 860.98px) {
-    .ft-row {
-      flex-direction: column;
-      align-items: flex-start;
-      gap: 18px;
-      padding-top: 22px;
+  .ft-in {
+    display: flex;
+    flex-direction: column;
+  }
+  .ft-logo {
+    display: block;
+    width: clamp(190px, 59vw, 240px);
+  }
+  .ft-logo:hover {
+    opacity: 0.7;
+  }
+  .ft-logo img {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+  .ft-desc {
+    display: none;
+  }
+
+  .ft-nav {
+    display: flex;
+    flex-direction: column;
+    margin-top: 28px;
+    border-top: 1px solid var(--ft-hair);
+  }
+  .ft-nav a {
+    padding: 15px 0;
+    border-bottom: 1px solid var(--ft-hair);
+    font-family: var(--font-body), sans-serif;
+    font-weight: 300;
+    font-size: 15px;
+    line-height: 1;
+  }
+  .ft-nav a:hover {
+    opacity: 0.6;
+  }
+
+  .ft-h {
+    font-family: var(--font-display), sans-serif;
+    font-weight: 500;
+    font-size: 10.5px;
+    line-height: 1;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ft-dim);
+  }
+  .ft-call {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    margin-top: 28px;
+  }
+  .ft-tel {
+    font-family: var(--font-body), sans-serif;
+    font-weight: 300;
+    font-size: clamp(19px, 5.38vw, 24px);
+    line-height: 1.2;
+  }
+  .ft-tel:hover,
+  .ft-mail:hover {
+    opacity: 0.6;
+  }
+  .ft-mail {
+    font-family: var(--font-body), sans-serif;
+    font-weight: 300;
+    font-size: 14.5px;
+    line-height: 1.4;
+    color: var(--ft-soft);
+    overflow-wrap: anywhere;
+  }
+  .ft-hours {
+    display: none;
+  }
+
+  .ft-soc {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 24px;
+  }
+  .ft-soc a {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 999px;
+    padding: 10px 17px;
+    font-family: var(--font-display), sans-serif;
+    font-weight: 300;
+    font-size: 13.5px;
+    white-space: nowrap;
+  }
+  .ft-soc a:hover {
+    background: rgba(255, 255, 255, 0.08);
+  }
+  .ft-soc svg {
+    width: 15px;
+    height: 15px;
+    flex: none;
+  }
+
+  .ft-bot {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-top: 30px;
+    padding-top: 18px;
+    border-top: 1px solid var(--ft-hair);
+  }
+  .ft-bot p {
+    margin: 0;
+    font-family: var(--font-body), sans-serif;
+    font-weight: 300;
+    color: var(--ft-dim);
+  }
+  .ft-bot p:first-child {
+    font-size: 11.5px;
+    line-height: 1.7;
+  }
+  .ft-legal {
+    font-size: 11px;
+    line-height: 1.7;
+  }
+  .ft-cred {
+    font-size: 10.5px;
+    line-height: 1.7;
+  }
+  .ft-bot a {
+    color: var(--ft-soft);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+  .ft-bot a:hover {
+    color: #fff;
+  }
+
+  /* ════ DESKTOP ≥1024 (para: NAV_DESKTOP_MIN_PX) ════ */
+  @media (min-width: 1024px) {
+    .ft {
+      padding-top: clamp(52px, 4.86vw, 70px);
+      padding-bottom: 30px;
+    }
+    .ft-in {
+      display: grid;
+      grid-template-columns: 1.4fr 1fr 1fr;
+      gap: clamp(34px, 4.17vw, 60px);
+      padding-bottom: clamp(38px, 3.61vw, 52px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+    }
+    .ft-logo {
+      width: clamp(170px, 14.9vw, 214px);
+    }
+    .ft-desc {
+      display: block;
+      margin: 24px 0 0;
+      font-family: var(--font-body), sans-serif;
+      font-weight: 300;
+      font-size: clamp(13px, 1.01vw, 14.5px);
+      line-height: 1.7;
+      color: var(--ft-dim);
+      max-width: 38ch;
+    }
+    .ft-nav {
+      margin-top: 0;
+      border: none;
+      gap: 14px;
+    }
+    .ft-nav a {
+      padding: 0;
+      border: none;
+      font-size: clamp(14px, 1.04vw, 15px);
+    }
+    .ft-nav a.dim {
+      color: var(--ft-dim);
+    }
+    .ft-h {
+      letter-spacing: 0.2em;
+    }
+    .ft-call {
+      margin-top: 0;
+      gap: 10px;
+    }
+    .ft-tel {
+      font-size: clamp(21px, 1.81vw, 26px);
+    }
+    .ft-mail {
+      font-size: clamp(14px, 1.04vw, 15px);
+      line-height: 1.5;
+    }
+    .ft-hours {
+      display: block;
+      font-family: var(--font-body), sans-serif;
+      font-weight: 300;
+      font-size: clamp(12.5px, 0.94vw, 13.5px);
+      line-height: 1.6;
+      color: var(--ft-dim);
+      margin-top: 8px;
     }
     .ft-soc {
-      flex-wrap: wrap;
-      gap: 16px 26px;
+      margin-top: 16px;
     }
-    .ft-leg {
-      width: 100%;
+    .ft-bot {
+      flex-direction: row;
+      align-items: center;
       justify-content: space-between;
+      gap: 20px;
+      margin-top: 0;
+      padding-top: 22px;
+      border: none;
+    }
+  }
+
+  /* mobile: nagłówek „Strony" tylko desktop (jak dOnly z eksportu) */
+  @media (max-width: 1023.98px) {
+    .dOnly {
+      display: none;
     }
   }
 </style>
 
 <script>
-  import { scrollToAnchor } from "@/scripts/anchors";
+  import { fillContactSlots } from "@/lib/contact-details";
 
-  // „Do góry ↑" — wspólny skok (@/scripts/anchors): Lenis gdy jest (strona
-  // główna), inaczej natywnie (podstrony bez smooth-scrolla); URL zostaje
-  // bez hasha. Bez JS działa goła kotwica #top.
-  document.querySelectorAll<HTMLAnchorElement>(".ft-up").forEach((a) =>
-    a.addEventListener("click", (e) => {
-      e.preventDefault();
-      scrollToAnchor(0);
-      history.replaceState(null, "", window.location.pathname);
-    }),
-  );
+  // Telefon/mail stopki (antyscraping — D-CH5). Idempotentne względem
+  // wypełnienia z Navbara (te same wartości do tych samych slotów).
+  fillContactSlots();
 </script>

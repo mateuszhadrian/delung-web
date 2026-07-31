@@ -1,9 +1,9 @@
 // Polityka prywatności — meta, komplet sekcji RODO, linki strona główna
 // ↔ polityka, e-mail administratora składany w JS (antyscraping — patrz
-// test dist w contact.spec.ts) i strzałka „wstecz" (a[data-back] →
-// history.back() przywraca pozycję scrolla strony głównej). Treść jest
-// niezależna od profilu — jak seo.spec.ts biega tylko na chromium-1920.
-// PL-only (delung).
+// test dist w contact.spec.ts). Chrome globalny 4.1: logo w pasku zamiast
+// BackButtona (D-CH8 — mechanizm data-back uśpiony w BaseLayout). Treść
+// jest niezależna od profilu — jak seo.spec.ts biega tylko na
+// chromium-1920. PL-only (delung).
 import { expect, test } from "@playwright/test";
 import { ui } from "../../src/i18n/ui";
 import { useChromium1920Only } from "../helpers/guards";
@@ -44,24 +44,19 @@ for (const p of PAGES) {
     await expect(page.locator(".pp-sec").first()).toContainText(p.nip);
   });
 
-  test(`${p.path}: nawigacja — wstecz, przełącznik języka, formularz`, async ({
+  test(`${p.path}: nawigacja — logo do głównej, formularz, stopka`, async ({
     page,
   }) => {
     await gotoReady(page, p.path);
-    // BackButton wzorca podstron: fallback na stronę główną, mechanizm
-    // data-back → history.back() (globalny initBackLinks w BaseLayout).
-    await expect(page.locator("a[data-back]")).toHaveAttribute(
-      "href",
-      p.backHref,
-    );
+    // Chrome 4.1: droga powrotna = logo w pasku (BackButton poza chrome).
+    await expect(page.locator(".hdr-logo")).toHaveAttribute("href", p.backHref);
     // Link do formularza kontaktowego w treści (§01) prowadzi na podstronę
     // kontaktu (migracja: docs/analiza-podstrona-kontakt.md).
     await expect(
       page.locator(`.pp-sec a[href="${p.contactHref}"]`).first(),
     ).toBeAttached();
-    // Stopka: współdzielony Footer w kontenerze .pp-foot (ten sam co na
-    // pozostałych podstronach).
-    await expect(page.locator(".pp-foot .ft-soc a").first()).toBeAttached();
+    // Stopka: współdzielony Footer (chrome globalny 4.1).
+    await expect(page.locator(".ft-soc a").first()).toBeAttached();
   });
 
   test(`${p.path}: e-mail administratora złożony w JS (mailto)`, async ({
@@ -80,38 +75,15 @@ test("linki polityki celują w podstrony: stopka głównej + nota na /kontakt/",
   page,
 }) => {
   // Nota RODO (.kt-note) żyje przy formularzu na /kontakt/;
-  // na głównej został footer.
+  // link polityki w stopce = .ft-nav (chrome 4.1, widoczny też na mobile).
   const href = ui.pl["contact.policyHref"];
   await gotoReady(page, "/");
-  await expect(page.locator(`.ft-leg a[href="${href}"]`)).toBeAttached();
+  await expect(page.locator(`.ft-nav a[href="${href}"]`)).toBeAttached();
   await gotoReady(page, "/kontakt/");
   await expect(page.locator(`.kt-note a[href="${href}"]`)).toBeAttached();
-  await expect(page.locator(`.ft-leg a[href="${href}"]`)).toBeAttached();
+  await expect(page.locator(`.ft-nav a[href="${href}"]`)).toBeAttached();
 });
 
-test("strzałka „wstecz” wraca na stronę główną w zapamiętane miejsce", async ({
-  page,
-}) => {
-  await gotoReady(page, "/");
-  const link = page.locator('.ft-leg a[href="/polityka-prywatnosci/"]');
-  // Doscrollowanie PRZED odczytem pozycji: klik i tak scrolluje link do
-  // viewportu, a mierzyć chcemy dokładnie pozycję, z której wychodzimy.
-  await link.scrollIntoViewIfNeeded();
-  const left = await page.evaluate(() => window.scrollY);
-  await link.click();
-  await expect(page).toHaveURL(/\/polityka-prywatnosci\/?$/);
-  expect(await page.evaluate(() => window.scrollY)).toBe(0); // polityka od góry
-
-  await page.locator("a[data-back]").click();
-  await expect(page).toHaveURL(/\/$/);
-  // history.back() → natywne scroll restoration przywraca pozycję sprzed
-  // przejścia. Poll: przywrócenie bywa asynchroniczne. Na szkielecie główna
-  // mieści się w viewporcie (left ≈ 0) — asercja porównuje z zapamiętaną
-  // pozycją, więc zaostrzy się sama, gdy strona główna urośnie w Etapie 4.
-  await expect
-    .poll(
-      async () => Math.abs((await page.evaluate(() => window.scrollY)) - left),
-      { timeout: 5000 },
-    )
-    .toBeLessThanOrEqual(2);
-});
+// Test „strzałka wstecz wraca w zapamiętane miejsce" usunięty razem
+// z BackButtonem (D-CH8) — mechanizm a[data-back]/initBackLinks zostaje
+// uśpiony w BaseLayout; test wróci, jeśli przycisk wróci po Etapach 0–7.
