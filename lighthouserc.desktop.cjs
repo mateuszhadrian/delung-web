@@ -19,8 +19,15 @@ module.exports = {
         "categories:performance": ["error", { minScore: 0.9 }],
         // Zapas: szkielet 492 ms + hero/sekcje (hadrianm desktop ~1733).
         "largest-contentful-paint": ["error", { maxNumericValue: 2000 }],
-        // Baseline 0 ms — próg-podłoga 100 ms (szum runnera).
-        "total-blocking-time": ["error", { maxNumericValue: 100 }],
+        // 100 → 200 (decyzja Mateusza, 4.5): próg-podłoga z Etapu 3 leżał
+        // w ŚRODKU pasma szumu runnera. Pomiary na `/` z main (mediana z 3):
+        // #8 73 ms, #10 22 ms, #11 40 ms, #12 73 ms, #13 138 ms (main
+        // czerwony), PR #14 104 ms. Między #12 a #13 bajty IDENTYCZNE
+        // (script 67 978 B, total 892 752 B — o-nas nie tknął `/`), a TBT
+        // skoczył 73 → 138: czysty szum, zero regresji JS. 200 ms = zapas
+        // nad najgorszą próbką; realny wzrost pracy JS (bundle 68 KB) i tak
+        // ten próg przebije.
+        "total-blocking-time": ["error", { maxNumericValue: 200 }],
         "cumulative-layout-shift": ["error", { maxNumericValue: 0.02 }],
         // Wspólny bundle z profilem mobile — te same progi zasobów.
         "resource-summary:script:size": ["error", { maxNumericValue: 100000 }],

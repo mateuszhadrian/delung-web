@@ -1,9 +1,11 @@
 // Polityka prywatności — meta, komplet sekcji RODO, linki strona główna
 // ↔ polityka, e-mail administratora składany w JS (antyscraping — patrz
-// test dist w contact.spec.ts). Chrome globalny 4.1: logo w pasku zamiast
-// BackButtona (D-CH8 — mechanizm data-back uśpiony w BaseLayout). Treść
-// jest niezależna od profilu — jak seo.spec.ts biega tylko na
-// chromium-1920. PL-only (delung).
+// test dist w contact.spec.ts; od 4.5 przez wspólne sloty
+// lib/contact-details). Layout pp-* designu (część 4.5): desktopowy
+// sticky TOC z kotwicami #pp-NN + pasek CTA z pigułką telefonu. Chrome
+// globalny 4.1: logo w pasku zamiast BackButtona (D-CH8 — mechanizm
+// data-back uśpiony w BaseLayout). Treść jest niezależna od profilu —
+// jak seo.spec.ts biega tylko na chromium-1920. PL-only (delung).
 import { expect, test } from "@playwright/test";
 import { ui } from "../../src/i18n/ui";
 import { useChromium1920Only } from "../helpers/guards";
@@ -70,6 +72,36 @@ for (const p of PAGES) {
     await expect(mail).toHaveText("kontakt@delung.pl");
   });
 }
+
+test("/polityka-prywatnosci/: TOC przewija do sekcji, CTA z telefonem po JS", async ({
+  page,
+}) => {
+  await gotoReady(page, "/polityka-prywatnosci/");
+  // TOC (desktop, chromium-1920): 9 linków-kotwic + „Masz pytanie o dane?"
+  const toc = page.locator(".pp-toc-list a");
+  await expect(toc).toHaveCount(9);
+  await expect(page.locator(".pp-toc-ask")).toHaveAttribute(
+    "href",
+    "/kontakt/",
+  );
+  // klik kotwicy przewija do sekcji (scroll-margin-top pod --hdr-h)
+  await toc.nth(6).click();
+  await expect(page).toHaveURL(/#pp-07$/);
+  await expect
+    .poll(async () =>
+      page
+        .locator("#pp-07")
+        .evaluate((el) => Math.round(el.getBoundingClientRect().top)),
+    )
+    .toBeLessThan(300);
+  // pasek CTA: pigułka telefonu złożona w JS + „Wróć do kontaktu"
+  await expect(page.locator(".pp-tel")).toHaveAttribute(
+    "href",
+    "tel:+48690291143",
+  );
+  await expect(page.locator(".pp-tel")).toHaveText("+48 690 291 143");
+  await expect(page.locator(".pp-back")).toHaveAttribute("href", "/kontakt/");
+});
 
 test("linki polityki celują w podstrony: stopka głównej + nota na /kontakt/", async ({
   page,

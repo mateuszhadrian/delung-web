@@ -1,19 +1,22 @@
 ---
-// Polityka prywatności (/polityka-prywatnosci/) — treść lokalnie w tym pliku
-// (nie w i18n/ui.ts): to dokument prawny, nie tekst interfejsu; jeden plik =
-// łatwy przegląd i wycofanie. Treść 1:1 z docs/design/polityka-prywatnosci.html
-// (9 sekcji, dane administratora z designu — decyzja D4); znaczniki
-// „[do uzupełnienia]" designu wypełnione realnym stackiem (Cloudflare/
-// Resend/OVH — sekcje 04–05 wg faktycznej architektury, wzorzec z szablonu źródłowego).
-// Chrome globalny (Navbar + Footer — część 4.1), BEZ warstwy
-// AmbientBackground.
-// E-mail administratora składany z fragmentów w JS (skrypt niżej) — pełny
-// adres nie może wystąpić w dist (kontrakt antyscrapingowy w
-// tests/e2e/contact.spec.ts); fallback bez JS wskazuje formularz kontaktowy.
-import "@/styles/legacy-dark.css";
+// Polityka prywatności (/polityka-prywatnosci/) — treść lokalnie w tym
+// pliku (nie w i18n/ui.ts): to dokument prawny, nie tekst interfejsu;
+// jeden plik = łatwy przegląd i wycofanie. Treść 1:1 z docs/design/
+// polityka-prywatnosci.html (9 sekcji, dane administratora z designu —
+// decyzja D4); znaczniki „[do uzupełnienia]" designu wypełnione realnym
+// stackiem (Cloudflare/Resend/OVH — sekcje 04–05 wg faktycznej
+// architektury).
+// Layout = port markupu pp-* designu (część 4.5, D-P8): head na cream,
+// dokument z desktopowym sticky TOC (kotwice #pp-NN), pasek CTA.
+// E-mail i telefon administratora składane w JS przez WSPÓLNY mechanizm
+// chrome'u (lib/contact-details — sloty [data-mail]/[data-tel], wypełnia
+// fillContactSlots z navbara; D-CH5) — pełne ciągi nie mogą wystąpić
+// w dist (kontrakt antyscrapingowy w tests/e2e/contact.spec.ts);
+// fallback bez JS wskazuje formularz kontaktowy.
 import BaseLayout from "@/layouts/BaseLayout.astro";
 import Navbar from "@/components/navbar/Navbar.astro";
 import Footer from "@/components/Footer.astro";
+import { CONTACT_PATH } from "@/lib/routes";
 
 type Section = {
   h: string;
@@ -22,23 +25,30 @@ type Section = {
   post?: string[];
 };
 
+const MAIL_SLOT = `<a data-mail hidden href="${CONTACT_PATH}"></a>`;
+const TEL_SLOT = `<a data-tel hidden href="${CONTACT_PATH}"></a>`;
+
 const c = {
   title: "Polityka prywatności — Delung Meble",
   description:
     "Zasady przetwarzania danych osobowych przekazanych przez formularz kontaktowy na delung.pl — prostym językiem, zgodnie z RODO.",
   eyebrow: "OCHRONA DANYCH OSOBOWYCH",
-  headLead: "Polityka",
-  headAccent: "prywatności",
-  effective: "Obowiązuje od 11 lipca 2026 r.",
+  heading: "Polityka prywatności",
+  effective: "OBOWIĄZUJE OD 11 LIPCA 2026 R.",
   intro:
     "Ta polityka opisuje, jak przetwarzamy dane osobowe przekazane przez formularz kontaktowy na stronie delung.pl. Piszemy prostym językiem — bez prawniczego szumu, ale z kompletem informacji wymaganych przez RODO.",
-  mailFallback: "adres e-mail na stronie kontaktu",
+  tocHead: "W TYM DOKUMENCIE",
+  tocAsk: "Masz pytanie o dane? Napisz",
+  ctaKick: "MASZ PYTANIA O SWOJE DANE?",
+  ctaH: "Napisz albo po prostu zadzwoń.",
+  ctaP: "W tygodniu jesteśmy pod telefonem praktycznie całą dobę.",
+  ctaBack: "Wróć do kontaktu",
   sections: [
     {
       h: "Administrator danych",
       pre: [
         "Administratorem Twoich danych osobowych jest <strong>Adam Delung</strong>, prowadzący działalność gospodarczą pod firmą Delung Meble Adam Delung, Strażacka 27a, 98-300 Gaszyn, NIP: 7312021984 — operator strony delung.pl.",
-        'W sprawach dotyczących danych osobowych napisz na adres <span data-pp-mail></span>, zadzwoń pod <span data-pp-phone></span> albo skorzystaj z <a href="/kontakt/">formularza kontaktowego</a>.',
+        `W sprawach dotyczących danych osobowych napisz na adres ${MAIL_SLOT}, zadzwoń pod ${TEL_SLOT} albo skorzystaj z <a href="${CONTACT_PATH}">formularza kontaktowego</a>.`,
       ],
     },
     {
@@ -111,204 +121,529 @@ const c = {
     },
   ] satisfies Section[],
 } as const;
+
+const pad = (n: number) => String(n + 1).padStart(2, "0");
 ---
 
 <BaseLayout title={c.title} description={c.description} smoothScroll="desktop">
   <Navbar />
 
-  <div class="pp">
-    <main class="pp-art">
-      <div class="pp-mono">{c.eyebrow}</div>
-      <h1>
-        {c.headLead}
-        <span class="sf">{c.headAccent}</span>
-      </h1>
-      <p class="pp-eff">{c.effective}</p>
-      <p class="pp-intro">{c.intro}</p>
+  <main>
+    <section class="pp-head">
+      <div class="pp-head-in">
+        <p class="pp-kick">{c.eyebrow}</p>
+        <h1>{c.heading}</h1>
+        <div class="pp-rule" aria-hidden="true"></div>
+        <p class="pp-date">{c.effective}</p>
+        <p class="pp-lead">{c.intro}</p>
+      </div>
+    </section>
 
-      {
-        c.sections.map((s, i) => (
-          <section class="pp-sec">
-            <h2>
-              <span class="num" aria-hidden="true">
-                {String(i + 1).padStart(2, "0")}
-              </span>
-              {s.h}
-            </h2>
-            {s.pre?.map((p) => (
-              <p set:html={p} />
-            ))}
-            {s.list && (
-              <ul>
-                {s.list.map((li) => (
-                  <li set:html={li} />
+    <div class="pp-doc">
+      <aside class="pp-toc">
+        <p class="pp-toc-h">{c.tocHead}</p>
+        <nav class="pp-toc-list" aria-label="Spis treści polityki">
+          {
+            c.sections.map((s, i) => (
+              <a href={`#pp-${pad(i)}`}>
+                <span aria-hidden="true" data-n={pad(i)} />
+                {s.h}
+              </a>
+            ))
+          }
+        </nav>
+        <a class="pp-toc-ask" href={CONTACT_PATH}>
+          {c.tocAsk}
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path
+              d="M6 18L18 6M18 6H8M18 6v10"
+              stroke="#1a1a1a"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"></path>
+          </svg>
+        </a>
+      </aside>
+
+      <div class="pp-secs">
+        {
+          c.sections.map((s, i) => (
+            <section class="pp-sec" id={`pp-${pad(i)}`}>
+              {/* numer przez content:attr() — dekoracja .4 poza zasięgiem
+                  color-contrast axe (wzorzec numeru-ducha procesu) */}
+              <span class="pp-num" aria-hidden="true" data-n={pad(i)} />
+              <div class="pp-body">
+                <h2>{s.h}</h2>
+                {s.pre?.map((p) => (
+                  <p set:html={p} />
                 ))}
-              </ul>
-            )}
-            {s.post?.map((p) => (
-              <p set:html={p} />
-            ))}
-          </section>
-        ))
-      }
-    </main>
+                {s.list && (
+                  <ul>
+                    {s.list.map((li) => (
+                      <li set:html={li} />
+                    ))}
+                  </ul>
+                )}
+                {s.post?.map((p) => (
+                  <p set:html={p} />
+                ))}
+              </div>
+            </section>
+          ))
+        }
+      </div>
+    </div>
 
-    <Footer />
-  </div>
+    <section class="pp-cta">
+      <div class="pp-cta-in">
+        <div class="pp-cta-txt">
+          <p class="pp-kick">{c.ctaKick}</p>
+          <h2>{c.ctaH}</h2>
+          <p>{c.ctaP}</p>
+        </div>
+        <div class="pp-cta-btns">
+          <a class="pp-tel" data-tel hidden href={CONTACT_PATH}>Telefon</a>
+          <a class="pp-back" href={CONTACT_PATH}>
+            <span>{c.ctaBack}</span>
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path
+                d="M6 18L18 6M18 6H8M18 6v10"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"></path>
+            </svg>
+          </a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <Footer />
 </BaseLayout>
 
-<script>
-  // Antyscraping (kontrakt: tests/e2e/contact.spec.ts — grep dist bez pełnego
-  // adresu ANI numeru): e-mail i telefon składane z fragmentów jak
-  // w contact-ui.ts. Bez JS zostaje fallback wskazujący sekcję kontakt.
-  const FR = ["kontakt", "delung", "pl"];
-  const addr = `${FR[0]}@${FR[1]}.${FR[2]}`;
-  document.querySelectorAll("[data-pp-mail]").forEach((el) => {
-    const a = document.createElement("a");
-    a.href = `mailto:${addr}`;
-    a.textContent = addr;
-    el.replaceWith(a);
-  });
-  const PH = ["690", "291", "143"];
-  document.querySelectorAll("[data-pp-phone]").forEach((el) => {
-    const a = document.createElement("a");
-    a.href = `tel:+48${PH.join("")}`;
-    a.textContent = `+48 ${PH.join(" ")}`;
-    el.replaceWith(a);
-  });
-</script>
-
 <style>
-  /* Prosty layout dokumentu na tokenach projektu (global.css); typografia
-     nagłówka = konwencja sekcji (display + serif italic accent, eyebrow mono).
-     Celowo bez animacji — podstrona ma być lekka i łatwa do redesignu (D7);
-     chrome (navbar + footer) wspólny z pozostałymi podstronami, bez ambientu. */
-  :global(body) {
-    background: #070507;
+  /* ── pasek tytułowy ── */
+  .pp-head {
+    background: var(--bg-cream);
+    padding: 24px 0 30px;
   }
-
-  .pp {
-    min-height: 100svh;
-    background: #070507;
-    color: var(--ink);
-    font-family: var(--font-body), sans-serif;
+  .pp-head-in {
+    width: 100%;
+    max-width: var(--col);
+    margin-inline: auto;
+    padding-inline: var(--pad);
   }
-
-  .pp-art {
-    max-width: 760px;
-    margin: 0 auto;
-    /* PRZEJŚCIOWE: odstęp z czasów fixed navbara — po zmianie chrome'u na
-       sticky zmniejszony; docelowo wg portu widoku (4.5). */
-    padding: 48px 24px 90px;
-  }
-  .pp-mono {
-    font-family: var(--font-mono), monospace;
-    font-size: 11px;
-    letter-spacing: 0.3em;
-    text-transform: uppercase;
+  .pp-kick {
+    font-family: var(--font-display), sans-serif;
+    font-weight: 500;
+    font-size: clamp(10px, 2.82vw, 12px);
+    line-height: 1;
+    letter-spacing: 0.2em;
+    /* eksport .5 — podbite do --faint (ratchet axe) */
     color: var(--faint);
+    margin-bottom: 14px;
   }
   h1 {
-    margin: 14px 0 0;
     font-family: var(--font-display), sans-serif;
-    font-weight: 800;
-    font-size: clamp(38px, 5.4vw, 56px);
-    line-height: 1.04;
-    letter-spacing: -0.03em;
+    font-weight: 200;
+    font-size: clamp(29px, 8.72vw, 38px);
+    line-height: 1.12;
+    color: var(--ink);
   }
-  h1 .sf {
-    font-family: var(--font-serif), serif;
-    font-style: italic;
-    font-weight: 400;
-    font-size: 1.06em;
-    letter-spacing: 0;
-    background: var(--accent-gradient);
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
-    color: transparent;
+  .pp-rule {
+    width: 44px;
+    height: 1px;
+    background: rgba(26, 26, 26, 0.3);
+    margin: 16px 0;
   }
-  .pp-eff {
-    margin: 18px 0 0;
-    font-family: var(--font-mono), monospace;
-    font-size: 12px;
-    letter-spacing: 0.08em;
+  .pp-date {
+    margin-bottom: 14px;
+    font-family: var(--font-display), sans-serif;
+    font-weight: 500;
+    font-size: 11px;
+    line-height: 1.5;
+    letter-spacing: 0.14em;
+    /* eksport .45 — podbite do --faint (ratchet axe) */
     color: var(--faint);
   }
-  .pp-intro {
-    margin: 26px 0 0;
-    font-size: 17px;
-    line-height: 1.65;
+  .pp-lead {
+    font-family: var(--font-display), sans-serif;
+    font-weight: 200;
+    font-size: clamp(13.5px, 3.97vw, 17px);
+    line-height: 1.48;
     color: var(--muted);
+    text-wrap: pretty;
   }
 
-  .pp-sec {
-    margin-top: 54px;
-  }
-  .pp-sec h2 {
+  /* ── dokument ── */
+  .pp-doc {
+    width: 100%;
+    max-width: var(--col);
+    margin-inline: auto;
+    padding-block: 0 40px;
+    padding-inline: var(--pad);
     display: flex;
-    align-items: baseline;
-    gap: 14px;
-    margin: 0 0 16px;
-    font-family: var(--font-display), sans-serif;
-    font-weight: 700;
-    font-size: 21px;
-    letter-spacing: -0.01em;
+    flex-direction: column;
   }
-  .pp-sec h2 .num {
+  .pp-toc {
+    display: none;
+  }
+  .pp-secs {
+    display: flex;
+    flex-direction: column;
+  }
+  .pp-sec {
+    padding: 26px 0 30px;
+    border-top: 1px solid rgba(26, 26, 26, 0.14);
+    /* kotwice TOC lądują pod sticky paskiem (eksport 100px — pod --hdr-h,
+       dewiacja-fix D-P9) */
+    scroll-margin-top: calc(var(--hdr-h, 74px) + 26px);
+  }
+  .pp-num {
+    display: block;
     font-family: var(--font-mono), monospace;
-    font-size: 12px;
-    font-weight: 400;
-    letter-spacing: 0.1em;
-    color: var(--accent);
+    font-weight: 500;
+    font-size: 11px;
+    line-height: 1;
+    color: rgba(26, 26, 26, 0.4);
+    margin-bottom: 10px;
   }
-  .pp-sec p,
-  .pp-sec li {
-    font-size: 15.5px;
-    line-height: 1.7;
-    color: rgba(245, 240, 236, 0.78);
+  .pp-num::before {
+    content: attr(data-n);
   }
-  .pp-sec p {
-    margin: 0 0 14px;
-  }
-  .pp-sec ul {
-    /* preflight Tailwinda zeruje list-style — przywracamy jawnie */
-    list-style: disc;
-    margin: 0 0 14px;
-    padding-left: 22px;
-  }
-  .pp-sec li {
-    margin-bottom: 8px;
-  }
-  .pp-sec li::marker {
-    color: var(--accent);
-  }
-  /* Treść sekcji renderowana przez set:html + link e-mail wstawiany w JS —
-     elementy bez atrybutu scope Astro, stąd :global (wzorzec .of-w z Oferty). */
-  .pp-sec :global(strong) {
+  .pp-body h2 {
+    margin-bottom: 12px;
+    font-family: var(--font-display), sans-serif;
+    font-weight: 200;
+    font-size: clamp(19px, 5.64vw, 24px);
+    line-height: 1.27;
     color: var(--ink);
-    font-weight: 600;
   }
-  .pp-sec :global(a) {
+  .pp-body p,
+  .pp-body li {
+    font-family: var(--font-display), sans-serif;
+    font-weight: 200;
+    font-size: clamp(13px, 3.72vw, 15.5px);
+    line-height: 1.52;
+    color: var(--muted);
+    text-wrap: pretty;
+  }
+  .pp-body p + p {
+    margin-top: 12px;
+  }
+  .pp-body h2 + p {
+    margin-top: 0;
+  }
+  /* lista z pauzami designu (.pp-bs/.pp-b) na semantycznym <ul> */
+  .pp-body ul {
+    list-style: none;
+    margin: 12px 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .pp-body li {
+    display: flex;
+    gap: 10px;
+  }
+  .pp-body li::before {
+    content: "—";
+    flex: none;
+    color: rgba(26, 26, 26, 0.35);
+  }
+  /* Treść sekcji renderowana przez set:html + sloty tel/mail wypełniane
+     w JS — elementy bez atrybutu scope Astro, stąd :global. */
+  .pp-body :global(strong) {
+    color: var(--ink);
+    font-weight: 500;
+  }
+  .pp-body :global(a) {
     color: var(--ink);
     text-decoration: underline;
-    text-underline-offset: 3px;
-    text-decoration-color: rgba(var(--glow), 0.55);
-    transition: text-decoration-color 0.2s;
+    text-underline-offset: 2px;
   }
-  .pp-sec :global(a:hover),
-  .pp-sec :global(a:focus-visible) {
-    text-decoration-color: var(--accent);
+  .pp-body :global(a:hover),
+  .pp-body :global(a:focus-visible) {
+    opacity: 0.65;
+  }
+  .pp-body :global(a[hidden]) {
+    display: none;
   }
 
-  /* Stopka full-bleed — Footer.astro sam kontroluje kontener/wrap. */
+  /* ── pasek CTA ── */
+  .pp-cta {
+    background: #eae5dd;
+    padding: 34px 0 38px;
+  }
+  .pp-cta-in {
+    width: 100%;
+    max-width: var(--col);
+    margin-inline: auto;
+    padding-inline: var(--pad);
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+  .pp-cta-txt {
+    display: none;
+  }
+  .pp-cta-btns {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .pp-cta-btns a {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    border-radius: 999px;
+    padding: 14px 28px;
+    font-family: var(--font-body), sans-serif;
+    font-weight: 500;
+    font-size: clamp(14px, 4.1vw, 17px);
+    line-height: 1;
+    text-decoration: none;
+  }
+  .pp-cta-btns svg {
+    width: 24px;
+    height: 24px;
+    flex: none;
+  }
+  .pp-back {
+    background: var(--ink);
+    color: #fff;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+  }
+  .pp-back:hover {
+    background: #2b2b2b;
+  }
+  .pp-tel {
+    display: none;
+  }
 
-  @media (max-width: 640px) {
-    .pp-art {
-      padding-top: 40px;
+  /* ════ DESKTOP ≥1024 (breakpoint projektu — @media bez stałej:
+     widok bez logiki JS zależnej od progu) ════ */
+  @media (min-width: 1024px) {
+    .pp-head {
+      padding: clamp(56px, 5.42vw, 78px) 0 clamp(52px, 5.14vw, 74px);
+    }
+    .pp-head-in {
+      max-width: 1180px;
+      margin-inline: 0;
+    }
+    .pp-kick {
+      font-size: clamp(10px, 0.76vw, 11px);
+      letter-spacing: 0.22em;
+      margin-bottom: 22px;
+    }
+    h1 {
+      font-size: clamp(50px, 5vw, 72px);
+      line-height: 1.06;
+    }
+    .pp-rule {
+      margin: 30px 0 22px;
+    }
+    .pp-date {
+      font-size: 11px;
+      letter-spacing: 0.16em;
+      margin-bottom: 18px;
+    }
+    .pp-lead {
+      max-width: 74ch;
+      font-size: clamp(16px, 1.25vw, 18px);
+      line-height: 1.7;
+    }
+
+    .pp-doc {
+      display: grid;
+      grid-template-columns: clamp(220px, 20.8vw, 300px) 1fr;
+      gap: clamp(40px, 5.56vw, 80px);
+      align-items: start;
+      padding-block: clamp(50px, 4.86vw, 70px) clamp(64px, 6.25vw, 90px);
+    }
+    .pp-toc {
+      display: flex;
+      position: sticky;
+      /* eksport clamp(96…120) liczone bez naszego paska — pod --hdr-h */
+      top: calc(var(--hdr-h, 74px) + 24px);
+      flex-direction: column;
+      gap: 14px;
+    }
+    .pp-toc-h {
+      font-family: var(--font-display), sans-serif;
+      font-weight: 500;
+      font-size: 10.5px;
+      line-height: 1;
+      letter-spacing: 0.2em;
+      /* eksport .45 — podbite do --faint (ratchet axe) */
+      color: var(--faint);
+    }
+    .pp-toc-list {
+      display: flex;
+      flex-direction: column;
+      gap: 11px;
+      padding-top: 6px;
+      border-top: 1px solid rgba(26, 26, 26, 0.14);
+    }
+    .pp-toc-list a {
+      display: flex;
+      gap: 12px;
+      font-family: var(--font-display), sans-serif;
+      font-weight: 300;
+      font-size: clamp(13px, 1.01vw, 14.5px);
+      line-height: 1.5;
+      color: var(--ink);
+      text-decoration: none;
+      position: relative;
+    }
+    .pp-toc-list a span {
+      flex: none;
+      font-family: var(--font-mono), monospace;
+      font-weight: 500;
+      font-size: 11px;
+      line-height: 1.6;
+      color: rgba(26, 26, 26, 0.35);
+    }
+    .pp-toc-list a span::before {
+      content: attr(data-n);
+    }
+    .pp-toc-list a:hover {
+      color: var(--accent-ink);
+    }
+    .pp-toc-ask {
+      margin-top: 16px;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      font-family: var(--font-display), sans-serif;
+      font-weight: 300;
+      font-size: clamp(13px, 1.01vw, 14.5px);
+      color: var(--ink);
+      text-decoration: none;
+    }
+    .pp-toc-ask:hover {
+      opacity: 0.6;
+    }
+    .pp-toc-ask svg {
+      width: 17px;
+      height: 17px;
+      flex: none;
+    }
+
+    .pp-secs {
+      max-width: 840px;
     }
     .pp-sec {
-      margin-top: 44px;
+      display: grid;
+      grid-template-columns: 64px 1fr;
+      gap: 24px;
+      padding: clamp(32px, 3.06vw, 44px) 0;
+      scroll-margin-top: calc(var(--hdr-h, 74px) + 28px);
+    }
+    .pp-sec:first-child {
+      padding-top: 0;
+      border-top: none;
+    }
+    .pp-sec:last-child {
+      padding-bottom: 0;
+    }
+    .pp-num {
+      font-size: 12px;
+      line-height: 1.6;
+      padding-top: 9px;
+      margin-bottom: 0;
+    }
+    .pp-body h2 {
+      margin-bottom: 18px;
+      font-size: clamp(24px, 2.22vw, 32px);
+      line-height: 1.2;
+    }
+    .pp-body p,
+    .pp-body li {
+      font-size: clamp(15px, 1.15vw, 16.5px);
+      line-height: 1.75;
+    }
+    .pp-body p + p {
+      margin-top: 16px;
+    }
+    .pp-body :global(a) {
+      text-underline-offset: 3px;
+    }
+    .pp-body ul {
+      gap: 14px;
+      margin: 16px 0;
+    }
+    .pp-body li {
+      gap: 14px;
+    }
+
+    .pp-cta {
+      padding: clamp(44px, 4.17vw, 60px) 0;
+    }
+    .pp-cta-in {
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+      gap: clamp(30px, 3.47vw, 50px);
+    }
+    .pp-cta-txt {
+      display: block;
+    }
+    .pp-cta-txt h2 {
+      font-family: var(--font-display), sans-serif;
+      font-weight: 200;
+      font-size: clamp(28px, 2.64vw, 38px);
+      line-height: 1.15;
+      color: var(--ink);
+    }
+    .pp-cta-txt p {
+      margin-top: 12px;
+      font-family: var(--font-display), sans-serif;
+      font-weight: 200;
+      font-size: clamp(14px, 1.11vw, 16px);
+      line-height: 1.65;
+      color: var(--muted);
+    }
+    .pp-cta-txt .pp-kick {
+      margin-bottom: 14px;
+    }
+    .pp-cta-btns {
+      flex: none;
+      flex-direction: row;
+      gap: 14px;
+    }
+    .pp-cta-btns a {
+      justify-content: center;
+      padding: clamp(15px, 1.32vw, 19px) clamp(24px, 2.36vw, 34px);
+      font-size: clamp(15px, 1.18vw, 17px);
+      box-shadow: none;
+    }
+    .pp-cta-btns svg {
+      width: 18px;
+      height: 18px;
+    }
+    .pp-tel {
+      display: flex;
+      background: var(--ink);
+      color: #fff;
+    }
+    .pp-tel:hover {
+      background: #2b2b2b;
+    }
+    .pp-tel[hidden] {
+      display: none;
+    }
+    .pp-back {
+      background: none;
+      color: var(--ink);
+      border: 1px solid rgba(26, 26, 26, 0.35);
+      box-shadow: none;
+    }
+    .pp-back:hover {
+      background: rgba(26, 26, 26, 0.05);
     }
   }
 </style>
