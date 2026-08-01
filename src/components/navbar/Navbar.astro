@@ -18,8 +18,13 @@ interface Props {
    *  Aktywacja `over`: strona główna (4.2), o-nas/proces (4.5),
    *  kontakt (Etap 5). */
   variant?: "plain" | "over";
+  /** Ton wariantu `over` (D-P2, `hdr dark` z eksportów proces/o-nas):
+   *  `dark` = po scrollu wjeżdża CIEMNE tło z blur zamiast białego,
+   *  logo i linki zostają białe, pill telefonu obwódkowy. Desktop-only
+   *  (mobile zawsze biały pasek); bez wpływu na `plain`. */
+  tone?: "light" | "dark";
 }
-const { variant = "plain" } = Astro.props;
+const { variant = "plain", tone = "light" } = Astro.props;
 
 // Normalizacja ukośnika — w dev Astro.url.pathname bywa bez końcowego "/".
 const currentPath = Astro.url.pathname.endsWith("/")
@@ -36,7 +41,11 @@ const t = {
 };
 ---
 
-<header class:list={["hdr", variant]} data-nav={variant} data-variant={variant}>
+<header
+  class:list={["hdr", variant, { dark: variant === "over" && tone === "dark" }]}
+  data-nav={variant}
+  data-variant={variant}
+>
   <span class="hdr-scrim" aria-hidden="true"></span>
   <span class="hdr-bg" aria-hidden="true"></span>
 
@@ -672,6 +681,44 @@ const t = {
     .mbtn,
     .sheet-ov {
       display: none;
+    }
+
+    /* ── ton ciemny wariantu over (D-P2 — blok `.hdr.dark` z proces.html):
+       po scrollu wjeżdża ciemne szkło (blur) zamiast bieli; logo i linki
+       białe przez cały przebieg --p, pill telefonu obwódkowy. ── */
+    .hdr.dark .hdr-bg {
+      background: rgba(18, 17, 15, 0.75);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .hdr.dark .hdr-scrim {
+      display: none;
+    }
+    .hdr.dark .logo-l {
+      opacity: 1;
+    }
+    .hdr.dark .logo-d {
+      opacity: 0;
+    }
+    .hdr.dark .nav-link {
+      color: rgba(255, 255, 255, 0.88);
+      letter-spacing: 0.16em;
+      font-size: clamp(11.5px, 0.9vw, 13px);
+      text-shadow: 0 1px 6px rgba(0, 0, 0, 0.35);
+    }
+    .hdr.dark .nav-link[aria-current="page"] {
+      color: #fff;
+    }
+    .hdr.dark .hdr-tel {
+      background: transparent;
+      color: #fff;
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      box-shadow: none;
+    }
+    .hdr.dark .hdr-tel:hover {
+      background: rgba(255, 255, 255, 0.1);
+      opacity: 1;
     }
   }
 

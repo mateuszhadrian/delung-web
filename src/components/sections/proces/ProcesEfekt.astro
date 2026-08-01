@@ -1,0 +1,105 @@
+---
+// Sekcja EFEKT (eksport: .efekt z proces.html) — WYŁĄCZNIE desktop
+// (mobile jej nie renderuje, 1:1 z eksportem: display:none <1024).
+// Cream, grid 2 kolumny: kicker + h2 serif italic / lista 4 checków.
+const ITEMS = [
+  "Telefonicznie jesteśmy dostępni 24/7 — także wieczorem.",
+  "Darmowy pomiar i doradztwo przed wyceną.",
+  "Bez chaosu, niedomówień i ukrytych kosztów.",
+  "Montaż „pod klucz” z podłączeniem AGD i dekoracji okiennych.",
+] as const;
+---
+
+<section class="efekt">
+  <div class="efekt-in">
+    <div>
+      <p class="efekt-kick">EFEKT</p>
+      <h2>Zostawiamy po sobie tylko gotowe, lśniące wnętrze.</h2>
+    </div>
+    <ul>
+      {
+        ITEMS.map((t) => (
+          <li>
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path
+                d="M4 12.5l5 5L20 6.5"
+                stroke="#2F8F5B"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+            <span>{t}</span>
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+</section>
+
+<style>
+  .efekt {
+    display: none;
+  }
+
+  /* ════ DESKTOP ≥1024 (para: PROCES_DESKTOP_MIN_PX) ════ */
+  @media (min-width: 1024px) {
+    .efekt {
+      display: block;
+      background: var(--bg-cream);
+      padding: clamp(58px, 5.56vw, 80px) 0 clamp(64px, 6.25vw, 90px);
+    }
+    .efekt-in {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: clamp(40px, 4.86vw, 70px);
+      align-items: center;
+      width: 100%;
+      max-width: var(--col);
+      margin-inline: auto;
+      padding-inline: var(--pad);
+    }
+    .efekt-kick {
+      font-family: var(--font-display), sans-serif;
+      font-weight: 500;
+      font-size: clamp(10px, 0.76vw, 11px);
+      line-height: 1;
+      letter-spacing: 0.2em;
+      /* eksport --gr (~4.0:1 na cream) — podbite do --accent-ink (axe) */
+      color: var(--accent-ink);
+      margin-bottom: 18px;
+    }
+    h2 {
+      font-family: var(--font-serif), serif;
+      font-style: italic;
+      font-weight: 500;
+      font-size: clamp(38px, 3.61vw, 52px);
+      line-height: 1.16;
+      color: var(--ink);
+    }
+    ul {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+    li {
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+      font-family: var(--font-display), sans-serif;
+      font-weight: 200;
+      font-size: clamp(15px, 1.18vw, 17px);
+      line-height: 1.55;
+      color: rgba(26, 26, 26, 0.82);
+    }
+    li svg {
+      width: 19px;
+      height: 19px;
+      flex: none;
+      margin-top: 3px;
+    }
+  }
+</style>

@@ -1,0 +1,440 @@
+---
+// Kroki procesu (eksport: .steps z proces.html). Mobile (<1024, jasny):
+// 4 sekcje numer/tag/h2/lead+rest/zdjęcie 39:35 + sticky chip licznika.
+// Desktop (≥1024, CIEMNY #12110f): grid 45.8%/1fr — lewa kolumna sticky
+// 100vh ze zdjęciami odsłanianymi clip-path wg postępu scrolla (licznik +
+// pionowy pasek), prawa lista kroków po 100vh. Eksport klonował zdjęcia
+// JS-em — my renderujemy oba egzemplarze w SSR (D-P3); te same pliki
+// w obu gałęziach = jeden fetch. Swap/liczniki napędza proces-motion.ts
+// (za bramką motion); bez JS widoczny pierwszy kadr (inline clip-path).
+// Motyw krok-sekcji przez lokalne custom-props --st* (eksport 1:1).
+import step1 from "@/assets/proces/step-1.webp";
+import step2 from "@/assets/proces/step-2.webp";
+import step3 from "@/assets/proces/step-3.webp";
+import step4 from "@/assets/proces/step-4.webp";
+
+const STEPS = [
+  {
+    tag: "PIERWSZY KONTAKT I DARMOWY POMIAR",
+    h: "Rozmowa i pomiar",
+    lead: "Wszystko zaczyna się od poznania Twojej wizji.",
+    rest:
+      "Jesteśmy do Twojej dyspozycji telefonicznie 24/7 – wiemy, że " +
+      "najlepsze pomysły często przychodzą wieczorem. Przyjeżdżamy na " +
+      "miejsce, precyzyjnie wymiarujemy przestrzeń i doradzamy najlepsze " +
+      "rozwiązania, niezależnie czy to kuchnia, garderoba, czy lokal " +
+      "komercyjny.",
+    img: step1,
+    pos: "50% 45%",
+    alt: "Rozmowa i pomiar",
+  },
+  {
+    tag: "PROJEKT, DETALE I WYCENA",
+    h: "Projektowanie i dobór materiałów",
+    lead: "Przekładamy pomysły na konkretny plan.",
+    rest:
+      "Pomagamy w doborze idealnych frontów, blatów HPL czy odpornych na " +
+      "zarysowania akryli. Jako kompleksowy wykonawca, doradzamy również " +
+      "przy wyborze sprzętu AGD oraz tkanin na dekoracje okienne. Po " +
+      "akceptacji projektu i wyceny, zabieramy się do pracy.",
+    img: step2,
+    pos: "50% 50%",
+    alt: "Projektowanie i dobór materiałów",
+  },
+  {
+    tag: "PRODUKCJA I BEZKOMPROMISOWA JAKOŚĆ",
+    h: "Rzemieślnicza produkcja",
+    lead: "To na tym etapie dzieje się magia.",
+    rest:
+      "W naszej stolarni produkujemy i kompletujemy Twoje meble. Nie " +
+      "idziemy na skróty – korzystamy z topowych maszyn i niezawodnych " +
+      "okuć. Zanim cokolwiek wyjedzie do klienta, każdy element jest przez " +
+      "nas rygorystycznie sprawdzany.",
+    img: step3,
+    pos: "50% 55%",
+    alt: "Rzemieślnicza produkcja",
+  },
+  {
+    tag: "MONTAŻ",
+    h: "Czysty montaż „pod klucz”",
+    lead:
+      "Twój dom to nie plac budowy, dlatego traktujemy go z maksymalnym " +
+      "szacunkiem.",
+    rest:
+      "Skrupulatnie zabezpieczamy podłogi i dbamy o porządek. Montujemy " +
+      "zabudowę, podłączamy sprzęt AGD i wieszamy zasłony. Gdy kończymy " +
+      "pracę, zostawiamy po sobie tylko w pełni gotowe, lśniące wnętrze.",
+    img: step4,
+    pos: "50% 55%",
+    alt: "Czysty montaż pod klucz",
+  },
+] as const;
+
+const BLANK_IMG =
+  "data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='1'%20height='1'/%3E";
+const pad = (n: number) => String(n).padStart(2, "0");
+---
+
+<div class="steps">
+  {/* sticky kolumna zdjęć — tylko desktop; czysto dekoracyjna */}
+  <div class="steps-media" aria-hidden="true">
+    <div class="steps-stick">
+      {
+        STEPS.map((s, i) => (
+          <div
+            class="swapimg"
+            style={i === 0 ? "clip-path:inset(0% 0% 0% 0%)" : undefined}
+          >
+            <picture>
+              <source media="(min-width: 1024px)" srcset={s.img.src} />
+              <img
+                src={BLANK_IMG}
+                width={s.img.width}
+                height={s.img.height}
+                alt=""
+                loading="lazy"
+                decoding="async"
+                style={`object-position:${s.pos}`}
+              />
+            </picture>
+            <span class="swapimg-tint" />
+          </div>
+        ))
+      }
+      <div class="swapcount">
+        <b data-swapcount>01</b><i>/ {pad(STEPS.length)}</i>
+      </div>
+      <div class="swaptrack"><b data-swapbar></b></div>
+    </div>
+  </div>
+
+  <div class="steps-list">
+    {/* sticky chip licznika — tylko mobile; dekoracyjny */}
+    <div class="steps-chip" aria-hidden="true">
+      <span><b data-count>01</b><i>/ {pad(STEPS.length)}</i></span>
+    </div>
+
+    {
+      STEPS.map((s, i) => (
+        <section class="step" data-step={i + 1}>
+          {/* numer-duch przez content: attr() — tekst 13% alpha to celowa
+              dekoracja designu (WCAG 1.4.3 „pure decoration"), a axe nie
+              umie tego odróżnić od treści; pseudo-element nie jest text
+              node'em, więc nie wchodzi do color-contrast (ratchet axe) */}
+          <div
+            class="step-num"
+            aria-hidden="true"
+            data-rev
+            data-n={pad(i + 1)}
+          />
+          <div class="step-txt">
+            <p class="step-tag" data-rev>
+              {s.tag}
+            </p>
+            <h2 data-rev>{s.h}</h2>
+            <div class="step-rule" aria-hidden="true" />
+            <p class="step-lead" data-rev>
+              {s.lead}
+            </p>
+            <p class="step-rest" data-rev>
+              {s.rest}
+            </p>
+          </div>
+          <div class="step-photo" data-rev="soft">
+            <img
+              src={s.img.src}
+              width={s.img.width}
+              height={s.img.height}
+              alt={s.alt}
+              loading="lazy"
+              decoding="async"
+              style={`object-position:${s.pos}`}
+            />
+          </div>
+        </section>
+      ))
+    }
+  </div>
+</div>
+
+<style>
+  /* ── motyw sekcji kroków: mobile = jasny, desktop = ciemny (eksport) ── */
+  .steps {
+    --st-bg: #fff;
+    --st-ink: var(--ink);
+    --st-dim: var(--muted);
+    /* eksport #2F8F5B (~4.0:1 na bieli) — podbite do --accent-ink (axe) */
+    --st-tag: var(--accent-ink);
+    --st-rule: rgba(26, 26, 26, 0.3);
+    --st-edge: transparent;
+    position: relative;
+    background: var(--st-bg);
+  }
+  .steps-media {
+    display: none;
+  }
+
+  .steps-chip {
+    position: sticky;
+    /* eksport top:12px chował chip pod sticky navbar — pod --hdr-h
+       (dewiacja-fix D-P9, wzorzec D-R7) */
+    top: calc(var(--hdr-h, 74px) + 12px);
+    z-index: 3;
+    display: flex;
+    justify-content: flex-end;
+    height: 0;
+    padding-inline: var(--pad);
+    width: 100%;
+    max-width: var(--col);
+    margin-inline: auto;
+  }
+  .steps-chip span {
+    display: flex;
+    align-items: baseline;
+    gap: 5px;
+    background: rgba(255, 255, 255, 0.94);
+    border: 1px solid rgba(26, 26, 26, 0.16);
+    border-radius: 999px;
+    padding: 8px 14px;
+    font-family: var(--font-mono), monospace;
+    font-weight: 500;
+    font-size: 12px;
+    line-height: 1;
+    color: var(--ink);
+  }
+  .steps-chip i {
+    font-style: normal;
+    color: rgba(26, 26, 26, 0.4);
+  }
+
+  .step {
+    padding: 30px 0 40px;
+    width: 100%;
+    max-width: var(--col);
+    margin-inline: auto;
+  }
+  .step-num {
+    overflow: hidden;
+    padding-inline: var(--pad);
+    font-family: var(--font-display), sans-serif;
+    font-weight: 200;
+    font-size: clamp(76px, 25.1vw, 106px);
+    line-height: 0.92;
+    color: rgba(26, 26, 26, 0.13);
+  }
+  .step-num::before {
+    content: attr(data-n);
+  }
+  .step-txt {
+    padding-block: 0 20px;
+    padding-inline: var(--pad);
+    margin-top: -26px;
+    position: relative;
+  }
+  .step-tag {
+    font-family: var(--font-display), sans-serif;
+    font-weight: 500;
+    font-size: clamp(9.5px, 2.7vw, 11px);
+    line-height: 1.6;
+    letter-spacing: 0.16em;
+    color: var(--st-tag);
+  }
+  .step-txt h2 {
+    margin-top: 8px;
+    font-family: var(--font-display), sans-serif;
+    font-weight: 200;
+    font-size: clamp(23px, 6.92vw, 30px);
+    line-height: 1.22;
+    color: var(--st-ink);
+    text-wrap: pretty;
+  }
+  .step-rule {
+    width: 44px;
+    height: 1px;
+    background: var(--st-rule);
+    margin: 14px 0;
+  }
+  .step-lead,
+  .step-rest {
+    font-family: var(--font-display), sans-serif;
+    font-weight: 200;
+    font-size: clamp(13.5px, 3.72vw, 15.5px);
+    line-height: 1.52;
+    color: var(--st-dim);
+    text-wrap: pretty;
+  }
+  .step-lead {
+    margin-bottom: 0.5em;
+  }
+  .step-photo {
+    position: relative;
+    aspect-ratio: 39 / 35;
+    overflow: hidden;
+    background: #e5e1da;
+  }
+  .step-photo img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  /* ════ DESKTOP ≥1024 (para: PROCES_DESKTOP_MIN_PX) ════ */
+  @media (min-width: 1024px) {
+    .steps {
+      --st-bg: #12110f;
+      --st-ink: #fff;
+      --st-dim: rgba(255, 255, 255, 0.7);
+      --st-tag: #7fd0a2;
+      --st-rule: rgba(255, 255, 255, 0.35);
+      --st-edge: rgba(255, 255, 255, 0.1);
+      display: grid;
+      grid-template-columns: 45.8% 1fr;
+    }
+    .steps-media {
+      display: block;
+      position: relative;
+    }
+    .steps-stick {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow: hidden;
+      background: #0d0c0b;
+    }
+    .swapimg {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      clip-path: inset(0% 0% 100% 0%);
+      transition: clip-path 1s cubic-bezier(0.76, 0, 0.24, 1);
+    }
+    .swapimg picture {
+      display: block;
+      position: absolute;
+      inset: 0;
+    }
+    .swapimg img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .swapimg-tint {
+      display: block;
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        180deg,
+        rgba(0, 0, 0, 0.25),
+        rgba(0, 0, 0, 0.05) 40%,
+        rgba(0, 0, 0, 0.5)
+      );
+    }
+    .swapcount {
+      position: absolute;
+      left: clamp(24px, 3.05vw, 44px);
+      bottom: clamp(28px, 3.19vw, 46px);
+      z-index: 10;
+      display: flex;
+      align-items: flex-end;
+      gap: 20px;
+    }
+    .swapcount b {
+      font-family: var(--font-display), sans-serif;
+      font-weight: 200;
+      font-size: clamp(78px, 8.19vw, 118px);
+      line-height: 0.86;
+      color: #fff;
+    }
+    .swapcount i {
+      font-family: var(--font-mono), monospace;
+      font-weight: 500;
+      font-size: 12px;
+      line-height: 1;
+      font-style: normal;
+      color: rgba(255, 255, 255, 0.55);
+      padding-bottom: 12px;
+    }
+    .swaptrack {
+      position: absolute;
+      right: clamp(24px, 3.05vw, 44px);
+      top: 0;
+      bottom: 0;
+      z-index: 10;
+      width: 1px;
+      background: rgba(255, 255, 255, 0.18);
+    }
+    .swaptrack b {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 1px;
+      height: 100%;
+      background: #fff;
+      transform: scaleY(0.25);
+      transform-origin: top;
+      transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .steps-list {
+      padding: 0 clamp(40px, 5.56vw, 80px);
+    }
+    .steps-chip {
+      display: none;
+    }
+    .step {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 70px 0;
+      max-width: none;
+      border-bottom: 1px solid var(--st-edge);
+    }
+    .step-num {
+      display: none;
+    }
+    .step-txt {
+      padding: 0;
+      margin-top: 0;
+    }
+    .step-tag {
+      font-size: clamp(10px, 0.76vw, 11px);
+      letter-spacing: 0.18em;
+    }
+    .step-txt h2 {
+      margin-top: 16px;
+      font-size: clamp(40px, 4.17vw, 60px);
+      line-height: 1.06;
+    }
+    .step-rule {
+      width: 52px;
+      margin: 28px 0;
+    }
+    .step-lead {
+      font-family: var(--font-serif), serif;
+      font-weight: 400;
+      font-size: clamp(20px, 1.81vw, 26px);
+      line-height: 1.5;
+      color: rgba(255, 255, 255, 0.92);
+      margin-bottom: 20px;
+    }
+    .step-rest {
+      font-size: clamp(15px, 1.15vw, 16.5px);
+      line-height: 1.7;
+    }
+    .step-photo {
+      display: none;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .swapimg,
+    .swaptrack b {
+      transition: none;
+    }
+  }
+</style>

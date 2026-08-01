@@ -166,12 +166,42 @@ treść/sekcje budowane od nowa wg `docs/design/`).
   z gestami, deep-link), visual `oferta` (6 profili + panel-05 na
   chromium-1920) i `kategorie` (tylko profile mobile). Kickery/drobny
   druk pod ratchet axe: `--accent-ink`/`--faint`.
-- Etapy 4.4–7 — przed nami (widoki → formularz → SEO/pomiar → przekazanie).
-- PRZEJŚCIOWE dziedzictwo szablonu (do wymiany w Etapach 4–5): widoki
-  `/realizacje/` `/kontakt/` `/polityka-prywatnosci/` na ciemnym motywie
-  (`src/styles/legacy-dark.css` — strona delung jest JASNA; kafle/detal
-  realizacji = tymczasowe kafle zdjęciowe), breakpointy 760/861
-  w odziedziczonych komponentach (docelowo wszędzie **1024 px**),
+- **Etap 4.4 (/realizacje/) — WYKONANY** (2026-08-01, PR #11; decyzje
+  i KOREKTY po testach Mateusza: `docs/analiza-realizacje.md` — czytać
+  PRZED pracą przy tym widoku): szyna filtrów = „Wszystkie" + TYLKO
+  kategorie z wpisami (`workRail()` w `work-data.ts` + unit test; bez
+  re-empty/paginacji/atrapy sortowania z makiety), **deep-link filtra
+  `/realizacje/#<slug>`** (domknięcie D-OK6; podpięte karty CTA paneli
+  /oferta/ i `dt-more` kart /kategorie/; zły/pusty slug → „Wszystkie");
+  detal = **JEDEN overlay `#work-detail`** (`WorkDetailOverlay.astro`;
+  modal↔sheet czystym CSS przy `WORK_DESKTOP_MIN_PX=1024` w
+  `work-config.ts` — `sheetMQ`/760 usunięte, `ui/Modal`+`ui/BottomSheet` +`CloseIcon` SKASOWANE, strona główna współdzieli overlay; X na
+  sheecie jak karty kategorii; galeria wędruje placeGal-em przy
+  klonowaniu, zmiana progu zamyka; desktopowy tor galerii BEZ
+  overflow:hidden z makiety — clipował translateX); projnav =
+  **przejazd modala za krawędź ekranu** (bez crossfade; guard na czas
+  zjazdu); **podgląd pełnoekranowy** `[data-lightbox]` (tap/klik w kadr;
+  klony kadrów w formacie 330/412 na czarnym tle; mobile: swipe-snap +
+  chevron + swipe-down [`touch-action: pan-x` na torze], licznik na
+  czarnym pasie; desktop: strzałki/dashes/X, Esc capture'em zamyka
+  TYLKO podgląd; wyjście wraca na oglądany kadr; nosi
+  `data-overlay-panel` — klik ≠ „klik w tło"; fokus na kontener, nie
+  chevron — iOS rysował pierścień); **wideo BEZ `controls` i bez
+  własnego play**: ikonka kamery `[data-cam]`, tap w kadr startuje film
+  i otwiera podgląd z grającym klipem, w podglądzie tap = pauza↔play
+  (reguła w sections.md zaktualizowana); `legacy-dark.css` usunięty
+  z widoku, Lenis włączony (jak /oferta/), sticky szyna/head pod
+  `--hdr-h` (fix top:0 makiety), `re-phone` przez antyscraping D-CH5.
+  Nowe specy: e2e filtry/deep-link/detal/podgląd/wideo-funkcjonalnie
+  (`play()` bez sieci — `paused===false`), visual top/grid/cta/detal/
+  podgląd/wideo pod maską (stary baseline stopki skasowany).
+- Etapy 4.5–7 — przed nami (widoki → formularz → SEO/pomiar → przekazanie).
+- PRZEJŚCIOWE dziedzictwo szablonu (do wymiany w Etapie 4.5/5): widoki
+  `/kontakt/` i `/polityka-prywatnosci/` na ciemnym motywie
+  (`src/styles/legacy-dark.css` — strona delung jest JASNA; **UWAGA:
+  plik importują OBA** — kasacja legacy-dark z planu 4.5 możliwa
+  dopiero, gdy i kontakt przejdzie na jasny motyw w Etapie 5),
+  breakpoint 861 w odziedziczonym widoku kontaktu (docelowo **1024 px**),
   placeholder `TODO_*` w `contact-config.ts` (Turnstile, Etap 5).
 
 ## Mapa projektu
@@ -193,15 +223,19 @@ treść/sekcje budowane od nowa wg `docs/design/`).
   `KategorieSection` + skrypty `oferta.ts`/`kategorie.ts` (funkcjonalne,
   zawsze) i `oferta-motion.ts` (motion-gate, wspólny obu stron);
   deep-link `/kategorie/#<slug>` otwiera kartę kategorii.
-- `src/components/sections/work/` — Realizacje: dane z Content Collections
-  (`src/content/realizacje/*.json`; schema Zod: `src/content.schema.ts` —
-  źródło prawdy, `content.config.ts` tylko ją importuje). Detal =
-  Modal/BottomSheet na `overlay.ts`.
+- `src/components/sections/work/` — Realizacje (4.4): dane z Content
+  Collections (`src/content/realizacje/*.json`; schema Zod:
+  `src/content.schema.ts` — źródło prawdy, `content.config.ts` tylko ją
+  importuje) + `work-config.ts` (WORK_DESKTOP_MIN_PX=1024, importują
+  testy) + `work-data.ts` (`viewProject`/`workRail`). Detal = JEDEN
+  overlay `#work-detail` (`WorkDetailOverlay.astro` + `open-detail.ts`
+  na `overlay.ts`: klon z `<template>`, galeria, podgląd pełnoekranowy,
+  projnav, wideo tap-toggle); ruch w `work-motion.ts` (motion-gate).
 - `src/components/sections/contact/` — formularz kontaktowy (Pages Function
   `functions/api/kontakt.ts`, Resend + Turnstile + antyspam + KV quota);
   widok docelowy wg `docs/design/kontakt.html` w Etapie 5.
-- `src/scripts/` — `overlay.ts` (Modal/BottomSheet — focus-trap, Esc,
-  swipe-down), `smooth-scroll.ts` (Lenis TYLKO desktop; dotyk = scroll
+- `src/scripts/` — `overlay.ts` (generyczne nakładki modal/sheet —
+  focus-trap, Esc, swipe-down), `smooth-scroll.ts` (Lenis TYLKO desktop; dotyk = scroll
   natywny — decyzja 4.2, reguły), `section-helpers.ts`, `anchors.ts`,
   `back-link.ts`, `bg-crossfade.ts`.
 - `src/lib/img.ts` — `imgAt()`: JEDYNE miejsce wiedzy o rozmiarach obrazów

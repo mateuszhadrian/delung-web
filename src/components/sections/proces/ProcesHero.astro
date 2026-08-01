@@ -1,0 +1,219 @@
+---
+// Hero /proces-wspolpracy/ (eksport: .hero z proces.html). Mobile (<1024):
+// jasny hero tekstowy BEZ zdjęcia (kicker/h1/linia/lead). Desktop (≥1024):
+// pełnoekranowe zdjęcie pracowni + tint, biały h1, pionowy cue „PRZEWIŃ".
+// Zdjęcie desktop-only przez <picture> + blank img (fix transferu 4.2 —
+// display:none nie zatrzymuje pobierania). Parallax [data-par] na
+// <picture> (host = sekcja; proces-motion.ts za bramką motion).
+// data-navref = referencja postępu navbara `over` (4.1).
+import heroImg from "@/assets/proces/hero.webp";
+
+const BLANK_IMG =
+  "data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='1'%20height='1'/%3E";
+---
+
+<section class="hero" data-navref>
+  {
+    /* dekoracyjne (img alt="") — aria-hidden na <picture> nie przechodzi
+      lintu jsx-a11y (element bez wsparcia ARIA) */
+  }
+  <picture class="hero-pic" data-par="0.1" data-par-scale="1.05">
+    <source media="(min-width: 1024px)" srcset={heroImg.src} />
+    <img
+      src={BLANK_IMG}
+      width={heroImg.width}
+      height={heroImg.height}
+      alt=""
+      fetchpriority="high"
+      decoding="async"
+    />
+  </picture>
+  <span class="hero-tint" aria-hidden="true"></span>
+
+  <div class="hero-in">
+    <p class="hero-kick" data-rev>
+      PROCES WSPÓŁPRACY<span class="hero-kick-d"> · 4 KROKI</span>
+    </p>
+    <h1 data-rev>Od rozmowy do gotowego wnętrza</h1>
+    <div class="hero-rule" aria-hidden="true"></div>
+    <p class="hero-lead" data-rev>
+      Cztery przejrzyste kroki dzielą Cię od wnętrza dopasowanego do Twojego
+      życia. Zobacz, jak pracujemy — bez chaosu, niedomówień i ukrytych kosztów.
+    </p>
+  </div>
+
+  <div class="hero-cue" aria-hidden="true">
+    <span>PRZEWIŃ</span>
+    <span class="hero-cue-line"></span>
+  </div>
+</section>
+
+<style>
+  /* ── mobile: jasny hero tekstowy ── */
+  .hero {
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    padding: clamp(18px, 6.1vw, 26px) 0 12px;
+  }
+  .hero-pic,
+  .hero-tint,
+  .hero-cue {
+    display: none;
+  }
+  .hero-in {
+    position: relative;
+    width: 100%;
+    max-width: var(--col);
+    margin-inline: auto;
+    padding-inline: var(--pad);
+  }
+  .hero-kick {
+    font-family: var(--font-display), sans-serif;
+    font-weight: 500;
+    font-size: clamp(10px, 2.82vw, 12px);
+    line-height: 1;
+    letter-spacing: 0.2em;
+    /* eksport .5 — podbite do --faint (drobny druk, ratchet axe) */
+    color: var(--faint);
+    margin-bottom: 14px;
+  }
+  .hero-kick-d {
+    display: none;
+  }
+  h1 {
+    font-family: var(--font-display), sans-serif;
+    font-weight: 200;
+    font-size: clamp(29px, 8.72vw, 38px);
+    line-height: 1.12;
+    color: var(--ink);
+  }
+  .hero-rule {
+    width: 44px;
+    height: 1px;
+    background: rgba(26, 26, 26, 0.3);
+    margin: 16px 0;
+  }
+  .hero-lead {
+    font-family: var(--font-display), sans-serif;
+    font-weight: 200;
+    font-size: clamp(14px, 3.97vw, 17px);
+    line-height: 1.48;
+    color: var(--muted);
+    text-wrap: pretty;
+  }
+
+  /* ════ DESKTOP ≥1024 (para: PROCES_DESKTOP_MIN_PX) ════ */
+  @media (min-width: 1024px) {
+    .hero {
+      height: clamp(560px, 52.8vw, 760px);
+      padding: 0;
+      background: #12110f;
+    }
+    .hero-pic {
+      display: block;
+      position: absolute;
+      left: 0;
+      top: -12%;
+      width: 100%;
+      height: 124%;
+    }
+    .hero-pic img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: 58% 50%;
+    }
+    .hero-tint {
+      display: block;
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        90deg,
+        rgba(12, 11, 10, 0.92) 0%,
+        rgba(12, 11, 10, 0.62) 55%,
+        rgba(12, 11, 10, 0.3) 100%
+      );
+    }
+    .hero-in {
+      max-width: 1000px;
+      margin-inline: 0;
+    }
+    .hero-kick {
+      font-size: clamp(11px, 0.83vw, 12px);
+      letter-spacing: 0.26em;
+      /* eksport .6 — podbite (drobny druk na ciemnym tle, ratchet axe) */
+      color: rgba(255, 255, 255, 0.7);
+      margin-bottom: 26px;
+    }
+    .hero-kick-d {
+      display: inline;
+    }
+    h1 {
+      font-size: clamp(74px, 7.22vw, 104px);
+      line-height: 1;
+      letter-spacing: -2px;
+      color: #fff;
+    }
+    .hero-rule {
+      display: none;
+    }
+    .hero-lead {
+      margin-top: 34px;
+      font-size: clamp(16px, 1.32vw, 19px);
+      line-height: 1.62;
+      color: rgba(255, 255, 255, 0.8);
+      max-width: 62ch;
+    }
+    .hero-cue {
+      display: flex;
+      position: absolute;
+      right: var(--pad);
+      bottom: 60px;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+    }
+    .hero-cue span:first-child {
+      font-family: var(--font-display), sans-serif;
+      font-weight: 500;
+      font-size: 10px;
+      line-height: 1;
+      letter-spacing: 0.26em;
+      /* eksport .55 — podbite (ratchet axe) */
+      color: rgba(255, 255, 255, 0.7);
+      writing-mode: vertical-rl;
+    }
+    .hero-cue-line {
+      width: 1px;
+      height: 64px;
+      background: rgba(255, 255, 255, 0.7);
+      animation: dxcue 2.6s cubic-bezier(0.76, 0, 0.24, 1) infinite;
+    }
+  }
+
+  @keyframes dxcue {
+    0% {
+      transform: scaleY(0);
+      transform-origin: top;
+    }
+    45% {
+      transform: scaleY(1);
+      transform-origin: top;
+    }
+    55% {
+      transform: scaleY(1);
+      transform-origin: bottom;
+    }
+    100% {
+      transform: scaleY(0);
+      transform-origin: bottom;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .hero-cue-line {
+      animation: none;
+    }
+  }
+</style>
