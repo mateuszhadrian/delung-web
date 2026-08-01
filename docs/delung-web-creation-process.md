@@ -452,7 +452,11 @@ unit/e2e/visual → baseline'y darwin+linux → PR. Kolejność:
    codes zostają u Ciebie (D3).
 4. **Przekazanie dostępów:** panel (`delung-cms`), skrzynka
    `kontakt@delung.pl` (webmail + konfiguracja telefonu/Gmaila —
-   opcjonalnie wg `gmail_alias_setup.md` z hadrianm).
+   opcjonalnie wg `gmail_alias_setup.md` z hadrianm) oraz **konto Resend
+   klienta** (założone w Etapie 5 na `kontakt@delung.pl` — darmowy plan
+   daje jedną domenę na konto, więc poczta transakcyjna delunga od razu
+   stoi na koncie klienta; 2FA na jego telefonie, Setup Key i hasło
+   zostają u Ciebie do pełnego rozliczenia — tak samo jak `delung-cms`).
 5. **Szkolenie na żywo:** wspólnie dodajecie jedną realizację od zera
    (zdjęcia + wideo + teksty) i patrzycie, jak po ~2 min build publikuje
    ją na `delung.pl`.
