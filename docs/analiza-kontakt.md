@@ -259,6 +259,12 @@ i formularz przestaje być problemem.
 i przyniosę Ci liczby; zacieśnienie to Twoja decyzja i osobny commit
 (kandydat: domknięcie Etapu 5 albo Etap 6).
 
+**WYNIK (pomiar po PR B, `lhci collect` lokalnie na `/`)**: skrypty
+**67 978 B → 19 053 B** (−72 %), total 892 752 B → 842 768 B. Budżety
+zostają na 80 000 B / 1,2 MB — zapas urósł z 15 % do ponad czterokrotności.
+Zacieśnienie czeka na decyzję Mateusza (osobny commit, po pomiarze z CI —
+lokalny `lhci` jest miarodajny tylko dla rozmiarów zasobów, nie dla score).
+
 ---
 
 ## 4. Kroki w chmurze (klikasz Ty) — i kiedy
