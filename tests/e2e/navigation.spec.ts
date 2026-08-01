@@ -26,7 +26,7 @@ test.describe("nawigacja desktop", () => {
     await gotoReady(page);
     await page.locator('.nav-link[href="/realizacje/"]').click();
     await expect(page).toHaveURL(/\/realizacje\/?$/);
-    await expect(page.locator(".wix-grid")).toBeVisible();
+    await expect(page.locator(".re-grid")).toBeVisible();
   });
 
   test("pasek jest sticky — widoczny u góry także po scrollu na dno", async ({
@@ -149,7 +149,7 @@ test.describe("nawigacja mobile (bottom sheet)", () => {
     await page.locator("[data-burger]").click();
     await page.locator('.m-link[href="/realizacje/"]').click();
     await expect(page).toHaveURL(/\/realizacje\/?$/);
-    await expect(page.locator(".wix-grid")).toBeVisible();
+    await expect(page.locator(".re-grid")).toBeVisible();
   });
 
   test("pozycja Kontakt w sheecie nawiguje na podstronę", async ({ page }) => {

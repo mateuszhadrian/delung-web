@@ -1,8 +1,8 @@
 // Sekcja Realizacje NA STRONIE GŁÓWNEJ (zajawka .re z części 4.2,
 // docs/analiza-strona-glowna.md D-SG6): max 3 wpisy z Content Collections,
-// kafle otwierają WorkDetail w Modalu (desktop, scena przypięta) /
-// BottomSheet (mobile, karty w kolumnie) przez overlay.ts. Pokrycie
-// nakładek na podstronie /realizacje/ biega w work-index.spec.ts.
+// kafle otwierają detal w JEDNYM overlayu #work-detail (część 4.4 —
+// modal ≥1024 / bottom sheet <1024 w CSS, open-detail.ts). Pełne pokrycie
+// detalu (galeria, projnav, wideo) biega w work-index.spec.ts.
 import { readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { expect, test } from "@playwright/test";
@@ -25,10 +25,10 @@ test("zajawka pokazuje max 3 realizacje", async ({ page }) => {
   );
 });
 
-test.describe("desktop: Modal ze sceny przypiętej", () => {
-  test.skip(({ isMobile }) => !!isMobile, "modal tylko na desktop");
+test.describe("desktop: modal ze sceny przypiętej", () => {
+  test.skip(({ isMobile }) => !!isMobile, "układ modala tylko na desktop");
 
-  test("klik w stos otwiera modal bieżącej realizacji, × i Escape zamykają", async ({
+  test("klik w stos otwiera detal bieżącej realizacji, × i Escape zamykają", async ({
     page,
   }) => {
     await gotoReady(page);
@@ -40,46 +40,51 @@ test.describe("desktop: Modal ze sceny przypiętej", () => {
     await scrollPageTo(page, secTop + 10);
     const card = page.locator("[data-recards] [data-work-slug]").first();
     const name = await card.getAttribute("data-work-name");
-    const modal = page.locator("#work-modal");
+    const detail = page.locator("#work-detail");
 
     await card.click();
-    await expect(modal).toBeVisible();
-    await expect(modal).toHaveClass(/is-open/);
-    await expect(modal.locator(".wdx__title")).toHaveText(name ?? "");
+    await expect(detail).toBeVisible();
+    await expect(detail).toHaveClass(/is-open/);
+    await expect(detail.locator(".dt-title")).toHaveText(name ?? "");
+    // kontekst zajawki = 3 wpisy (licznik detalu, D-R5)
+    await expect(detail.locator("[data-projcount]")).toHaveText(
+      `REALIZACJA 01 / ${String(HOME_COUNT).padStart(2, "0")}`,
+    );
 
-    await modal.locator("[data-overlay-close]").click();
-    await expect(modal).toBeHidden();
+    // X w dt-head (desktop; drugi [data-overlay-close] to X sheeta mobile)
+    await detail.locator(".dt-x").click();
+    await expect(detail).toBeHidden();
     // Host czyszczony po zamknięciu (zwalnia obrazy/DOM).
-    await expect(modal.locator(".wdx")).toHaveCount(0);
+    await expect(detail.locator(".dt-title")).toHaveCount(0);
 
     await card.click();
-    await expect(modal).toBeVisible();
+    await expect(detail).toBeVisible();
     await page.keyboard.press("Escape");
-    await expect(modal).toBeHidden();
+    await expect(detail).toBeHidden();
   });
 });
 
-test.describe("mobile: BottomSheet z karty zajawki", () => {
+test.describe("mobile: bottom sheet z karty zajawki", () => {
   test.skip(({ isMobile }) => !isMobile, "sheet tylko na mobile");
 
-  test("tap w kartę otwiera sheet; zamykanie przyciskiem", async ({ page }) => {
+  test("tap w kartę otwiera sheet; X zamyka", async ({ page }) => {
     await gotoReady(page);
-    // Dociera do karty i uspokaja scroll (guard „strona w ruchu" blokuje
-    // otwarcie nakładki przez ~110 ms po scrollu).
+    // Dociera do karty i uspokaja scroll przed tapnięciem.
     const card = page.locator("[data-recards] [data-work-slug]").first();
     await card.scrollIntoViewIfNeeded();
     await page.waitForTimeout(300);
-    const sheet = page.locator("#work-sheet");
+    const detail = page.locator("#work-detail");
 
     await card.click();
-    await expect(sheet).toBeVisible();
-    await expect(sheet).toHaveClass(/is-open/);
-    await expect(sheet.locator(".wdx__title")).toHaveText(
+    await expect(detail).toBeVisible();
+    await expect(detail).toHaveClass(/is-open/);
+    await expect(detail.locator(".dt-title")).toHaveText(
       (await card.getAttribute("data-work-name")) ?? "",
     );
 
-    await sheet.locator("[data-overlay-close]").click();
-    await expect(sheet).toBeHidden();
-    await expect(sheet.locator(".wdx")).toHaveCount(0);
+    // X sheeta (jak karty kategorii 4.3 — korekta Mateusza po testach)
+    await detail.locator(".dt-xm").click();
+    await expect(detail).toBeHidden();
+    await expect(detail.locator(".dt-title")).toHaveCount(0);
   });
 });

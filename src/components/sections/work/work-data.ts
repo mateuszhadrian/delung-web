@@ -7,7 +7,7 @@
 // + specs; kategoria jako slug z src/lib/categories.ts (D2) — komponenty
 // dostają też gotową etykietę (categoryLabel).
 
-import { categoryLabel, type CategorySlug } from "@/lib/categories";
+import { CATEGORIES, categoryLabel, type CategorySlug } from "@/lib/categories";
 
 // Pozycja galerii detalu; `video` (URL MP4 w R2) => zdjęcie pełni rolę
 // posteru, a kafel dostaje badge play (+ opcjonalny opis `duration`).
@@ -45,4 +45,31 @@ export type ViewProject = Omit<WorkProject, "order"> & {
 // Normalizacja wpisu do postaci konsumowanej przez komponenty.
 export function viewProject(p: WorkProject): ViewProject {
   return { ...p, categoryLabel: categoryLabel(p.category) };
+}
+
+// Pozycja szyny filtrów /realizacje/ (część 4.4, D-R1).
+// `slug: null` = „Wszystkie"; kategorie BEZ wpisów nie dostają pozycji
+// (instrukcja: puste ukryte, żadnych „(0)") — dlatego stan „brak
+// realizacji w kategorii" jest w UI nieosiągalny.
+export interface WorkRailItem {
+  slug: CategorySlug | null;
+  label: string;
+  count: number;
+}
+
+export function workRail(
+  projects: readonly Pick<WorkProject, "category">[],
+): WorkRailItem[] {
+  const counts = new Map<CategorySlug, number>();
+  for (const p of projects) {
+    counts.set(p.category, (counts.get(p.category) ?? 0) + 1);
+  }
+  return [
+    { slug: null, label: "Wszystkie", count: projects.length },
+    ...CATEGORIES.filter((c) => counts.has(c.slug)).map((c) => ({
+      slug: c.slug,
+      label: c.label,
+      count: counts.get(c.slug)!,
+    })),
+  ];
 }

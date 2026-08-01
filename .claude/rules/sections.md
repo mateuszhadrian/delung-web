@@ -33,13 +33,17 @@ wspólne odziedziczone z szablonu + gotchas sekcji, które przeżyły kopię
 - Track karuzeli mobile wymaga `data-lenis-prevent-horizontal` (NIE
   `data-lenis-prevent` — zabija pionowy scroll na Androidzie) oraz
   `scroll-snap-stop: always`.
-- Detal realizacji: Modal (desktop) / BottomSheet (mobile) na szkielecie
-  `overlay.ts` — zmiana progu przy otwartej nakładce zamyka ją (nie
-  zostawiaj niespójnego stanu).
-- Galeria detalu delung (Etap 4.4): zdjęcia przez `imgAt()`, wideo
-  `<video preload="none" poster playsinline controls>` odtwarzane na tap;
-  wideo na zrzutach visual ZAWSZE przez maskę, odtwarzanie testuj
-  funkcjonalnie w e2e.
+- Detal realizacji (od 4.4): JEDEN overlay `#work-detail` na szkielecie
+  `overlay.ts` (`WorkDetailOverlay.astro`) — wariant modal (≥1024) ↔
+  bottom sheet (<1024) to czysty CSS przy `WORK_DESKTOP_MIN_PX`;
+  zmiana progu przy otwartej nakładce zamyka ją (miejsce galerii w DOM
+  jest per-próg — `open-detail.ts`).
+- Galeria detalu delung (4.4): zdjęcia przez `imgAt()`, wideo
+  `<video preload="none" poster playsinline>` — BEZ `controls` i bez
+  własnego znaku play (korekta Mateusza): ikonka kamery w rogu kadru,
+  tap w kadr galerii startuje film i otwiera podgląd pełnoekranowy
+  (`[data-lightbox]`), w podglądzie tap = pauza↔play; wideo na zrzutach
+  visual ZAWSZE przez maskę, odtwarzanie testuj funkcjonalnie w e2e.
 
 ## Contact (`kt`)
 

@@ -136,7 +136,37 @@ treść/sekcje budowane od nowa wg `docs/design/`).
   domknięciu 4.5. Nowy spec `tests/visual/index.spec.ts` (zrzuty sekcji
   na 6 profilach + sweep scen na chromium-1920; mikro-scroll przed
   zrzutem = wymuszenie re-rasteryzacji sticky paska w WebKit).
-- Etapy 4.3–7 — przed nami (widoki → formularz → SEO/pomiar → przekazanie).
+- **Etap 4.3 (/oferta/ + /kategorie/) — WYKONANY** (2026-07-31, PR #10;
+  decyzje i KOREKTY po testach Mateusza: `docs/analiza-oferta-kategorie.md`
+  — czytać PRZED pracą przy tych widokach): treści oferty w
+  `sections/oferta/oferta-content.ts` kluczowane slugami `categories.ts`
+  (6 kategorii; `inne` celowo BEZ treści — żyje tylko w CMS/filtrach;
+  unit test kontraktu), obrazy osobno w `oferta-images.ts` (nowe assety
+  `src/assets/oferta/cat-*.webp` 1600 px z pełnych kwadratowych źródeł);
+  stała `OFERTA_DESKTOP_MIN_PX=1024` w `oferta-config.ts`. Desktop:
+  wzorzec ARIA tabs (strzałki, panel 01 w SSR), animacje przełączenia =
+  keyframes CSS pod klasą `.anim` (bez GSAP; pierwszy render statyczny);
+  wariant niskiego ekranu ≤820px PRZEBUDOWANY względem eksportu (nie
+  mieścił się): CTA obok zdjęcia (dół CTA = dół zdjęcia; celowy duplikat
+  karty `--side`/`--wide` w DOM), spece pełną szerokością pod spodem,
+  wiersz zdjęcia ugina się (`1fr auto`) do min. 180 px; karta CTA
+  `fit-content` + nowrap (dłuższa etykieta rozpycha w prawo). Mobile:
+  karuzela 3 kafli (gotchas: `data-lenis-prevent-horizontal` +
+  `scroll-snap-stop: always`) + pasek postępu; kafel kategorii →
+  **deep-link `/kategorie/#<slug>`** (otwiera tam kartę; korekta po
+  testach), „zobacz pełną ofertę" → goła lista. `/kategorie/`: lista
+  6 kafli-przycisków + karta kategorii = 6 PRE-RENDEROWANYCH bottom
+  sheetów na `overlay.ts` (`#kat-<slug>`; Esc/X/scrim/swipe-down;
+  ≥1024 przy otwartej zamyka); redirect desktopowy i canonical z Etapu 0
+  NIETKNIĘTE. Marquee logotypów = własny markup w `OfertaLogos` (reuse
+  plików logo; HomeTrust nietknięty), tła `pr`/`kt-cta` = reuse
+  `ko-bg.webp`. CTA realizacji: etykieta z `categoryLabel()`, href goły
+  `/realizacje/` — deep-link FILTRA = decyzja 4.4 (D-OK6). Nowe specy:
+  e2e `oferta`/`kategorie` (zakładki, karuzela, jawny redirect, sheety
+  z gestami, deep-link), visual `oferta` (6 profili + panel-05 na
+  chromium-1920) i `kategorie` (tylko profile mobile). Kickery/drobny
+  druk pod ratchet axe: `--accent-ink`/`--faint`.
+- Etapy 4.4–7 — przed nami (widoki → formularz → SEO/pomiar → przekazanie).
 - PRZEJŚCIOWE dziedzictwo szablonu (do wymiany w Etapach 4–5): widoki
   `/realizacje/` `/kontakt/` `/polityka-prywatnosci/` na ciemnym motywie
   (`src/styles/legacy-dark.css` — strona delung jest JASNA; kafle/detal
@@ -156,6 +186,13 @@ treść/sekcje budowane od nowa wg `docs/design/`).
 - `src/components/sections/home/` — sekcje strony głównej (4.2):
   `Home*.astro` + `home-config.ts` (HOME_DESKTOP_MIN_PX=1024, importują
   testy) + `home-scroll.ts` (ruch bez GSAP, motion-gate `js-motion`).
+- `src/components/sections/oferta/` — widoki /oferta/ i /kategorie/ (4.3):
+  `oferta-content.ts` (treści kluczowane slugami categories.ts; `inne`
+  bez treści) + `oferta-images.ts` + `oferta-config.ts`
+  (OFERTA_DESKTOP_MIN_PX=1024, importują testy) + sekcje `Oferta*`/
+  `KategorieSection` + skrypty `oferta.ts`/`kategorie.ts` (funkcjonalne,
+  zawsze) i `oferta-motion.ts` (motion-gate, wspólny obu stron);
+  deep-link `/kategorie/#<slug>` otwiera kartę kategorii.
 - `src/components/sections/work/` — Realizacje: dane z Content Collections
   (`src/content/realizacje/*.json`; schema Zod: `src/content.schema.ts` —
   źródło prawdy, `content.config.ts` tylko ją importuje). Detal =
