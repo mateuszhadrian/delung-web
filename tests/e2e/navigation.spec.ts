@@ -32,8 +32,10 @@ test.describe("nawigacja desktop", () => {
   test("pasek jest sticky — widoczny u góry także po scrollu na dno", async ({
     page,
   }) => {
-    // Na /realizacje/ (długa podstrona) — szkielet głównej mieści się
-    // w jednym viewporcie. Design delung NIE chowa paska przy scrollu
+    // Na /realizacje/ — po Etapie 4 długie są wszystkie widoki, ale ten
+    // ma pasek w wariancie `plain` na jednolitym tle (bez hero `over`
+    // i bez ciemnego tonu proces/o-nas), więc mierzy sam sticky, nie
+    // przejścia wariantu. Design delung NIE chowa paska przy scrollu
     // (koniec data-hidden z szablonu) — pasek klei się do górnej krawędzi.
     await gotoReady(page, "/realizacje/");
     const nav = page.locator("[data-nav]");
