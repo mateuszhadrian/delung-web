@@ -1,0 +1,72 @@
+---
+// Widok /o-nas/ (część 4.5) — port docs/design/o-nas.html; decyzje:
+// docs/analiza-proces-onas-polityka.md. Navbar `over` w tonie ciemnym
+// (D-P2 — markup `hdr dark` obu eksportów; CSS z proces.html). Ruch
+// (reveale, parallax, manifest słowo-po-słowie, tor zespołu, zoom teł)
+// za bramką motion (onas-motion.ts) — bez JS / przy reduce strona jest
+// w pełni statyczna (tor zespołu przewijany natywnie).
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import Navbar from "@/components/navbar/Navbar.astro";
+import Footer from "@/components/Footer.astro";
+import OnasHero from "@/components/sections/o-nas/OnasHero.astro";
+import OnasManifest from "@/components/sections/o-nas/OnasManifest.astro";
+import OnasTeam from "@/components/sections/o-nas/OnasTeam.astro";
+import OnasPrec from "@/components/sections/o-nas/OnasPrec.astro";
+import OnasOpinie from "@/components/sections/o-nas/OnasOpinie.astro";
+
+const DESCRIPTION =
+  "Poznaj Delung Meble — pracownię mebli na wymiar: manifest, zespół " +
+  "i precyzja wykonania.";
+---
+
+<BaseLayout title="O nas — Delung Meble" description={DESCRIPTION}>
+  <script is:inline>
+    // PRZED paintem: motion OK → html.js-motion (uzbraja stany startowe
+    // revealów i scenę przypiętą zespołu — reszta w onas-motion.ts).
+    if (window.matchMedia("(prefers-reduced-motion: no-preference)").matches) {
+      document.documentElement.classList.add("js-motion");
+    }
+  </script>
+
+  <Navbar variant="over" tone="dark" />
+
+  <main>
+    <OnasHero />
+    <OnasManifest />
+    <OnasTeam />
+    <OnasPrec />
+    <OnasOpinie />
+  </main>
+
+  <Footer />
+</BaseLayout>
+
+<style is:global>
+  /* Odsłanianie treści przy przewijaniu — tylko widok mobilny; stan
+     startowy WYŁĄCZNIE pod html.js-motion (bez JS / przy reduce treść
+     od razu widoczna — reguła sections.md; wzorzec OfertaPage 4.3). */
+  @media (max-width: 1023px) {
+    html.js-motion [data-rev] {
+      opacity: 0;
+      transform: translateY(22px);
+      transition:
+        opacity 0.7s ease,
+        transform 0.8s cubic-bezier(0.22, 0.61, 0.36, 1);
+    }
+    html.js-motion [data-rev].rv-in {
+      opacity: 1;
+      transform: none;
+    }
+    html.js-motion [data-rev="soft"],
+    html.js-motion [data-rev="soft"].rv-in {
+      transform: none;
+    }
+  }
+</style>
+
+<script>
+  // Ruch — dynamicznie, tylko przy motion OK (wzorzec D-SG9).
+  if (matchMedia("(prefers-reduced-motion: no-preference)").matches) {
+    import("@/components/sections/o-nas/onas-motion");
+  }
+</script>

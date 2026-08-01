@@ -3,62 +3,19 @@
 // + link do opinii Google. Desktop: dwa przeciwbieżne marquee (2×3 opinie,
 // pętla przez duplikat aria-hidden). Korekty pod pustą allowlistę axe
 // (D-SG7): gwiazdki jako SVG aria-hidden (znak ★ #f2a90c ≈2:1 na bieli),
-// tła inicjałów przyciemnione do AA (#7d8a94→#59656f, #e8710a→#a34f07,
-// #5f9a41→#457533), drobne teksty na tokenie --faint.
+// tła inicjałów przyciemnione do AA, drobne teksty na tokenie --faint.
+// Dane 6 opinii współdzielone z /o-nas/ — src/lib/opinie.ts (D-P4, 4.5);
+// markup/CSS sekcji bez zmian (baseline'y home nietknięte).
 import certImg from "@/assets/home/cert-firma-godna.webp";
+import {
+  OPINIE,
+  OPINIE_GOOGLE_URL as GOOGLE_URL,
+  OPINIE_STAR_PATH as STAR_PATH,
+  type Opinia,
+} from "@/lib/opinie";
 
-const OPINIE = [
-  {
-    i: "P",
-    c: "#6a4fbf",
-    n: "Paweł Kowalczyk",
-    m: "1 opinia · 4 zdjęcia",
-    t: "Z całego serca polecamy Pana Adama! Wykonane meble kuchenne są na najwyższym poziomie. Wszystko zostało dopracowane z ogromną precyzją, dbałością o każdy, nawet najmniejszy szczegół. Widać ogromne doświadczenie, profesjonalizm i pasję do swojej pracy.",
-  },
-  {
-    i: "M",
-    c: "#59656f",
-    n: "Magda Lena",
-    m: "3 opinie · 7 zdjęć",
-    t: "Serdecznie i z czystym sumieniem możemy polecić Pana Adama. Jest profesjonalistą i najlepszym fachowcem, z jakim udało nam się współpracować w czasie wykończenia naszego wymarzonego domu. Świetny kontakt, dokładność i sumienność.",
-  },
-  {
-    i: "M",
-    c: "#a34f07",
-    n: "Magdalena Kotyś",
-    m: "4 opinie · 1 zdjęcie",
-    t: "Polecam z całego serca! Pan Adam urzeczywistnił nasze meblowe marzenia – od kuchni, przez salon, aż po wymarzoną garderobę! Piękne, starannie wykonane i funkcjonalne meble. Doradztwo na najwyższym poziomie, przyjazna atmosfera.",
-  },
-  {
-    i: "A",
-    c: "#9334e6",
-    n: "Anna Szlaska",
-    m: "5 opinii",
-    t: "Jestem bardzo zadowolona ze współpracy z panem Adamem. Meble kuchenne zostały wykonane z najwyższą starannością, dokładnie tak, jak sobie wymarzyłam. Cała realizacja przebiegła sprawnie, terminowo i bez żadnych problemów.",
-  },
-  {
-    i: "E",
-    c: "#5b6dcd",
-    n: "Ewa",
-    m: "2 opinie",
-    t: "Pan Adam Delung to profesjonalista pod każdym względem. Wszystko przebiegło perfekcyjnie od pomiaru przez projekt aż do wykonania i montażu mebli. Fachowiec pełen pasji i serca. Polecam serdecznie.",
-  },
-  {
-    i: "J",
-    c: "#457533",
-    n: "Jakub Nalichowski",
-    m: "9 opinii · 9 zdjęć",
-    t: "Bardzo polecam. Dobry kontakt, szybka realizacja, dobra cena, super jakość.",
-  },
-] as const;
-
-type Opinia = (typeof OPINIE)[number];
 const MARQ1 = OPINIE.slice(0, 3);
 const MARQ2 = OPINIE.slice(3);
-
-const GOOGLE_URL = "https://www.google.com/search?q=Delung+Meble";
-const STAR_PATH =
-  "M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17.2l-6.1 3.4 1.4-6.8L2.2 9.1l6.9-.8z";
 ---
 
 <section class="op" data-home-op>

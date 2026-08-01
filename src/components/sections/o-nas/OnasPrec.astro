@@ -1,0 +1,382 @@
+---
+// Precyzja i standardy (eksport: .prec z o-nas.html). Mobile (<1024,
+// jasny): kicker/h2/linia/lead → karta „3 FILARY" (cream, checki) →
+// logotypy marek. Desktop (≥1024, ciemny): tło kaszmirowe (reuse ko-bg
+// pod blur, zoom-out scrollem) + grid 2 kolumny — lewa kicker/h2/lead
+// + logotypy, prawa filary z numerkami i hairline'ami. Struktura
+// z eksportu: .prec-col display:contents na mobile steruje kolejnością
+// (filary między leadem a markami). Logotypy = reuse plików home
+// (logo-*.webp); wysokości mobile/desktop przez custom-props (eksport
+// robił to JS-em syncLogos).
+import bgImg from "@/assets/home/ko-bg.webp";
+import logoBlum from "@/assets/home/logo-blum.webp";
+import logoGtv from "@/assets/home/logo-gtv.webp";
+import logoWurth from "@/assets/home/logo-wurth.webp";
+import logoPeka from "@/assets/home/logo-peka.webp";
+import logoFestool from "@/assets/home/logo-festool.webp";
+import logoMakita from "@/assets/home/logo-makita.webp";
+
+const BRANDS = [
+  { name: "Blum", img: logoBlum, hM: 15, hD: 22 },
+  { name: "GTV", img: logoGtv, hM: 13, hD: 19 },
+  { name: "Würth", img: logoWurth, hM: 16, hD: 24 },
+  { name: "Peka", img: logoPeka, hM: 14, hD: 20 },
+  { name: "Festool", img: logoFestool, hM: 12, hD: 17 },
+  { name: "Makita", img: logoMakita, hM: 15, hD: 22 },
+] as const;
+
+const PILLARS = [
+  {
+    h: "Technologia bez kompromisów",
+    p:
+      "Pracujemy wyłącznie na topowym sprzęcie (Festool, Makita) " +
+      "i niezawodnych okuciach (Blum).",
+  },
+  {
+    h: "Kultura pracy",
+    p:
+      "Twój dom traktujemy z szacunkiem. Zabezpieczamy podłogi, a po " +
+      "montażu zostawiamy po sobie gotowe, czyste wnętrze.",
+  },
+  {
+    h: "Spokój pod klucz",
+    p:
+      "Oddajemy w pełni gotową przestrzeń – od mebli, przez podłączone " +
+      "AGD, aż po dekoracje okienne.",
+  },
+] as const;
+
+const LEAD =
+  "Zrealizowaliśmy setki projektów. Od domowych kuchni, przez eleganckie " +
+  "zabudowy łazienkowe i luksusowe garderoby, po realizacje, w których " +
+  "margines błędu po prostu nie istnieje. Nasza precyzja została doceniona " +
+  "również w wymagającym sektorze biznesowym. Mamy za sobą kompleksowe " +
+  "wyposażenie dziesiątek przestrzeni komercyjnych i lokali usługowych – " +
+  "od nowoczesnych gabinetów medycznych przez luksusowe salony jubilerskie " +
+  "i eleganckie biura, aż po wiele innych wymagających inwestycji, gdzie " +
+  "estetyka i rzemieślnicze detale muszą być absolutnie perfekcyjne.";
+---
+
+<section class="prec">
+  <img
+    class="prec-bg"
+    src={bgImg.src}
+    width={bgImg.width}
+    height={bgImg.height}
+    alt=""
+    aria-hidden="true"
+    loading="lazy"
+    decoding="async"
+    data-bgzoom
+  />
+  <span class="prec-tint" aria-hidden="true"></span>
+  <div class="prec-in">
+    <div class="prec-col">
+      <p class="prec-kick" data-rev>PRECYZJA I STANDARDY</p>
+      <h2 data-rev>Precyzja, której ufają profesjonaliści.</h2>
+      <div class="prec-rule" aria-hidden="true"></div>
+      <p class="prec-lead" data-rev>{LEAD}</p>
+      <div class="brands">
+        <p class="brands-h">PRACUJEMY NA MARKACH</p>
+        <div class="brands-row">
+          {
+            BRANDS.map((b) => (
+              <span title={b.name}>
+                <img
+                  src={b.img.src}
+                  width={b.img.width}
+                  height={b.img.height}
+                  alt={b.name}
+                  loading="lazy"
+                  decoding="async"
+                  style={`--h-m:${b.hM}px;--h-d:${b.hD}px`}
+                />
+              </span>
+            ))
+          }
+        </div>
+      </div>
+    </div>
+    <div class="pillars">
+      <p class="pillars-h">3 FILARY NASZEJ JAKOŚCI</p>
+      {
+        PILLARS.map((f, i) => (
+          <div class="pillar">
+            <span class="pillar-num" aria-hidden="true">
+              {String(i + 1).padStart(2, "0")}
+            </span>
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path
+                d="M4 12.5l5 5L20 6.5"
+                stroke="#2F8F5B"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+            <div>
+              <h3>{f.h}</h3>
+              <p>{f.p}</p>
+            </div>
+          </div>
+        ))
+      }
+    </div>
+  </div>
+</section>
+
+<style>
+  /* ── mobile ── */
+  .prec {
+    padding: 0 0 46px;
+    background: #fff;
+    position: relative;
+  }
+  .prec-bg,
+  .prec-tint {
+    display: none;
+  }
+  .prec-in {
+    position: relative;
+    width: 100%;
+    max-width: var(--col);
+    margin-inline: auto;
+    padding-inline: var(--pad);
+    display: flex;
+    flex-direction: column;
+  }
+  .prec-col {
+    display: contents;
+  }
+  .pillars {
+    order: 1;
+  }
+  .brands {
+    order: 2;
+  }
+  .prec-kick {
+    font-family: var(--font-display), sans-serif;
+    font-weight: 500;
+    font-size: clamp(10px, 2.82vw, 12px);
+    line-height: 1;
+    letter-spacing: 0.2em;
+    /* eksport --gr (~4.0:1 na bieli) — podbite do --accent-ink (axe) */
+    color: var(--accent-ink);
+    margin-bottom: 14px;
+  }
+  h2 {
+    font-family: var(--font-display), sans-serif;
+    font-weight: 200;
+    font-size: clamp(25px, 7.69vw, 33px);
+    line-height: 1.2;
+    color: var(--ink);
+  }
+  .prec-rule {
+    width: 44px;
+    height: 1px;
+    background: rgba(26, 26, 26, 0.3);
+    margin: 16px 0;
+  }
+  .prec-lead {
+    margin-bottom: 24px;
+    font-family: var(--font-display), sans-serif;
+    font-weight: 200;
+    font-size: clamp(13.5px, 3.72vw, 15.5px);
+    line-height: 1.52;
+    color: var(--muted);
+    text-wrap: pretty;
+  }
+  .pillars {
+    background: var(--bg-cream);
+    border-radius: 8px;
+    padding: 26px 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+    border: none;
+  }
+  .pillars-h {
+    font-family: var(--font-display), sans-serif;
+    font-weight: 500;
+    font-size: 10.5px;
+    line-height: 1;
+    letter-spacing: 0.2em;
+    /* eksport .5 — podbite do --faint (ratchet axe) */
+    color: var(--faint);
+  }
+  .pillar {
+    display: flex;
+    gap: 13px;
+    align-items: flex-start;
+  }
+  .pillar-num {
+    display: none;
+  }
+  .pillar svg {
+    width: 20px;
+    height: 20px;
+    flex: none;
+    margin-top: 2px;
+  }
+  .pillar h3 {
+    margin-bottom: 5px;
+    font-family: var(--font-display), sans-serif;
+    font-weight: 300;
+    font-size: clamp(16px, 4.49vw, 18.5px);
+    color: var(--ink);
+  }
+  .pillar p {
+    font-family: var(--font-display), sans-serif;
+    font-weight: 200;
+    font-size: clamp(13px, 3.59vw, 15px);
+    line-height: 1.5;
+    color: var(--muted);
+    text-wrap: pretty;
+  }
+  .brands {
+    margin-top: 26px;
+  }
+  .brands-h {
+    font-family: var(--font-display), sans-serif;
+    font-weight: 500;
+    font-size: 10px;
+    line-height: 1;
+    letter-spacing: 0.2em;
+    /* eksport .45 — podbite do --faint (ratchet axe) */
+    color: var(--faint);
+    margin-bottom: 14px;
+  }
+  .brands-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .brands-row span {
+    border: 1px solid rgba(26, 26, 26, 0.12);
+    border-radius: 6px;
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    background: #fff;
+  }
+  .brands-row img {
+    display: block;
+    width: auto;
+    height: var(--h-m);
+    filter: grayscale(1) opacity(0.6);
+  }
+
+  /* ════ DESKTOP ≥1024 (para: ONAS_DESKTOP_MIN_PX) ════ */
+  @media (min-width: 1024px) {
+    .prec {
+      padding: clamp(78px, 8.33vw, 120px) 0 clamp(84px, 9.03vw, 130px);
+      background: #100f0d;
+      overflow: hidden;
+    }
+    .prec-bg {
+      display: block;
+      position: absolute;
+      inset: -40px;
+      width: calc(100% + 80px);
+      height: calc(100% + 80px);
+      object-fit: cover;
+      object-position: 10% 58%;
+      filter: blur(9px);
+      transform: scale(1.25);
+    }
+    .prec-tint {
+      display: block;
+      position: absolute;
+      inset: 0;
+      background: rgba(22, 19, 16, 0.62);
+    }
+    .prec-in {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: clamp(40px, 6.25vw, 90px);
+      align-items: start;
+    }
+    .prec-col {
+      display: block;
+    }
+    .pillars,
+    .brands {
+      order: 0;
+    }
+    .prec-kick {
+      font-size: clamp(10.5px, 0.8vw, 11.5px);
+      letter-spacing: 0.22em;
+      color: #7fd0a2;
+      margin-bottom: 20px;
+    }
+    h2 {
+      font-size: clamp(38px, 3.89vw, 56px);
+      line-height: 1.08;
+      color: #fff;
+    }
+    .prec-rule {
+      display: none;
+    }
+    .prec-lead {
+      margin: 28px 0 0;
+      font-size: clamp(15px, 1.15vw, 16.5px);
+      line-height: 1.75;
+      /* eksport .68 — podbite (ratchet axe) */
+      color: rgba(255, 255, 255, 0.7);
+    }
+    .pillars {
+      background: none;
+      border-radius: 0;
+      padding: 0;
+      gap: 0;
+      border-top: 1px solid rgba(255, 255, 255, 0.14);
+    }
+    .pillars-h {
+      display: none;
+    }
+    .pillar {
+      gap: 26px;
+      padding: clamp(22px, 2.22vw, 32px) 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+    }
+    .pillar-num {
+      display: block;
+      font-family: var(--font-mono), monospace;
+      font-weight: 500;
+      font-size: 12px;
+      line-height: 1;
+      color: rgba(255, 255, 255, 0.4);
+      flex: none;
+      padding-top: 6px;
+    }
+    .pillar svg {
+      display: none;
+    }
+    .pillar h3 {
+      margin-bottom: 10px;
+      font-size: clamp(20px, 1.81vw, 26px);
+      color: #fff;
+    }
+    .pillar p {
+      font-size: clamp(14px, 1.08vw, 15.5px);
+      line-height: 1.65;
+      /* eksport .65 — podbite (ratchet axe) */
+      color: rgba(255, 255, 255, 0.7);
+    }
+    .brands {
+      margin-top: 38px;
+    }
+    .brands-h {
+      display: none;
+    }
+    .brands-row span {
+      border-color: rgba(255, 255, 255, 0.14);
+      background: rgba(255, 255, 255, 0.05);
+      padding: 12px 20px;
+    }
+    .brands-row img {
+      height: var(--h-d);
+      filter: grayscale(1) brightness(3) opacity(0.65);
+    }
+  }
+</style>
