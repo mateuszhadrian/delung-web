@@ -12,19 +12,19 @@ wspólne odziedziczone z szablonu + gotchas sekcji, które przeżyły kopię
 
 ## Wspólne
 
-- Moduły `*-scroll.ts` ładowane DYNAMICZNIE tylko przy
-  `prefers-reduced-motion: no-preference`; bez JS / przy reduce sekcja
+- Moduły ruchu (`*-motion.ts`, `home-scroll.ts`) ładowane DYNAMICZNIE tylko
+  przy `prefers-reduced-motion: no-preference`; bez JS / przy reduce sekcja
   renderuje pełną, statyczną treść.
-- Wspólne helpery już istnieją — nie kopiuj bloków między sekcjami:
-  `src/scripts/section-helpers.ts` (`revealOnce`, `motionMedia`,
-  `ghostParallax`, `makeProgress`, `scopedQueries`) oraz
-  `src/scripts/anchors.ts` (`scrollToAnchor`, `handleAnchorClick`).
+- **BEZ GSAP** — biblioteka wypadła z projektu w Etapie 5 (ostatnim
+  konsumentem był `smooth-scroll.ts`, dziś na własnym `requestAnimationFrame`).
+  Ruch sekcji to własne pętle rAF + `IntersectionObserver` (wzorce:
+  `proces-motion.ts`, `onas-motion.ts`, `contact-motion.ts`) — kopiuj wzorzec
+  z sąsiedniej sekcji, nie przywracaj GSAP-a ani helperów
+  `section-helpers.ts`/`anchors.ts` (skasowane razem z nim).
 - Breakpoint projektu delung: **1024 px** (spójnie z designami — desktop
-  ≥1024, mobile <1024). W kodzie odziedziczonym siedzą jeszcze progi
-  760/768/861 z szablonu — przy porcie widoku na design delung ZAWSZE
-  wyrównuj do 1024 (stała w configu sekcji + ten sam próg w `@media`
-  pliku `.astro` — CSS nie zaimportuje stałej, utrzymuj W PARZE; testy
-  importują stałą, nie hardkodują).
+  ≥1024, mobile <1024). Testy importują stałą `*_DESKTOP_MIN_PX` z configu
+  sekcji, a `@media` w `.astro` trzymamy z nią W PARZE (CSS nie zaimportuje
+  stałej). Progów 760/768/861 z szablonu już w kodzie nie ma.
 - Warstwy testów po zmianie: `.claude/rules/testing.md`; sekcje mają
   własne specy w `tests/visual/`.
 

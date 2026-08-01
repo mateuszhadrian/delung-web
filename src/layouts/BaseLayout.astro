@@ -13,7 +13,6 @@ import "@fontsource/cormorant-garamond/500-italic.css";
 
 import "@/styles/global.css";
 
-import Toast from "@/components/ui/toast/Toast.astro";
 import LoadingOverlay from "@/components/ui/LoadingOverlay.astro";
 
 // Preload krojów above-the-fold — skraca okno font-display:swap (mniejszy
@@ -165,7 +164,6 @@ const ogImageUrl = new URL("/og-image.png", urlBase);
   <body data-smooth-scroll={smoothScrollAttr}>
     <LoadingOverlay />
     <slot />
-    <Toast />
     <script>
       // Lenis ładowany dynamicznie przy dozwolonym ruchu (config dobiera sam).
       // Podstrony bez animacji scrollowych rezygnują z niego w całości

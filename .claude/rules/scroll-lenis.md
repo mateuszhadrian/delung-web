@@ -21,14 +21,20 @@ paths:
   `hover`/`pointer` (laptopy z dotykiem kłamią).
 - Lenis ładowany tylko przy `prefers-reduced-motion: no-preference`
   (bramka w `BaseLayout`); instancja wystawiona jako `window.__lenis`
-  (używa jej navbar do `scrollTo`). Wszyscy konsumenci (`anchors.ts`,
-  `overlay.ts`, helpery testów) mają fallback natywny — na dotyku
-  `window.__lenis` po prostu nie istnieje.
-- Handler `pageshow` z `e.persisted` (`lenis.resize()` +
-  `ScrollTrigger.refresh()`) to NAPRAWIONY BUG powrotów przez bfcache
-  (`history.back()` z podstron): stronę przywróconą z zamrożenia omijają
-  resize'y, a pasek Safari zmienia w międzyczasie wysokość viewportu —
-  bez przeliczenia dno strony/stopka są „przesunięte o pasek" na iOS.
-  NIE usuwać (`ScrollTrigger.refresh()` potrzebny też przy natywnym
-  scrollu); weryfikacja tylko na fizycznym iPhonie (emulacja nie
-  odtwarza bfcache ani paska).
+  (używa jej navbar do `scrollTo`). Wszyscy konsumenci (`overlay.ts`,
+  helpery testów) mają fallback natywny — na dotyku `window.__lenis`
+  po prostu nie istnieje.
+- **Pętla rysowania to własny `requestAnimationFrame`** (Etap 5). Wcześniej
+  napędzał ją `gsap.ticker`, a `lenis.on("scroll", ScrollTrigger.update)`
+  odświeżał ScrollTriggery — po porcie `/kontakt/` w projekcie nie został
+  ani jeden ScrollTrigger, więc GSAP wypadł z zależności (chunk
+  gsap+ScrollTrigger ważył ~44,8 kB gz z ~68 kB skryptów strony głównej;
+  po zmianie skrypty „/" to ~19 kB). `stop()` musi anulować rAF —
+  inaczej pętla żyje po `destroy()` Lenisa.
+- Handler `pageshow` z `e.persisted` (`lenis.resize()`) to NAPRAWIONY BUG
+  powrotów przez bfcache (`history.back()` z podstron): stronę przywróconą
+  z zamrożenia omijają resize'y, a pasek Safari zmienia w międzyczasie
+  wysokość viewportu — bez przeliczenia dno strony/stopka są „przesunięte
+  o pasek" na iOS. NIE usuwać; weryfikacja tylko na fizycznym iPhonie
+  (emulacja nie odtwarza bfcache ani paska). Towarzyszący mu
+  `ScrollTrigger.refresh()` odszedł razem z GSAP-em.

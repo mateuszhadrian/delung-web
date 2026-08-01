@@ -249,13 +249,22 @@ treść/sekcje budowane od nowa wg `docs/design/`).
   `capture-ambient-bg.mjs`, tekstury w `public/`, skrypt npm) —
   SKASOWANE; breakpoint kontaktu 861 → **1024**; realny site key
   Turnstile w `contact-config.ts`.
-  PR B (porządki, PRZED NAMI): kasacja `ui/toast/**` + `<Toast />`
-  z `BaseLayout`, martwych `ui/{AnimatedCta,SplitCta,OfertaButtons,
-SolidButton}`, `scripts/section-helpers.ts`, `scripts/bg-crossfade.ts`
-  oraz **wyjście GSAP-a z projektu** (Lenis na własnej pętli rAF —
-  chunk gsap+ScrollTrigger to 44,8 kB gz z 68 kB skryptów strony
-  głównej; po zmianie zmierzyć main i zgłosić Mateuszowi ewentualne
-  zacieśnienie progów LHCI = osobna decyzja, osobny commit).
+  Poprawka po merge'u (PR #17): `settleImages()` w `tests/helpers/visual.ts`
+  — sekcje ładują zdjęcia `lazy`+`decoding="async"`, więc zszywany zrzut
+  elementu wyższego niż ekran ścigał się z dekodowaniem (diff WYŁĄCZNIE na
+  krawędziach zdjęć, tekst identyczny — tak migotał `o-nas: zespół` na
+  webkit-iphone-14 w CI przy zielonym przebiegu lokalnym; sonda: 13 obrazów
+  niewczytanych w chwili zrzutu). Przy okazji 5 baseline'ów utrwalających
+  brakujące zdjęcia (marquee logotypów bez Festoola i w dwóch rzędach,
+  pusty kafel „Meble nietypowe") zregenerowanych.
+  PR B (porządki): kasacja `ui/toast/**` + `<Toast />` z `BaseLayout`,
+  martwych `ui/{AnimatedCta,SplitCta,OfertaButtons,SolidButton}`,
+  `scripts/{section-helpers,bg-crossfade,anchors}.ts` oraz **WYJŚCIE
+  GSAP-a Z PROJEKTU** (Lenis na własnym `requestAnimationFrame`).
+  Zmierzone na `/`: skrypty **67 978 B → 19 053 B**, total 892 752 B →
+  842 768 B. Budżety LHCI zostają NIETKNIĘTE (script 80 000 B) — ich
+  zacieśnienie do nowego baseline'u to osobna decyzja Mateusza i osobny
+  commit (kandydat: Etap 6).
 - Etapy 6–7 — przed nami (SEO/pomiar → przekazanie).
 
 ## Mapa projektu
@@ -306,12 +315,15 @@ SolidButton}`, `scripts/section-helpers.ts`, `scripts/bg-crossfade.ts`
   `functions/api/kontakt.ts` + `src/lib/contact-form.ts` (Resend
   z `send.delung.pl` + Turnstile + antyspam + KV quota). Strona przez
   `ContactPage.astro` (navbar `over`, scroll NATYWNY — D-K9).
-- `src/scripts/` — `overlay.ts` (generyczne nakładki modal/sheet —
-  focus-trap, Esc, swipe-down), `smooth-scroll.ts` (Lenis TYLKO desktop; dotyk = scroll
-  natywny — decyzja 4.2, reguły), `section-helpers.ts`, `anchors.ts`,
-  `back-link.ts` (żywy — `BaseLayout`), `bg-crossfade.ts`.
-  `section-helpers.ts`, `bg-crossfade.ts` i `anchors.ts` mają po Etapie 5
-  ZERO importów — kandydaci do kasacji w PR B.
+- `src/scripts/` — TRZY moduły (reszta skasowana w Etapie 5):
+  `overlay.ts` (generyczne nakładki modal/sheet — focus-trap, Esc,
+  swipe-down), `smooth-scroll.ts` (Lenis TYLKO desktop na własnej pętli
+  rAF; dotyk = scroll natywny — decyzja 4.2, `.claude/rules/scroll-lenis.md`),
+  `back-link.ts` (delegacja `a[data-back]` z `BaseLayout` — uśpiona, D-CH8).
+- `src/components/ui/` — po czystce Etapu 5 zostały `LoadingOverlay.astro`
+  (bramka mikro-fade w `BaseLayout`) i `BackButton.astro` (nieużywany,
+  świadomie zachowany — D-CH8). Toast, AnimatedCta, SplitCta,
+  OfertaButtons i SolidButton skasowane.
 - `src/lib/img.ts` — `imgAt()`: JEDYNE miejsce wiedzy o rozmiarach obrazów
   (Cloudflare Image Transformations na `media.delung.pl`; w dev pokazuje
   oryginały). Wideo BEZ transformacji — wprost z R2.

@@ -104,6 +104,30 @@ test.describe("oferta desktop (zakładki + panel)", () => {
     await expect(page).toHaveURL(new RegExp(`${PROCESS_PATH}?$`));
     await expect(page.locator("main h1")).toBeVisible();
   });
+
+  // Strażnik po wymianie silnika pętli w Etapie 5: Lenis jechał na
+  // gsap.ticker, dziś napędza go własny requestAnimationFrame. Bez tego
+  // testu zerwana pętla byłaby niewidoczna — strona dalej się przewija,
+  // tyle że skokowo (reguła .claude/rules/scroll-lenis.md).
+  test("Lenis: instancja żyje i wygładza scroll kółkiem (pętla rAF)", async ({
+    page,
+  }) => {
+    await gotoReady(page, OFERTA_PATH);
+    await settle(page, 300);
+    expect(await page.evaluate(() => Boolean(window.__lenis))).toBe(true);
+
+    await page.mouse.move(700, 500);
+    await page.mouse.wheel(0, 600);
+    const samples: number[] = [];
+    for (let i = 0; i < 5; i++) {
+      samples.push(await page.evaluate(() => Math.round(window.scrollY)));
+      await page.waitForTimeout(60);
+    }
+    // Wygładzanie = scroll dojeżdża przez kilka RÓŻNYCH klatek, a nie
+    // jednym skokiem (przy zerwanej pętli wszystkie próbki są równe).
+    expect(new Set(samples).size).toBeGreaterThan(2);
+    expect(samples.at(-1)!).toBeGreaterThan(samples[0]);
+  });
 });
 
 test.describe("oferta mobile (karuzela)", () => {
