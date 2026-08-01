@@ -1,0 +1,560 @@
+---
+// Formularz /kontakt/ (eksport: .form-sec + .form-card). Mobile (<1024):
+// sekcja na tle cream, pola z podkreśleniem. Desktop (≥1024): biała karta
+// 980 px z cieniem, pola w gridzie 2×2 na tle cream.
+// Pola wg designu (D-K4): imię, telefon (OPCJONALNY), e-mail, wiadomość —
+// chipsy tematu z szablonu nie istnieją w eksporcie i wypadają (serwer
+// dalej toleruje puste `temat`). Mechanika (walidacja, pułapki, Turnstile,
+// POST, stan `.sent`) żyje w contact-ui.ts — ładowanym ZAWSZE, także przy
+// prefers-reduced-motion (to funkcja, nie dekoracja).
+// id="contact" = kontrakt smoke/navigation (`#contact .kt-form`).
+import { POLICY_PATH } from "@/lib/routes";
+---
+
+<section class="kt-form-sec" id="contact">
+  <div class="kt-frame" data-rev>
+    <div class="kt-head">
+      <p class="kt-kick">Napisz do nas</p>
+      <h2 class="dOnly">Zostaw wiadomość</h2>
+      <p class="kt-head-p">
+        Zostaw wiadomość, a oddzwonimy lub odpiszemy w ciągu 24 godzin. Wolisz
+        zadzwonić? W tygodniu jesteśmy pod telefonem praktycznie całą dobę.
+      </p>
+    </div>
+
+    <form class="kt-form" novalidate>
+      {
+        /* honeypot: boty wypełniają, ludzie nie widzą. READONLY jest
+           kluczowe — autofill Chrome'a wypełnia offscreenowe pola „sekcji
+           adresowej", ale NIE rusza pól readonly (incydent z preview);
+           bot, który focusuje i pisze, zdejmie readonly (listener
+           w contact-ui.ts) i dalej wpada w pułapkę. */
+      }
+      <div class="kt-hp" aria-hidden="true">
+        <label for="kt-firma">Firma</label>
+        <input
+          id="kt-firma"
+          name="firma"
+          type="text"
+          tabindex="-1"
+          autocomplete="off"
+          readonly
+        />
+      </div>
+
+      <div class="kt-fields">
+        <div class="kt-field" data-f="name">
+          <label class="kt-lbl" for="kt-name">Imię i nazwisko</label>
+          <input
+            id="kt-name"
+            name="name"
+            type="text"
+            placeholder="np. Anna Kowalska"
+            autocomplete="name"
+            aria-describedby="kt-name-err"
+          />
+          <span class="kt-fline" aria-hidden="true"></span>
+          <span class="kt-err" id="kt-name-err" aria-live="polite"
+            >Podaj imię</span
+          >
+        </div>
+
+        <div class="kt-field" data-f="phone">
+          <label class="kt-lbl" for="kt-phone">Twój numer telefonu</label>
+          <input
+            id="kt-phone"
+            name="phone"
+            type="tel"
+            inputmode="tel"
+            placeholder="np. 600 000 000"
+            autocomplete="tel"
+          />
+          <span class="kt-fline" aria-hidden="true"></span>
+        </div>
+
+        <div class="kt-field full" data-f="email">
+          <label class="kt-lbl" for="kt-email">Twój e-mail</label>
+          <input
+            id="kt-email"
+            name="email"
+            type="email"
+            placeholder="np. anna@poczta.pl"
+            autocomplete="email"
+            aria-describedby="kt-email-err"
+          />
+          <span class="kt-fline" aria-hidden="true"></span>
+          <span class="kt-err" id="kt-email-err" aria-live="polite"
+            >Podaj poprawny adres e-mail</span
+          >
+        </div>
+
+        <div class="kt-field full" data-f="msg">
+          <label class="kt-lbl" for="kt-msg">W czym możemy Ci pomóc?</label>
+          <textarea
+            id="kt-msg"
+            name="message"
+            placeholder="Opisz krótko swój projekt…"
+            aria-describedby="kt-msg-err"></textarea>
+          <span class="kt-fline" aria-hidden="true"></span>
+          <span class="kt-err" id="kt-msg-err" aria-live="polite"
+            >Napisz kilka słów wiadomości</span
+          >
+        </div>
+      </div>
+
+      <div class="kt-send-wrap">
+        {/* kontener widgetu Turnstile (appearance: interaction-only) */}
+        <div class="kt-ts"></div>
+        <p class="kt-srv" role="alert" hidden>
+          Nie udało się wysłać wiadomości. Spróbuj ponownie za chwilę albo
+          zadzwoń — numer i adres e-mail znajdziesz wyżej.
+        </p>
+        <button
+          class="kt-send"
+          type="submit"
+          data-send="Wyślij wiadomość"
+          data-sending="Wysyłam…"
+        >
+          <span class="lb">Wyślij wiadomość</span>
+          <svg
+            class="kt-send-arr"
+            viewBox="0 0 24 24"
+            fill="none"
+            aria-hidden="true"
+          >
+            <path
+              d="M6 18L18 6M18 6H8M18 6v10"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"></path>
+          </svg>
+        </button>
+        <p class="kt-note">
+          Wysyłając wiadomość akceptujesz <a href={POLICY_PATH}
+            >politykę prywatności</a
+          >. Twoje dane wykorzystujemy wyłącznie po to, żeby odpowiedzieć.
+        </p>
+      </div>
+    </form>
+
+    {/* potwierdzenie — wchodzi w miejsce formularza po udanej wysyłce */}
+    <div class="kt-done" role="status">
+      <span class="kt-done-ic" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none">
+          <path
+            d="M4 12.5 9.5 18 20 7"
+            stroke="currentColor"
+            stroke-width="1.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"></path>
+        </svg>
+      </span>
+      <h2 class="kt-done-h" tabindex="-1">Wiadomość wysłana</h2>
+      <p>
+        Odezwiemy się najpóźniej w ciągu 24 godzin w dni robocze — zwykle
+        znacznie szybciej.
+      </p>
+      <button class="kt-again" type="button">Wyślij kolejną</button>
+    </div>
+  </div>
+</section>
+
+<style>
+  /* ── mobile: sekcja cream, pola z podkreśleniem ── */
+  .kt-form-sec {
+    background: #eae5dd;
+    padding-top: 50px;
+    padding-bottom: 56px;
+  }
+  .kt-frame {
+    width: 100%;
+    max-width: var(--col);
+    margin-inline: auto;
+    padding-inline: var(--pad);
+  }
+  .kt-head {
+    margin-bottom: 30px;
+  }
+  .kt-kick {
+    font-family: var(--font-display), sans-serif;
+    font-weight: 500;
+    font-size: clamp(10px, 2.82vw, 12px);
+    line-height: 1;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    /* eksport .5 — podbite do --faint (drobny druk, ratchet axe) */
+    color: var(--faint);
+    margin-bottom: 8px;
+  }
+  h2 {
+    margin: 0 0 14px;
+    font-family: var(--font-display), sans-serif;
+    font-weight: 200;
+    font-size: clamp(30px, 3.05vw, 44px);
+    line-height: 1.1;
+    color: var(--ink);
+  }
+  .dOnly {
+    display: none;
+  }
+  .kt-head-p {
+    font-family: var(--font-display), sans-serif;
+    font-weight: 200;
+    font-size: clamp(14px, 3.97vw, 17px);
+    line-height: 1.48;
+    color: var(--muted);
+    text-wrap: pretty;
+  }
+
+  /* honeypot poza ekranem (nie display:none — bot ma go „widzieć") */
+  .kt-hp {
+    position: absolute;
+    left: -9999px;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+  }
+
+  .kt-fields {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 26px;
+  }
+  .kt-field {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .kt-lbl {
+    font-family: var(--font-display), sans-serif;
+    font-weight: 500;
+    font-size: 10px;
+    line-height: 1;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    /* eksport .5 — podbite do --faint (drobny druk, ratchet axe) */
+    color: var(--faint);
+    transition: color 0.4s ease;
+  }
+  .kt-field:focus-within .kt-lbl {
+    color: var(--accent-ink);
+  }
+  .kt-field input,
+  .kt-field textarea {
+    width: 100%;
+    border: none;
+    outline: none;
+    background: transparent;
+    border-radius: 0;
+    border-bottom: 1px solid rgba(26, 26, 26, 0.4);
+    padding: 10px 0 12px;
+    font-family: var(--font-display), sans-serif;
+    font-weight: 300;
+    /* PODŁOGA 16px (eksport schodzi do 15): Safari iOS zoomuje stronę
+       przy focusie pola < 16px i zostawia ją zoomniętą (D-K11). */
+    font-size: clamp(16px, 4.23vw, 18px);
+    color: var(--ink);
+  }
+  .kt-field textarea {
+    height: 96px;
+    resize: none;
+  }
+  .kt-field input::placeholder,
+  .kt-field textarea::placeholder {
+    /* eksport .35 — podbite (axe sprawdza też kontrast placeholdera) */
+    color: rgba(26, 26, 26, 0.55);
+  }
+  .kt-field input:focus,
+  .kt-field textarea:focus {
+    border-bottom-color: var(--ink);
+  }
+  .kt-fline {
+    display: none;
+  }
+
+  .kt-err {
+    display: none;
+    margin-top: 6px;
+    font-family: var(--font-body), sans-serif;
+    font-size: 12.5px;
+    line-height: 1.4;
+    color: #a3231b;
+  }
+  .kt-field.err .kt-err {
+    display: block;
+  }
+  .kt-field.err input,
+  .kt-field.err textarea {
+    border-bottom-color: #a3231b;
+  }
+
+  .kt-send-wrap {
+    display: flex;
+    flex-direction: column;
+  }
+  .kt-ts:empty {
+    display: none;
+  }
+  .kt-ts {
+    margin-top: 24px;
+  }
+  .kt-srv {
+    margin-top: 20px;
+    font-family: var(--font-body), sans-serif;
+    font-size: 13.5px;
+    line-height: 1.5;
+    color: #a3231b;
+    text-wrap: pretty;
+  }
+  .kt-send {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    background: var(--ink);
+    color: #fff;
+    border: 0;
+    border-radius: 999px;
+    padding: 11px 28px;
+    font-family: var(--font-body), sans-serif;
+    font-weight: 500;
+    font-size: clamp(15px, 4.36vw, 18px);
+    line-height: 1;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+    margin-top: 32px;
+    cursor: pointer;
+  }
+  .kt-send:hover {
+    background: #2b2b2b;
+  }
+  .kt-send:disabled {
+    opacity: 0.6;
+    cursor: progress;
+  }
+  .kt-send:focus-visible {
+    outline: 2px solid var(--accent-ink);
+    outline-offset: 3px;
+  }
+  .kt-send-arr {
+    flex: none;
+    width: 26px;
+    height: 26px;
+    transition: transform 0.55s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .kt-send:hover .kt-send-arr {
+    transform: translate(5px, -5px);
+  }
+  .kt-note {
+    margin-top: 16px;
+    font-family: var(--font-display), sans-serif;
+    font-weight: 300;
+    font-size: clamp(11.5px, 3.2vw, 13.5px);
+    line-height: 1.55;
+    color: var(--faint);
+    text-wrap: pretty;
+  }
+  .kt-note a {
+    color: inherit;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+  .kt-note a:hover {
+    opacity: 0.7;
+  }
+
+  /* ── potwierdzenie (widoczne dopiero w stanie .sent) ── */
+  .kt-done {
+    display: none;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+  }
+  .kt-frame.sent .kt-form {
+    display: none;
+  }
+  .kt-frame.sent .kt-head {
+    display: none;
+  }
+  .kt-frame.sent .kt-done {
+    display: flex;
+  }
+  .kt-done-ic {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    border-radius: 999px;
+    background: var(--accent);
+    color: #fff;
+  }
+  .kt-done-ic svg {
+    width: 24px;
+    height: 24px;
+  }
+  .kt-done-h {
+    margin: 0;
+    font-size: clamp(24px, 6.5vw, 30px);
+  }
+  .kt-done-h:focus-visible {
+    outline: 2px solid var(--accent-ink);
+    outline-offset: 4px;
+  }
+  .kt-done p {
+    font-family: var(--font-display), sans-serif;
+    font-weight: 200;
+    font-size: clamp(14px, 3.97vw, 17px);
+    line-height: 1.48;
+    color: var(--muted);
+    text-wrap: pretty;
+  }
+  .kt-again {
+    margin-top: 6px;
+    background: none;
+    border: 1px solid rgba(26, 26, 26, 0.35);
+    border-radius: 999px;
+    padding: 11px 22px;
+    font-family: var(--font-body), sans-serif;
+    font-weight: 500;
+    font-size: 14px;
+    color: var(--ink);
+    cursor: pointer;
+  }
+  .kt-again:hover {
+    background: rgba(26, 26, 26, 0.04);
+  }
+  .kt-again:focus-visible {
+    outline: 2px solid var(--accent-ink);
+    outline-offset: 3px;
+  }
+
+  /* ════ DESKTOP ≥1024 (para: CONTACT_DESKTOP_MIN_PX) ════ */
+  @media (min-width: 1024px) {
+    .kt-form-sec {
+      background: none;
+      padding: clamp(64px, 6.25vw, 90px) 0 clamp(78px, 7.64vw, 110px);
+      display: flex;
+      justify-content: center;
+    }
+    .kt-frame {
+      max-width: 980px;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.08);
+      padding: clamp(44px, 4.44vw, 64px) clamp(40px, 4.86vw, 70px)
+        clamp(48px, 4.86vw, 70px);
+    }
+    .kt-head {
+      text-align: center;
+      margin-bottom: clamp(34px, 3.19vw, 46px);
+    }
+    .dOnly {
+      display: block;
+    }
+    .kt-kick {
+      font-size: clamp(10px, 0.76vw, 11px);
+      letter-spacing: 0.22em;
+      /* eksport --gr (#2f8f5b ≈ 4.0:1 na bieli) — dla drobnego druku
+         idzie --accent-ink (D-K11) */
+      color: var(--accent-ink);
+      margin-bottom: 14px;
+    }
+    .kt-head-p {
+      font-size: clamp(15px, 1.15vw, 16.5px);
+      line-height: 1.6;
+    }
+    .kt-fields {
+      grid-template-columns: 1fr 1fr;
+      gap: clamp(24px, 2.22vw, 32px) clamp(20px, 1.94vw, 28px);
+    }
+    .kt-field {
+      gap: 4px;
+    }
+    .kt-field.full {
+      grid-column: span 2;
+    }
+    .kt-field input,
+    .kt-field textarea {
+      background: var(--bg-cream);
+      border: none;
+      border-radius: 6px;
+      padding: clamp(13px, 1.11vw, 16px) clamp(14px, 1.25vw, 18px);
+      font-size: clamp(15px, 1.18vw, 17px);
+    }
+    .kt-field textarea {
+      height: 130px;
+    }
+    .kt-field.err input,
+    .kt-field.err textarea {
+      box-shadow: inset 0 0 0 1px #a3231b;
+    }
+    /* zielona linia postępu pola — w eksporcie animowana JS-em, u nas
+       czysty CSS (:focus-within): działa też przy reduce, bo to stan
+       pola, nie dekoracja */
+    .kt-fline {
+      display: block;
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 2px;
+      background: var(--accent);
+      border-radius: 2px;
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .kt-field:focus-within .kt-fline {
+      transform: scaleX(1);
+    }
+    .kt-send-wrap {
+      align-items: center;
+      gap: 18px;
+      margin-top: 36px;
+    }
+    .kt-ts {
+      margin-top: 0;
+    }
+    .kt-srv {
+      margin-top: 0;
+      text-align: center;
+    }
+    .kt-send {
+      align-self: center;
+      justify-content: center;
+      margin-top: 0;
+      box-shadow: none;
+      padding: clamp(15px, 1.32vw, 19px) clamp(26px, 2.5vw, 36px);
+      font-size: clamp(15.5px, 1.22vw, 17.5px);
+    }
+    .kt-send-arr {
+      width: 20px;
+      height: 20px;
+    }
+    .kt-note {
+      margin-top: 0;
+      max-width: 62ch;
+      text-align: center;
+      font-weight: 200;
+      font-size: clamp(12.5px, 0.94vw, 13.5px);
+      line-height: 1.6;
+    }
+    .kt-done {
+      align-items: center;
+      text-align: center;
+      gap: 16px;
+    }
+    .kt-done-h {
+      font-size: clamp(30px, 3.05vw, 44px);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .kt-send-arr,
+    .kt-fline {
+      transition: none;
+    }
+  }
+</style>

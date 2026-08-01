@@ -32,7 +32,6 @@
     "test:visual": "playwright test tests/visual",
     "test:visual:update": "playwright test tests/visual --update-snapshots",
     "test:smoke:prod": "BASE_URL=https://delung.pl playwright test tests/e2e --grep @prod-smoke",
-    "capture:ambient-bg": "node scripts/capture-ambient-bg.mjs",
     "prepare": "husky"
   },
   "dependencies": {

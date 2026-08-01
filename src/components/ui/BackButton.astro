@@ -49,8 +49,7 @@ const { href, label, class: className } = Astro.props;
     border-radius: 999px;
     border: 1px solid var(--line);
     /* „Szkło": lekki tint + rozmycie tła. Element ma 46×46 px, więc obszar
-       do rozmycia jest znikomy — koszt kompozytora nieistotny nawet przy
-       animowanym AmbientBackground pod spodem. */
+       do rozmycia jest znikomy — koszt kompozytora nieistotny. */
     background: rgba(245, 240, 236, 0.07);
     -webkit-backdrop-filter: blur(12px) saturate(1.2);
     backdrop-filter: blur(12px) saturate(1.2);

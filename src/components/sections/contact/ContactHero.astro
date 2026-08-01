@@ -1,0 +1,160 @@
+---
+// Hero /kontakt/ (eksport: .hero z kontakt.html). Mobile (<1024): jasny
+// hero tekstowy bez zdjęcia. Desktop (≥1024): pas 455–640 px z ROZMYTYM
+// kadrem kaszmiru + tint, treść wyśrodkowana na biało; kafle kontaktowe
+// wjeżdżają na jego dół ujemnym marginesem (ContactCards).
+// Kadr = reuse `home/ko-bg.webp` (ten sam obraz co banner #contact i tło
+// sheeta menu; blur(8px) i tak zjada detal — D-K7, zero nowych assetów).
+// Zdjęcie desktop-only przez <picture> + blank img (display:none NIE
+// zatrzymuje pobierania — lekcja 4.2). data-navref = referencja postępu
+// navbara `over` (4.1).
+import heroBg from "@/assets/home/ko-bg.webp";
+
+const BLANK_IMG =
+  "data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='1'%20height='1'/%3E";
+---
+
+<section class="kt-hero" data-navref>
+  {
+    /* dekoracyjne (img alt="") — aria-hidden na <picture> nie przechodzi
+      lintu jsx-a11y (element bez wsparcia ARIA) */
+  }
+  <picture class="kt-hero-pic" data-par="0.07" data-par-scale="1.12">
+    <source media="(min-width: 1024px)" srcset={heroBg.src} />
+    <img
+      src={BLANK_IMG}
+      width={heroBg.width}
+      height={heroBg.height}
+      alt=""
+      decoding="async"
+    />
+  </picture>
+  <span class="kt-hero-tint" aria-hidden="true"></span>
+
+  <div class="kt-hero-in">
+    <p class="kt-hero-kick" data-rev>Kontakt</p>
+    <h1 data-rev>Skontaktuj się z nami</h1>
+    <div class="kt-hero-rule" aria-hidden="true"></div>
+    <p class="kt-hero-lead" data-rev>
+      Masz pytania, gotowy projekt lub szukasz inspiracji? Zadzwoń do nas lub
+      zostaw wiadomość – odezwiemy się najszybciej, jak to możliwe.
+    </p>
+  </div>
+</section>
+
+<style>
+  /* ── mobile: jasny hero tekstowy ── */
+  .kt-hero {
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: clamp(18px, 6.1vw, 26px) 0 6px;
+  }
+  .kt-hero-pic,
+  .kt-hero-tint {
+    display: none;
+  }
+  .kt-hero-in {
+    position: relative;
+    width: 100%;
+    max-width: var(--col);
+    margin-inline: auto;
+    padding-inline: var(--pad);
+  }
+  .kt-hero-kick {
+    font-family: var(--font-display), sans-serif;
+    font-weight: 500;
+    font-size: clamp(10px, 2.82vw, 12px);
+    line-height: 1;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    /* eksport .5 — podbite do --faint (drobny druk, ratchet axe) */
+    color: var(--faint);
+    margin-bottom: 14px;
+  }
+  h1 {
+    margin: 0;
+    font-family: var(--font-display), sans-serif;
+    font-weight: 200;
+    font-size: clamp(29px, 8.72vw, 38px);
+    line-height: 1.12;
+    letter-spacing: -0.2px;
+    color: var(--ink);
+  }
+  .kt-hero-rule {
+    width: 44px;
+    height: 1px;
+    background: rgba(26, 26, 26, 0.3);
+    margin: 16px 0;
+  }
+  .kt-hero-lead {
+    font-family: var(--font-display), sans-serif;
+    font-weight: 200;
+    font-size: clamp(14px, 3.97vw, 17px);
+    line-height: 1.48;
+    color: var(--muted);
+    text-wrap: pretty;
+  }
+
+  /* ════ DESKTOP ≥1024 (para: CONTACT_DESKTOP_MIN_PX) ════ */
+  @media (min-width: 1024px) {
+    .kt-hero {
+      height: clamp(455px, 44.4vw, 640px);
+      padding: 0;
+      background: var(--bg-dark);
+    }
+    .kt-hero-pic {
+      display: block;
+      position: absolute;
+      left: 0;
+      top: -9%;
+      width: 100%;
+      height: 118%;
+    }
+    .kt-hero-pic img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: 10% 58%;
+      filter: blur(8px);
+    }
+    .kt-hero-tint {
+      display: block;
+      position: absolute;
+      inset: 0;
+      background: rgba(22, 19, 16, 0.58);
+    }
+    .kt-hero-in {
+      max-width: 980px;
+      text-align: center;
+      padding-inline: 40px;
+    }
+    .kt-hero-kick {
+      font-size: clamp(11px, 0.83vw, 12px);
+      letter-spacing: 0.28em;
+      /* eksport .72 — podbite (drobny druk na ciemnym tle, ratchet axe) */
+      color: rgba(255, 255, 255, 0.8);
+      margin-bottom: 24px;
+    }
+    h1 {
+      font-size: clamp(62px, 6.11vw, 88px);
+      line-height: 1.04;
+      letter-spacing: -1.5px;
+      color: #fff;
+      text-shadow: 0 3px 22px rgba(0, 0, 0, 0.4);
+    }
+    .kt-hero-rule {
+      display: none;
+    }
+    .kt-hero-lead {
+      margin: 28px auto 0;
+      max-width: 62ch;
+      font-size: clamp(16px, 1.32vw, 19px);
+      line-height: 1.62;
+      color: rgba(255, 255, 255, 0.92);
+      text-shadow: 0 1px 10px rgba(0, 0, 0, 0.45);
+    }
+  }
+</style>

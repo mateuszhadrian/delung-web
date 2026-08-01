@@ -1,15 +1,17 @@
-// Sekcja „Kontakt" — logika ZAWSZE aktywna (niezależna od
-// prefers-reduced-motion): reveal danych kontaktowych, chipsy tematu,
-// walidacja, wysyłka z tokenem Turnstile, ekran potwierdzenia.
-// Port kontakt.js z referencji docs/design/kontakt-referencja/;
-// kontrakt endpointu: docs/contact-me-form-analysis-implementation.md §4.
+// Formularz /kontakt/ — logika ZAWSZE aktywna (niezależna od
+// prefers-reduced-motion): walidacja, pułapki antyspamowe, token Turnstile,
+// wysyłka i ekran potwierdzenia. Ruch widoku żyje osobno w contact-motion.ts
+// (za bramką motion).
 //
 // Reguły walidacji (EMAIL_RE, MESSAGE_MIN, MIN_FILL_MS) importowane z
 // src/lib/contact-form.ts — jedno źródło prawdy dla klienta i serwera.
-// Teksty UI (etykiety [ KOPIUJ ] / „Wysyłam…") przychodzą przez
-// data-atrybuty z Contact.astro — moduł nie zna i18n.
+// Telefon jest OPCJONALNY (D-K4) i nie ma walidacji klienckiej.
+// Etykiety przycisku przychodzą przez data-atrybuty z ContactForm.astro.
+//
+// Telefon i e-mail w kaflach kontaktowych składa fillContactSlots
+// (src/lib/contact-details.ts, wołany przez skrypt chrome'u w Navbarze) —
+// ten moduł nie zna fragmentów numeru ani adresu.
 import { EMAIL_RE, MESSAGE_MIN, MIN_FILL_MS } from "@/lib/contact-form";
-import { toast } from "@/components/ui/toast/toast";
 import {
   CONTACT_ENDPOINT,
   TURNSTILE_SITE_KEY,
@@ -17,19 +19,11 @@ import {
   TURNSTILE_TIMEOUT_MS,
 } from "./contact-config";
 
-/* ── e-mail i telefon NIE istnieją w bundle'u w całości — składane z
-   fragmentów dopiero w handlerze kliknięcia (antyscraping; testy e2e
-   grepują bundle o pełne ciągi). ── */
-const FR = { e: ["kontakt", "delung", "pl"], p: [48, 690, 291, 143] };
-const buildEmail = () =>
-  FR.e[0] + String.fromCharCode(64) + FR.e[1] + "." + FR.e[2];
-const buildPhone = (sep: string) => "+" + FR.p.join(sep);
-
 /* ── Turnstile: skrypt ładowany leniwie (pierwszy focus w formularzu),
    widget renderowany jawnie, egzekucja dopiero przy submit (token żyje
    300 s — render przy wejściu mógłby wygasnąć, zanim ktoś dopisze
    wiadomość). Brak skryptu/timeout → token "" → serwer odpowie 403 →
-   komunikat .kt-srv z fallbackiem „napisz bezpośrednio". ── */
+   komunikat .kt-srv z fallbackiem „zadzwoń". ── */
 interface TurnstileApi {
   render(el: HTMLElement, opts: Record<string, unknown>): string;
   execute(el: HTMLElement): void;
@@ -59,58 +53,6 @@ function loadTurnstile(): Promise<void> {
 }
 
 export function initContactUi(section: HTMLElement): void {
-  initReveal(section);
-  initForm(section);
-}
-
-/* ── 1. reveal danych: [ POKAŻ ] → wartość + link, potem [ KOPIUJ ] ── */
-function initReveal(section: HTMLElement): void {
-  for (const rev of section.querySelectorAll<HTMLElement>(".kt-rev")) {
-    const kind = rev.getAttribute("data-kind");
-    const val = rev.querySelector<HTMLElement>(".kt-val");
-    const act = rev.querySelector<HTMLButtonElement>(".kt-act");
-    if (!val || !act) continue;
-    let value = "";
-    let timer: ReturnType<typeof setTimeout> | undefined;
-
-    act.addEventListener("click", () => {
-      if (!rev.classList.contains("open")) {
-        /* pierwsze kliknięcie: złóż + pokaż + podlinkuj */
-        value = kind === "email" ? buildEmail() : buildPhone(" ");
-        const href =
-          kind === "email" ? `mailto:${value}` : `tel:${buildPhone("")}`;
-        const link = document.createElement("a");
-        link.href = href;
-        link.textContent = value;
-        val.textContent = "";
-        val.appendChild(link);
-        rev.classList.add("open");
-        act.textContent = act.dataset.copy ?? "[ KOPIUJ ]";
-        act.setAttribute("aria-label", act.dataset.ariaCopy ?? "");
-        return;
-      }
-      /* kolejne kliknięcia: kopiuj (feedback także gdy Clipboard API
-         odmówi — użytkownik i tak widzi już wartość) */
-      const done = () => {
-        act.textContent = act.dataset.copied ?? "[ SKOPIOWANO ]";
-        act.classList.add("ok");
-        clearTimeout(timer);
-        timer = setTimeout(() => {
-          act.textContent = act.dataset.copy ?? "[ KOPIUJ ]";
-          act.classList.remove("ok");
-        }, 1900);
-      };
-      if (navigator.clipboard?.writeText) {
-        navigator.clipboard.writeText(value).then(done, done);
-      } else {
-        done();
-      }
-    });
-  }
-}
-
-/* ── 2. formularz: walidacja → pułapki → Turnstile → POST ── */
-function initForm(section: HTMLElement): void {
   const frame = section.querySelector<HTMLElement>(".kt-frame");
   const form = section.querySelector<HTMLFormElement>(".kt-form");
   if (!frame || !form) return;
@@ -143,20 +85,9 @@ function initForm(section: HTMLElement): void {
     return;
   }
 
-  /* Teksty toastów (PL/EN) przychodzą z data-* na formularzu — moduł nie
-     zna i18n (ten sam wzorzec co etykiety przycisku). */
-  const tstr = {
-    valTitle: form.dataset.toastValTitle ?? "",
-    valMsg: form.dataset.toastValMsg ?? "",
-    errTitle: form.dataset.toastErrTitle ?? "",
-    errMsg: form.dataset.toastErrMsg ?? "",
-    okTitle: form.dataset.toastOkTitle ?? "",
-    okMsg: form.dataset.toastOkMsg ?? "",
-  };
-
   /* honeypot jest readonly (autofill Chrome'a nie wypełnia readonly —
-     naprawa incydentu z preview, patrz komentarz w Contact.astro); focus
-     zdejmuje blokadę, żeby bot piszący „po ludzku" nadal się łapał */
+     naprawa incydentu z preview, patrz komentarz w ContactForm.astro);
+     focus zdejmuje blokadę, żeby bot piszący „po ludzku" nadal się łapał */
   hp.addEventListener("focus", () => hp.removeAttribute("readonly"), {
     once: true,
   });
@@ -236,18 +167,6 @@ function initForm(section: HTMLElement): void {
       ?.addEventListener("input", () => setErr(wrap, false));
   }
 
-  /* chipsy: klasa .sel (niezależnie od :has) */
-  for (const radio of form.querySelectorAll<HTMLInputElement>(
-    ".kt-chip input",
-  )) {
-    radio.addEventListener("change", () => {
-      for (const chip of form.querySelectorAll(".kt-chip")) {
-        chip.classList.remove("sel");
-      }
-      radio.closest(".kt-chip")?.classList.add("sel");
-    });
-  }
-
   function setBusy(on: boolean): void {
     busy = on;
     sendBtn!.disabled = on;
@@ -260,10 +179,8 @@ function initForm(section: HTMLElement): void {
   function showDone(): void {
     frame!.classList.add("sent");
     frame!
-      .querySelector<HTMLElement>(".kt-done h3")
+      .querySelector<HTMLElement>(".kt-done-h")
       ?.focus({ preventScroll: true });
-    // Toast success obok panelu potwierdzenia (panel = główne potwierdzenie).
-    toast.success(tstr.okMsg, { title: tstr.okTitle });
   }
 
   async function handleSubmit(): Promise<void> {
@@ -277,12 +194,6 @@ function initForm(section: HTMLElement): void {
     setErr(fMsg!, !okMsg);
     if (!okName || !okMail || !okMsg) {
       form!.querySelector<HTMLElement>(".err input, .err textarea")?.focus();
-      // Toast warning obok błędów pod polami; klucz = jeden aktywny naraz
-      // (wielokrotny submit nie stackuje toastów).
-      toast.warning(tstr.valMsg, {
-        title: tstr.valTitle,
-        key: "contact-validation",
-      });
       return;
     }
 
@@ -299,7 +210,7 @@ function initForm(section: HTMLElement): void {
       const token = await getToken();
       const fd = new FormData(form!);
       fd.append("elapsed", String(Date.now() - t0));
-      fd.append("lang", document.documentElement.lang === "en" ? "en" : "pl");
+      fd.append("lang", "pl");
       fd.append("cf-turnstile-response", token);
       const res = await fetch(CONTACT_ENDPOINT, {
         method: "POST",
@@ -309,8 +220,6 @@ function initForm(section: HTMLElement): void {
       showDone();
     } catch {
       srvErr!.hidden = false;
-      // Toast error obok trwałego komunikatu .kt-srv (z fallbackiem na e-mail).
-      toast.error(tstr.errMsg, { title: tstr.errTitle });
     } finally {
       setBusy(false);
       resetTurnstile();
@@ -322,14 +231,11 @@ function initForm(section: HTMLElement): void {
     void handleSubmit();
   });
 
-  /* [ Wyślij kolejną ]: reset formularza i zegara antyspamu */
+  /* „Wyślij kolejną": reset formularza i zegara antyspamu */
   frame
-    .querySelector<HTMLButtonElement>(".kt-done .again")
+    .querySelector<HTMLButtonElement>(".kt-again")
     ?.addEventListener("click", () => {
       form.reset();
-      for (const chip of form.querySelectorAll(".kt-chip")) {
-        chip.classList.remove("sel");
-      }
       for (const wrap of [fName!, fMail!, fMsg!]) setErr(wrap, false);
       srvErr!.hidden = true;
       frame.classList.remove("sent");
@@ -337,5 +243,3 @@ function initForm(section: HTMLElement): void {
       iName!.focus({ preventScroll: true });
     });
 }
-
-/* „Do góry ↑" żyje teraz we współdzielonym Footer.astro (własny skrypt). */
