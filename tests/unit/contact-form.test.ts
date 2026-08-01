@@ -7,8 +7,11 @@ import {
   buildNotifyEmail,
   escapeHtml,
   isBotTrap,
+  CONTACT_FROM_CONFIRM,
+  CONTACT_FROM_NOTIFY,
   MESSAGE_MAX,
   NAME_MAX,
+  PHONE_MAX,
   stripNewlines,
   TOPICS,
   validateSubmission,
@@ -19,6 +22,7 @@ import {
 const validRaw: ContactRaw = {
   name: "Anna",
   email: "anna@example.com",
+  phone: "600 000 000",
   temat: "Kuchnia",
   message: "Chciałabym zapytać o stronę dla mojej pracowni.",
   firma: "",
@@ -29,6 +33,7 @@ const validRaw: ContactRaw = {
 const validData: ContactData = {
   name: "Anna",
   email: "anna@example.com",
+  phone: "600 000 000",
   temat: "Kuchnia",
   message: "Chciałabym zapytać o stronę dla mojej pracowni.",
   lang: "pl",
@@ -108,6 +113,27 @@ describe("kontakt: validateSubmission", () => {
     }
   });
 
+  it("telefon jest OPCJONALNY — pusty nie blokuje zgłoszenia (Etap 5)", () => {
+    const result = validateSubmission({ ...validRaw, phone: "" });
+    expect(result.ok && result.data.phone).toBe("");
+  });
+
+  it("telefon: jedna linia, przycięty do PHONE_MAX, bez odrzucania", () => {
+    const multiline = validateSubmission({
+      ...validRaw,
+      phone: " 600 000 000 \r\n Bcc: spam@evil.com ",
+    });
+    expect(multiline.ok && multiline.data.phone).toBe(
+      "600 000 000 Bcc: spam@evil.com",
+    );
+    const long = validateSubmission({
+      ...validRaw,
+      phone: "9".repeat(PHONE_MAX + 20),
+    });
+    expect(long.ok).toBe(true);
+    expect(long.ok && long.data.phone).toHaveLength(PHONE_MAX);
+  });
+
   it("lang jest zawsze normalizowany do pl (PL-only)", () => {
     const pl = validateSubmission({ ...validRaw, lang: "de" });
     expect(pl.ok && pl.data.lang).toBe("pl");
@@ -147,6 +173,17 @@ describe("kontakt: mail #1 (powiadomienie do kontakt@)", () => {
     expect(mail.subject).not.toMatch(/[\r\n]/);
   });
 
+  it("treść zawiera telefon, a bez telefonu — myślnik (Etap 5)", () => {
+    const withPhone = buildNotifyEmail(validData, "1 sie 2026, 12:00");
+    expect(withPhone.text).toContain("Telefon: 600 000 000");
+    expect(withPhone.html).toContain("600 000 000");
+    const noPhone = buildNotifyEmail(
+      { ...validData, phone: "" },
+      "1 sie 2026, 12:00",
+    );
+    expect(noPhone.text).toContain("Telefon: —");
+  });
+
   it("treść zawiera adres do odpowiedzi i wiadomość; HTML jest escapowany", () => {
     const mail = buildNotifyEmail(
       { ...validData, message: "Oferta <b>specjalna</b> & co dalej?" },
@@ -156,6 +193,16 @@ describe("kontakt: mail #1 (powiadomienie do kontakt@)", () => {
     expect(mail.text).toContain("Oferta <b>specjalna</b> & co dalej?");
     expect(mail.html).toContain("Oferta &lt;b&gt;specjalna&lt;/b&gt; &amp;");
     expect(mail.html).not.toContain("<b>specjalna</b>");
+  });
+});
+
+describe("kontakt: nadawcy (domena zweryfikowana w Resendzie)", () => {
+  // Etap 5: Resend weryfikuje SUBDOMENĘ send.delung.pl (apeks zostaje przy
+  // skrzynce Zimbra). Adres nadawcy spoza tej domeny = odmowa wysyłki.
+  it("oba maile wychodzą z @send.delung.pl", () => {
+    for (const from of [CONTACT_FROM_NOTIFY, CONTACT_FROM_CONFIRM]) {
+      expect(from).toContain("@send.delung.pl>");
+    }
   });
 });
 

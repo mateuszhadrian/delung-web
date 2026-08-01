@@ -37,7 +37,8 @@ html {
      Jawna deklaracja z „only" wyłącza WYMUSZANE ciemnienie przeglądarek
      Androida (Chrome Auto-Dark / Samsung Internet dark mode), które bez
      niej inwertowało biały navbar/tło na S20 FE (korekta po 4.1).
-     Przejściowe ciemne widoki nadpisują na `dark` w legacy-dark.css. */
+     Od Etapu 5 nie ma już widoków z ciemnym motywem szablonu —
+     `legacy-dark.css` skasowany razem z portem /kontakt/. */
   color-scheme: only light;
 
   /* foreground — strona delung jest JASNA (białe tło, ciemny tekst) */

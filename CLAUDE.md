@@ -224,14 +224,39 @@ treść/sekcje budowane od nowa wg `docs/design/`).
   — main po #13 był z tego powodu czerwony). Poluzowane celowo zostają
   desktop `perf` 0,9 (min. próbka 0,92 — score ciągnie szumiący TBT) oraz
   mobile TBT 150 / CLS 0,02 (podłogi przy zerze).
-- Etapy 5–7 — przed nami (formularz + /kontakt/ → SEO/pomiar → przekazanie).
-- PRZEJŚCIOWE dziedzictwo szablonu — już TYLKO widok `/kontakt/`
-  (do wymiany w Etapie 5): ciemny motyw `src/styles/legacy-dark.css`
-  (strona delung jest JASNA) — po porcie polityki w 4.5 **plik importuje
-  wyłącznie `ContactPage.astro`**, więc jego kasacja to ostatni krok
-  Etapu 5 (weryfikacja grepem przed usunięciem); breakpoint 861
-  w odziedziczonym widoku kontaktu (docelowo **1024 px**); placeholder
-  `TODO_*` w `contact-config.ts` (Turnstile, Etap 5).
+- **Etap 5 (formularz + /kontakt/) — W TOKU** (decyzje:
+  `docs/analiza-kontakt.md` — czytać PRZED pracą przy tym widoku).
+  Kroki w chmurze WYKONANE (2026-08-01): **osobne konto Resend klienta**
+  na `kontakt@delung.pl` (darmowy plan = 1 domena, konto Mateusza zajęte
+  przez hadrianm; 2FA + Setup Key u Mateusza, przekazanie w Etapie 7),
+  domena `send.delung.pl` Verified, widget Turnstile `delung-kontakt`
+  (Managed; `delung.pl` + `delung-web.pages.dev`), KV
+  `delung-kontakt-quota` + binding `KONTAKT_KV` i sekrety
+  `RESEND_API_KEY`/`TURNSTILE_SECRET_KEY` w Production i Preview, reguła
+  WAF `kontakt-form-burst` (3 POST-y/10 s na `/api/kontakt`).
+  PR A (widok): port `/kontakt/` na design — hero `over` (ton jasny,
+  tło = reuse `ko-bg.webp` pod blur), 4 kafle kontaktowe wjeżdżające na
+  hero, karta formularza, pigułka social **duplikowana per breakpoint**
+  (kolejność tabulacji = wizualna); pola wg designu: imię, **telefon
+  (opcjonalny — nowe pole kontraktu)**, e-mail, wiadomość — **chipsy
+  tematu wypadły** (serwer dalej toleruje puste `temat`); tel/mail
+  w kaflach przez sloty `contact-details.ts` (koniec `[ POKAŻ ]`;
+  kafle NIE startują `hidden` — maska trzyma layout); nadawcy Resend
+  przeniesieni na `@send.delung.pl`; **toasty usunięte z użycia**
+  (potwierdzenie = stan `.sent` karty + `.kt-srv` przy błędzie).
+  **DŁUGI SZABLONU SPŁACONE**: `legacy-dark.css`, `Contact.astro`,
+  `contact-scroll.ts`, cały ambient (`components/backgrounds/`,
+  `capture-ambient-bg.mjs`, tekstury w `public/`, skrypt npm) —
+  SKASOWANE; breakpoint kontaktu 861 → **1024**; realny site key
+  Turnstile w `contact-config.ts`.
+  PR B (porządki, PRZED NAMI): kasacja `ui/toast/**` + `<Toast />`
+  z `BaseLayout`, martwych `ui/{AnimatedCta,SplitCta,OfertaButtons,
+SolidButton}`, `scripts/section-helpers.ts`, `scripts/bg-crossfade.ts`
+  oraz **wyjście GSAP-a z projektu** (Lenis na własnej pętli rAF —
+  chunk gsap+ScrollTrigger to 44,8 kB gz z 68 kB skryptów strony
+  głównej; po zmianie zmierzyć main i zgłosić Mateuszowi ewentualne
+  zacieśnienie progów LHCI = osobna decyzja, osobny commit).
+- Etapy 6–7 — przed nami (SEO/pomiar → przekazanie).
 
 ## Mapa projektu
 
@@ -273,14 +298,20 @@ treść/sekcje budowane od nowa wg `docs/design/`).
 - `src/components/PolicyPage.astro` — /polityka-prywatnosci/ (4.5): markup
   `pp-*` designu, treść 9 sekcji RODO inline (dokument prawny), klasa
   `.pp-sec` = kontrakt `policy.spec.ts`; jasny motyw (bez legacy-dark).
-- `src/components/sections/contact/` — formularz kontaktowy (Pages Function
-  `functions/api/kontakt.ts`, Resend + Turnstile + antyspam + KV quota);
-  widok docelowy wg `docs/design/kontakt.html` w Etapie 5. JEDYNY
-  konsument `src/styles/legacy-dark.css` (kasacja pliku = koniec Etapu 5).
+- `src/components/sections/contact/` — /kontakt/ (Etap 5): sekcje
+  `ContactHero/ContactCards/ContactForm/ContactSoc.astro` +
+  `contact-config.ts` (CONTACT_DESKTOP_MIN_PX=1024 i site key Turnstile;
+  importują testy) + `contact-ui.ts` (formularz — ładowany ZAWSZE) +
+  `contact-motion.ts` (ruch za bramką). Backend: Pages Function
+  `functions/api/kontakt.ts` + `src/lib/contact-form.ts` (Resend
+  z `send.delung.pl` + Turnstile + antyspam + KV quota). Strona przez
+  `ContactPage.astro` (navbar `over`, scroll NATYWNY — D-K9).
 - `src/scripts/` — `overlay.ts` (generyczne nakładki modal/sheet —
   focus-trap, Esc, swipe-down), `smooth-scroll.ts` (Lenis TYLKO desktop; dotyk = scroll
   natywny — decyzja 4.2, reguły), `section-helpers.ts`, `anchors.ts`,
-  `back-link.ts`, `bg-crossfade.ts`.
+  `back-link.ts` (żywy — `BaseLayout`), `bg-crossfade.ts`.
+  `section-helpers.ts`, `bg-crossfade.ts` i `anchors.ts` mają po Etapie 5
+  ZERO importów — kandydaci do kasacji w PR B.
 - `src/lib/img.ts` — `imgAt()`: JEDYNE miejsce wiedzy o rozmiarach obrazów
   (Cloudflare Image Transformations na `media.delung.pl`; w dev pokazuje
   oryginały). Wideo BEZ transformacji — wprost z R2.

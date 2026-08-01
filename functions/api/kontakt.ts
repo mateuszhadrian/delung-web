@@ -70,6 +70,9 @@ async function handlePost({ request, env }: PagesContext): Promise<Response> {
   const raw = {
     name: field("name"),
     email: field("email"),
+    // Pole z designu delung (Etap 5) — opcjonalne; stare POST-y bez niego
+    // dostają "" i przechodzą tak samo.
+    phone: field("phone"),
     temat: field("temat"),
     message: field("message"),
     firma: field("firma"),

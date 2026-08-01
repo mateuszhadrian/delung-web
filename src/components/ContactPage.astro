@@ -1,17 +1,21 @@
 ---
-// Podstrona „Kontakt" (PL: /kontakt/, EN: /en/contact/) — sekcja Contact
-// z formularzem przeniesiona W CAŁOŚCI ze strony głównej (tam został banner
-// KontaktBaner.astro); plan: docs/analiza-podstrona-kontakt.md. Chrome
-// globalny (Navbar + Footer — część 4.1), jedna statyczna warstwa ambientu
-// (RED, jak tło sekcji na głównej), scroll NATYWNY (smoothScroll={false}, jak
-// /realizacje/) — sekcja nie ma pinowanych scen, a formularz najlepiej
-// czuje się bez pośrednika (fokus pól, autoscroll do błędów walidacji).
-import "@/styles/legacy-dark.css";
+// Widok /kontakt/ (Etap 5) — port docs/design/kontakt.html; decyzje:
+// docs/analiza-kontakt.md. Navbar `over` w tonie JASNYM (eksport kontaktu
+// nie ma bloku .hdr.dark — po scrollu wjeżdża białe tło).
+// Kolejność w DOM: hero → kafle → social (mobile) → formularz → social
+// (desktop). Eksport przestawia sekcje CSS-owym `order`; my renderujemy
+// duplikat pigułki social per breakpoint (D-K3), żeby kolejność tabulacji
+// zgadzała się z wizualną na obu progach.
+// Scroll NATYWNY (smoothScroll={false}, D-K9): formularz najlepiej czuje
+// się bez pośrednika (fokus pól, dojazd do błędnego pola, klawiatura
+// ekranowa), a widok jest krótki — Lenis nie ma tu czego wygładzać.
 import BaseLayout from "@/layouts/BaseLayout.astro";
 import Navbar from "@/components/navbar/Navbar.astro";
-import AmbientBackground from "@/components/backgrounds/AmbientBackground.astro";
-import Contact from "@/components/sections/contact/Contact.astro";
 import Footer from "@/components/Footer.astro";
+import ContactHero from "@/components/sections/contact/ContactHero.astro";
+import ContactCards from "@/components/sections/contact/ContactCards.astro";
+import ContactSoc from "@/components/sections/contact/ContactSoc.astro";
+import ContactForm from "@/components/sections/contact/ContactForm.astro";
 import { useTranslations } from "@/i18n/utils";
 
 const t = useTranslations("pl");
@@ -22,46 +26,64 @@ const t = useTranslations("pl");
   description={t("contactPage.description")}
   smoothScroll={false}
 >
-  <div class="ktp-bg" aria-hidden="true">
-    <AmbientBackground variant="red" />
-  </div>
+  <script is:inline>
+    // PRZED paintem: motion OK → html.js-motion (uzbraja stany startowe
+    // revealów — reszta w contact-motion.ts, ładowanym niżej).
+    if (window.matchMedia("(prefers-reduced-motion: no-preference)").matches) {
+      document.documentElement.classList.add("js-motion");
+    }
+  </script>
 
-  <Navbar />
+  <Navbar variant="over" />
 
-  <main class="ktp">
-    <Contact lang="pl" />
+  <main>
+    <ContactHero />
+    <ContactCards />
+    <ContactSoc at="mobile" />
+    <ContactForm />
+    <ContactSoc at="desktop" />
   </main>
 
-  {/* Współdzielony footer strony (ten sam co finał strony głównej). */}
-  <div class="ktp-foot">
-    <Footer />
-  </div>
+  <Footer />
 </BaseLayout>
 
-<style>
-  :global(body) {
-    background: #000;
+<style is:global>
+  /* Odsłanianie treści przy przewijaniu — tylko widok mobilny; stan
+     startowy WYŁĄCZNIE pod html.js-motion (bez JS / przy reduce treść
+     od razu widoczna — reguła sections.md; wzorzec ProcesPage 4.5). */
+  @media (max-width: 1023px) {
+    html.js-motion [data-rev] {
+      opacity: 0;
+      transform: translateY(22px);
+      transition:
+        opacity 0.7s ease,
+        transform 0.8s cubic-bezier(0.22, 0.61, 0.36, 1);
+    }
+    html.js-motion [data-rev].rv-in {
+      opacity: 1;
+      transform: none;
+    }
   }
 
-  /* Jedna statyczna warstwa ambientu — bez crossfade'u strony głównej
-     (podczas jazdy przez sekcję na głównej tłem był wariant red). */
-  .ktp-bg {
-    position: fixed;
-    inset: 0;
-    z-index: 0;
-    background: #000;
-    pointer-events: none;
+  /* Dojazd kotwicą/fokusem pod sticky paskiem: sekcja i pola nie chowają
+     się pod navbarem (--hdr-h ustawia skrypt chrome'u — wzorzec D-P9/D-R7). */
+  #contact {
+    scroll-margin-top: calc(var(--hdr-h, 72px) + 8px);
   }
-
-  .ktp {
-    position: relative;
-    z-index: 1;
-  }
-
-  /* ── Stopka: full-bleed (Footer.astro sam kontroluje kontener/wrap);
-     z-index tylko wynosi ją nad warstwę ambientu. ── */
-  .ktp-foot {
-    position: relative;
-    z-index: 1;
+  #contact .kt-field {
+    scroll-margin-top: calc(var(--hdr-h, 72px) + 16px);
   }
 </style>
+
+<script>
+  import { initContactUi } from "@/components/sections/contact/contact-ui";
+
+  // Formularz działa ZAWSZE (to funkcja, nie dekoracja); choreografia
+  // wejść tylko przy dozwolonym ruchu — ta sama bramka co w 4.2–4.5.
+  const section = document.querySelector<HTMLElement>("#contact");
+  if (section) initContactUi(section);
+
+  if (matchMedia("(prefers-reduced-motion: no-preference)").matches) {
+    import("@/components/sections/contact/contact-motion");
+  }
+</script>

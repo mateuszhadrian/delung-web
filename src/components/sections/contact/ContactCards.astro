@@ -1,0 +1,316 @@
+---
+// Kafle kontaktowe /kontakt/ (eksport: .cards). Mobile (<1024): wiersze
+// rozdzielone hairline'ami. Desktop (≥1024): 4 białe karty w gridzie,
+// wjeżdżające na dół hero ujemnym marginesem.
+// Telefon i e-mail: sloty antyscrapingowe D-CH5 — kotwica [data-tel]/
+// [data-mail] z placeholderem href="/kontakt/" i ZAMASKOWANĄ wartością
+// w [data-slot]; tekst i href składa fillContactSlots (skrypt chrome'u).
+// Świadoma różnica względem paska i stopki: karty NIE startują `hidden`
+// (cztery kafle wjeżdżające na hero — znikające dwa dałyby skok layoutu),
+// maskę trzyma placeholder (D-K5).
+import { CONTACT_PATH } from "@/lib/routes";
+
+const MAPS_HREF =
+  "https://www.google.com/maps/search/?api=1&query=Stra%C5%BCacka+27a%2C+98-300+Gaszyn";
+---
+
+<section class="kt-cards-sec">
+  <div class="kt-cards" data-rev>
+    <a class="kt-card" data-tel href={CONTACT_PATH}>
+      <span class="kt-card-ic" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none">
+          <path
+            d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"
+            stroke="currentColor"
+            stroke-width="1.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"></path>
+        </svg>
+      </span>
+      <span class="kt-card-txt">
+        <span class="kt-card-lbl"
+          >Telefon<span class="dOnlyI"> · 24/7</span></span
+        >
+        <span class="kt-card-val" data-slot>+48 ••• ••• •••</span>
+      </span>
+      <svg
+        class="kt-card-arr"
+        viewBox="0 0 24 24"
+        fill="none"
+        aria-hidden="true"
+      >
+        <path
+          d="M6 18L18 6M18 6H8M18 6v10"
+          stroke="currentColor"
+          stroke-width="1.5"
+          stroke-linecap="round"
+          stroke-linejoin="round"></path>
+      </svg>
+    </a>
+
+    <a class="kt-card" data-mail href={CONTACT_PATH}>
+      <span class="kt-card-ic" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none">
+          <rect
+            x="2"
+            y="4"
+            width="20"
+            height="16"
+            rx="2"
+            stroke="currentColor"
+            stroke-width="1.5"></rect>
+          <path
+            d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"
+            stroke="currentColor"
+            stroke-width="1.5"
+            stroke-linecap="round"></path>
+        </svg>
+      </span>
+      <span class="kt-card-txt">
+        <span class="kt-card-lbl">E-mail</span>
+        <span class="kt-card-val" data-slot>••••••@••••••.••</span>
+      </span>
+      <svg
+        class="kt-card-arr"
+        viewBox="0 0 24 24"
+        fill="none"
+        aria-hidden="true"
+      >
+        <path
+          d="M6 18L18 6M18 6H8M18 6v10"
+          stroke="currentColor"
+          stroke-width="1.5"
+          stroke-linecap="round"
+          stroke-linejoin="round"></path>
+      </svg>
+    </a>
+
+    <a
+      class="kt-card"
+      href={MAPS_HREF}
+      target="_blank"
+      rel="noopener noreferrer"
+    >
+      <span class="kt-card-ic" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none">
+          <path
+            d="M12 21s7-5.686 7-11a7 7 0 1 0-14 0c0 5.314 7 11 7 11z"
+            stroke="currentColor"
+            stroke-width="1.5"
+            stroke-linejoin="round"></path>
+          <circle
+            cx="12"
+            cy="10"
+            r="2.5"
+            stroke="currentColor"
+            stroke-width="1.5"></circle>
+        </svg>
+      </span>
+      <span class="kt-card-txt">
+        <span class="kt-card-lbl"
+          >Adres<span class="dOnlyI"> · pracownia</span></span
+        >
+        <span class="kt-card-val sm">Strażacka 27a<br />98-300 Gaszyn</span>
+      </span>
+      <svg
+        class="kt-card-arr"
+        viewBox="0 0 24 24"
+        fill="none"
+        aria-hidden="true"
+      >
+        <path
+          d="M6 18L18 6M18 6H8M18 6v10"
+          stroke="currentColor"
+          stroke-width="1.5"
+          stroke-linecap="round"
+          stroke-linejoin="round"></path>
+      </svg>
+    </a>
+
+    <div class="kt-card">
+      <span class="kt-card-ic" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none">
+          <circle
+            cx="12"
+            cy="12"
+            r="10"
+            stroke="currentColor"
+            stroke-width="1.5"></circle>
+          <path
+            d="M12 6v6l4 2"
+            stroke="currentColor"
+            stroke-width="1.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"></path>
+        </svg>
+      </span>
+      <span class="kt-card-txt">
+        <span class="kt-card-lbl"
+          >Dostępność<span class="dOnlyI"> telefoniczna</span></span
+        >
+        <span class="kt-card-val sm mOnly"
+          >Dostępni 24/7 — zadzwoń o dowolnej porze</span
+        >
+        <span class="kt-card-val sm dOnly"
+          >Pn–Pt praktycznie całą dobę<br />Dzwoń o dowolnej porze</span
+        >
+      </span>
+    </div>
+  </div>
+</section>
+
+<style>
+  /* ── mobile: wiersze z hairline'ami ── */
+  .kt-cards {
+    width: 100%;
+    max-width: var(--col);
+    margin-inline: auto;
+    padding-inline: var(--pad);
+    display: flex;
+    flex-direction: column;
+    padding-top: 10px;
+    padding-bottom: 8px;
+  }
+  .kt-card {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 18px 0;
+    border-bottom: 1px solid rgba(26, 26, 26, 0.14);
+    color: inherit;
+    text-decoration: none;
+  }
+  .kt-card:last-child {
+    border-bottom: none;
+  }
+  a.kt-card:hover {
+    opacity: 0.7;
+  }
+  a.kt-card:focus-visible {
+    outline: 2px solid var(--accent-ink);
+    outline-offset: 4px;
+    border-radius: 4px;
+  }
+  .kt-card-ic {
+    flex: none;
+    width: clamp(42px, 12.3vw, 52px);
+    height: clamp(42px, 12.3vw, 52px);
+    border: 1px solid rgba(26, 26, 26, 0.35);
+    border-radius: 999px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--ink);
+    transition:
+      background 0.45s ease,
+      border-color 0.45s ease,
+      color 0.45s ease;
+  }
+  .kt-card-ic svg {
+    width: 20px;
+    height: 20px;
+  }
+  .kt-card-txt {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+    min-width: 0;
+  }
+  .kt-card-lbl {
+    font-family: var(--font-display), sans-serif;
+    font-weight: 500;
+    font-size: 10px;
+    line-height: 1;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    /* eksport .5 — podbite do --faint (drobny druk, ratchet axe) */
+    color: var(--faint);
+  }
+  .kt-card-val {
+    font-family: var(--font-display), sans-serif;
+    font-weight: 300;
+    font-size: clamp(16px, 4.62vw, 20px);
+    line-height: 1.25;
+    color: var(--ink);
+    overflow-wrap: anywhere;
+  }
+  .kt-card-val.sm {
+    font-size: clamp(14px, 3.97vw, 17px);
+    line-height: 1.42;
+  }
+  .kt-card-arr {
+    flex: none;
+    width: 18px;
+    height: 18px;
+    color: var(--ink);
+  }
+  .dOnly,
+  .dOnlyI {
+    display: none;
+  }
+
+  /* ════ DESKTOP ≥1024 (para: CONTACT_DESKTOP_MIN_PX) ════ */
+  @media (min-width: 1024px) {
+    .dOnly {
+      display: block;
+    }
+    .dOnlyI {
+      display: inline;
+    }
+    .mOnly {
+      display: none;
+    }
+    .kt-cards {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: clamp(14px, 1.39vw, 20px);
+      /* wjazd na hero — para z wysokością hero (ContactHero) */
+      margin-top: clamp(-92px, -6.39vw, -70px);
+      position: relative;
+      z-index: 2;
+      padding-block: 0;
+    }
+    .kt-card {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 16px;
+      background: #fff;
+      border-radius: 10px;
+      border-bottom: none;
+      padding: clamp(24px, 2.36vw, 34px) clamp(22px, 2.22vw, 32px);
+      box-shadow: 0 16px 44px rgba(0, 0, 0, 0.12);
+    }
+    a.kt-card:hover {
+      opacity: 1;
+    }
+    a.kt-card:hover .kt-card-ic {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+    .kt-card-ic {
+      width: clamp(42px, 3.61vw, 52px);
+      height: clamp(42px, 3.61vw, 52px);
+      border-color: rgba(26, 26, 26, 0.3);
+    }
+    .kt-card-ic svg {
+      width: 21px;
+      height: 21px;
+    }
+    .kt-card-txt {
+      gap: 8px;
+      flex: none;
+    }
+    .kt-card-val {
+      font-size: clamp(20px, 1.81vw, 26px);
+    }
+    .kt-card-val.sm {
+      font-size: clamp(16px, 1.32vw, 19px);
+      line-height: 1.5;
+    }
+    .kt-card-arr {
+      display: none;
+    }
+  }
+</style>

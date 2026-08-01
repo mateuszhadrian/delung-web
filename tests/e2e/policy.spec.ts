@@ -7,7 +7,7 @@
 // data-back uśpiony w BaseLayout). Treść jest niezależna od profilu —
 // jak seo.spec.ts biega tylko na chromium-1920. PL-only (delung).
 import { expect, test } from "@playwright/test";
-import { ui } from "../../src/i18n/ui";
+import { POLICY_PATH } from "../../src/lib/routes";
 import { useChromium1920Only } from "../helpers/guards";
 import { gotoReady } from "../helpers/scroll";
 
@@ -108,7 +108,7 @@ test("linki polityki celują w podstrony: stopka głównej + nota na /kontakt/",
 }) => {
   // Nota RODO (.kt-note) żyje przy formularzu na /kontakt/;
   // link polityki w stopce = .ft-nav (chrome 4.1, widoczny też na mobile).
-  const href = ui.pl["contact.policyHref"];
+  const href = POLICY_PATH;
   await gotoReady(page, "/");
   await expect(page.locator(`.ft-nav a[href="${href}"]`)).toBeAttached();
   await gotoReady(page, "/kontakt/");

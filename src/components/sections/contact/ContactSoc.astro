@@ -1,0 +1,109 @@
+---
+// Pigułka social /kontakt/ (eksport: .soc). Eksport ma Instagram +
+// Facebook z martwym href="#" — zostaje SAM Instagram (D-K12, spójnie
+// z D-CH7: firma nie prowadzi FB).
+// Blok renderujemy DWA razy (D-K3): mobile pod kaflami, desktop pod
+// formularzem. Eksport przestawia sekcje CSS-owym `order`, co rozjeżdża
+// kolejność tabulacji z wizualną — duplikat per-breakpoint (wzorzec D-P3)
+// trzyma obie zgodne, a nieaktywny wariant siedzi na display:none, więc
+// w drzewie dostępności jest zawsze JEDEN egzemplarz.
+interface Props {
+  /** Na którym breakpoincie ten egzemplarz jest widoczny. */
+  at: "mobile" | "desktop";
+}
+const { at } = Astro.props;
+---
+
+<section class:list={["kt-soc-sec", at]}>
+  <div class="kt-soc">
+    <a
+      href="https://www.instagram.com/delung_meble/"
+      target="_blank"
+      rel="noopener noreferrer"
+    >
+      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <rect
+          x="2"
+          y="2"
+          width="20"
+          height="20"
+          rx="5"
+          stroke="currentColor"
+          stroke-width="1.5"></rect>
+        <circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="1.5"
+        ></circle>
+        <circle cx="17.5" cy="6.5" r="1" fill="currentColor"></circle>
+      </svg>
+      Instagram
+    </a>
+  </div>
+</section>
+
+<style>
+  /* mobile: widoczny wariant `mobile`, desktopowy schowany (i odwrotnie
+     w @media) — display:none zdejmuje duplikat też z drzewa a11y */
+  .kt-soc-sec.desktop {
+    display: none;
+  }
+  .kt-soc {
+    width: 100%;
+    max-width: var(--col);
+    margin-inline: auto;
+    padding-inline: var(--pad);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding-top: 2px;
+    padding-bottom: 40px;
+  }
+  .kt-soc a {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    border: 1px solid rgba(26, 26, 26, 0.3);
+    border-radius: 999px;
+    padding: 11px 18px;
+    font-family: var(--font-display), sans-serif;
+    font-weight: 300;
+    font-size: clamp(13px, 3.6vw, 15px);
+    white-space: nowrap;
+    color: var(--ink);
+    text-decoration: none;
+  }
+  .kt-soc a:hover {
+    background: rgba(26, 26, 26, 0.04);
+  }
+  .kt-soc a:focus-visible {
+    outline: 2px solid var(--accent-ink);
+    outline-offset: 3px;
+  }
+  .kt-soc svg {
+    width: 16px;
+    height: 16px;
+    flex: none;
+  }
+
+  /* ════ DESKTOP ≥1024 (para: CONTACT_DESKTOP_MIN_PX) ════ */
+  @media (min-width: 1024px) {
+    .kt-soc-sec.mobile {
+      display: none;
+    }
+    .kt-soc-sec.desktop {
+      display: block;
+    }
+    .kt-soc {
+      justify-content: center;
+      gap: 14px;
+      padding-top: 0;
+      padding-bottom: clamp(70px, 6.94vw, 100px);
+    }
+    .kt-soc a {
+      padding: clamp(11px, 0.9vw, 13px) clamp(17px, 1.53vw, 22px);
+      font-size: clamp(14px, 1.04vw, 15px);
+    }
+    .kt-soc svg {
+      width: 17px;
+      height: 17px;
+    }
+  }
+</style>
