@@ -45,18 +45,28 @@ wspólne odziedziczone z szablonu + gotchas sekcji, które przeżyły kopię
   (`[data-lightbox]`), w podglądzie tap = pauza↔play; wideo na zrzutach
   visual ZAWSZE przez maskę, odtwarzanie testuj funkcjonalnie w e2e.
 
-## Contact (`kt`)
+## Contact (`kt`) — /kontakt/ (Etap 5)
 
-- Adres e-mail i telefon składane z fragmentów dopiero po kliknięciu
-  `[ POKAŻ ]` (antyscraping) — nie „upraszczaj" do zwykłego mailto
-  w markupie.
+- Sekcje: `ContactHero/ContactCards/ContactForm/ContactSoc.astro`;
+  mechanika formularza w `contact-ui.ts` (ładowana ZAWSZE — to funkcja,
+  nie dekoracja), ruch w `contact-motion.ts` (za bramką `js-motion`).
+- Telefon i e-mail w kaflach: sloty `[data-tel]`/`[data-mail]`
+  - `[data-slot]` wypełniane przez `fillContactSlots`
+    (`src/lib/contact-details.ts`, wołane przez skrypt Navbara) — nie
+    „upraszczaj" do jawnego `tel:`/`mailto:` w markupie (D-CH5).
+    Kafle celowo NIE startują `hidden` (skok layoutu) — maskę trzyma
+    placeholder `+48 ••• ••• •••`.
+- Pola wg designu: imię, telefon (OPCJONALNY, bez walidacji klienckiej),
+  e-mail, wiadomość. Chipsy tematu z szablonu nie istnieją; serwer dalej
+  toleruje puste `temat`.
 - Honeypot jest `readonly` (autofill Chrome'a nie wypełnia readonly;
   focus zdejmuje atrybut w `contact-ui.ts`) — nie usuwaj atrybutu.
 - Turnstile ładowany leniwie (pierwszy `focusin` w formularzu) — nie
   przenoś do eager loadu.
-- Breakpoint: `CONTACT_DESKTOP_MIN_PX` z `contact-config.ts` (importują
-  go też testy e2e) — 861 px z szablonu; wyrównanie do 1024 przy porcie
-  widoku kontaktu (Etap 5).
+- Pola mobile mają PODŁOGĘ `font-size: 16px` (Safari iOS zoomuje stronę
+  przy focusie mniejszego pola i zostawia ją zoomniętą).
+- Breakpoint: `CONTACT_DESKTOP_MIN_PX = 1024` z `contact-config.ts`
+  (importują go testy e2e; `@media` w parze).
 - Pułapki klienckie mają serwerowy odpowiednik w `functions/api/kontakt.ts`
   (Pages Function: honeypot, czas wypełnienia, weryfikacja Turnstile) —
   zmiany po jednej stronie kontraktu wymagają przeglądu drugiej.
