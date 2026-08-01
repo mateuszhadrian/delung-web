@@ -1,0 +1,424 @@
+---
+// Opinie (eksport: .rev z o-nas.html). Mobile (<1024, cream): h2 + lead
+// + ocena „Google 5,0" + karuzela 6 kart (snap, gotchas sections.md)
+// + CTA do opinii Google. Desktop (≥1024, #faf8f5): ocena inline w
+// leadzie, dwa przeciwbieżne marquee (3+3, pętla przez duplikat
+// aria-hidden — wzorzec HomeOpinie) + CTA. Dane 6 opinii wspólne ze
+// stroną główną (src/lib/opinie.ts — D-P4); gwiazdki jako SVG
+// aria-hidden, drobne teksty podbite do --faint (ratchet axe).
+import {
+  OPINIE,
+  OPINIE_GOOGLE_URL,
+  OPINIE_STAR_PATH,
+  type Opinia,
+} from "@/lib/opinie";
+
+const MARQ1 = OPINIE.slice(0, 3);
+const MARQ2 = OPINIE.slice(3);
+---
+
+<section class="rev">
+  <div class="rev-in">
+    <h2 data-rev>Nie musisz wierzyć nam na słowo.</h2>
+    <p class="rev-lead" data-rev>
+      Zobacz, co mówią o nas klienci.<span class="rev-rate rev-rate--d">
+        <span>Google</span>
+        <span>5,0</span>
+        <span class="rev-stars" aria-hidden="true">
+          {
+            [0, 1, 2, 3, 4].map(() => (
+              <svg viewBox="0 0 24 24">
+                <path d={OPINIE_STAR_PATH} fill="#f2a90c" />
+              </svg>
+            ))
+          }
+        </span>
+      </span>
+    </p>
+    <p class="rev-rate rev-rate--m" data-rev>
+      <span>Google</span>
+      <span>5,0</span>
+      <span class="rev-stars" aria-hidden="true">
+        {
+          [0, 1, 2, 3, 4].map(() => (
+            <svg viewBox="0 0 24 24">
+              <path d={OPINIE_STAR_PATH} fill="#f2a90c" />
+            </svg>
+          ))
+        }
+      </span>
+    </p>
+  </div>
+
+  {/* desktop: dwa przeciwbieżne marquee (duplikat pętli aria-hidden) */}
+  {
+    [MARQ1, MARQ2].map((list, mi) => (
+      <div class:list={["rev-marq", { "rev-marq2": mi === 1 }]}>
+        {[false, true].map((clone) => (
+          <div class="rev-set" aria-hidden={clone ? "true" : undefined}>
+            {list.map((r: Opinia) => (
+              <article class="rc">
+                <div class="rc-top">
+                  <span
+                    class="rc-av"
+                    style={`background:${r.c}`}
+                    aria-hidden="true"
+                  >
+                    {r.i}
+                  </span>
+                  <span class="rc-who">
+                    <span class="rc-name">{r.n}</span>
+                    <span class="rc-meta">{r.m}</span>
+                  </span>
+                </div>
+                <span class="rc-stars" aria-hidden="true">
+                  {[0, 1, 2, 3, 4].map(() => (
+                    <svg viewBox="0 0 24 24">
+                      <path d={OPINIE_STAR_PATH} fill="#f2a90c" />
+                    </svg>
+                  ))}
+                </span>
+                <p class="rc-txt">{r.t}</p>
+              </article>
+            ))}
+          </div>
+        ))}
+      </div>
+    ))
+  }
+
+  {
+    /* mobile: karuzela 6 kart (gotchas: sections.md); tabindex + role:
+       przewijany region musi być osiągalny klawiaturą (axe
+       scrollable-region-focusable — wzorzec op-car z HomeOpinie). */
+  }
+  <div
+    class="rev-car"
+    data-lenis-prevent-horizontal
+    tabindex="0"
+    role="region"
+    aria-label="Opinie klientów"
+  >
+    {
+      OPINIE.map((r: Opinia) => (
+        <article class="rc">
+          <div class="rc-top">
+            <span class="rc-av" style={`background:${r.c}`} aria-hidden="true">
+              {r.i}
+            </span>
+            <span class="rc-who">
+              <span class="rc-name">{r.n}</span>
+              <span class="rc-meta">{r.m}</span>
+            </span>
+          </div>
+          <span class="rc-stars" aria-hidden="true">
+            {[0, 1, 2, 3, 4].map(() => (
+              <svg viewBox="0 0 24 24">
+                <path d={OPINIE_STAR_PATH} fill="#f2a90c" />
+              </svg>
+            ))}
+          </span>
+          <p class="rc-txt">{r.t}</p>
+          {r.more && <span class="rc-more">…więcej</span>}
+        </article>
+      ))
+    }
+  </div>
+
+  <div class="rev-cta" data-rev="soft">
+    <a href={OPINIE_GOOGLE_URL} target="_blank" rel="noopener">
+      <span>Zobacz więcej opinii w Google</span>
+      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path
+          d="M6 18L18 6M18 6H8M18 6v10"
+          stroke="#fff"
+          stroke-width="1.5"
+          stroke-linecap="round"
+          stroke-linejoin="round"></path>
+      </svg>
+    </a>
+  </div>
+</section>
+
+<style>
+  /* ── mobile ── */
+  .rev {
+    background: var(--bg-cream);
+    padding: 44px 0 48px;
+    overflow: hidden;
+  }
+  .rev-in {
+    width: 100%;
+    max-width: var(--col);
+    margin-inline: auto;
+    padding-inline: var(--pad);
+  }
+  h2 {
+    font-family: var(--font-display), sans-serif;
+    font-weight: 200;
+    font-size: clamp(24px, 7.18vw, 31px);
+    line-height: 1.25;
+    color: var(--ink);
+  }
+  .rev-lead {
+    margin-top: 10px;
+    font-family: var(--font-display), sans-serif;
+    font-weight: 200;
+    font-size: clamp(13.5px, 3.85vw, 16px);
+    line-height: 1.47;
+    color: var(--muted);
+  }
+  .rev-rate {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: var(--font-body), sans-serif;
+    font-weight: 600;
+    font-size: 14px;
+    line-height: 1;
+    color: var(--ink);
+  }
+  .rev-rate--m {
+    margin: 16px 0 20px;
+  }
+  .rev-rate--d {
+    display: none;
+  }
+  .rev-stars {
+    display: inline-flex;
+    gap: 2px;
+  }
+  .rev-stars svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  .rev-marq {
+    display: none;
+  }
+  .rev-set {
+    display: flex;
+  }
+
+  .rev-car {
+    display: flex;
+    gap: 14px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    padding-block: 2px 6px;
+    padding-inline: var(--pad);
+    scrollbar-width: none;
+  }
+  .rev-car::-webkit-scrollbar {
+    display: none;
+  }
+  .rc {
+    flex: none;
+    width: min(300px, 84vw);
+    border-radius: 8px;
+    padding: 20px;
+    background: #fff;
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+    box-sizing: border-box;
+  }
+  .rc-top {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .rc-av {
+    width: 40px;
+    height: 40px;
+    border-radius: 999px;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-body), sans-serif;
+    font-weight: 500;
+    font-size: 17px;
+    line-height: 1;
+    flex: none;
+  }
+  .rc-who {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .rc-name {
+    font-family: var(--font-body), sans-serif;
+    font-weight: 600;
+    font-size: 14.5px;
+    line-height: 1.2;
+    color: var(--ink);
+  }
+  .rc-meta {
+    font-family: var(--font-body), sans-serif;
+    font-weight: 400;
+    font-size: 12px;
+    line-height: 1.2;
+    /* eksport .5 — podbite do --faint (ratchet axe) */
+    color: var(--faint);
+  }
+  .rc-stars {
+    display: inline-flex;
+    gap: 2px;
+  }
+  .rc-stars svg {
+    width: 13px;
+    height: 13px;
+  }
+  .rc-txt {
+    font-family: var(--font-display), sans-serif;
+    font-weight: 300;
+    font-size: 14px;
+    line-height: 1.5;
+    color: rgba(26, 26, 26, 0.85);
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .rc-more {
+    font-family: var(--font-body), sans-serif;
+    font-weight: 400;
+    font-size: 13px;
+    line-height: 1;
+    /* eksport .45 — podbite do --faint (ratchet axe) */
+    color: var(--faint);
+  }
+
+  .rev-cta {
+    padding-block: 26px 0;
+    padding-inline: var(--pad);
+  }
+  .rev-cta a {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    background: var(--ink);
+    color: #fff;
+    border-radius: 999px;
+    padding: 15px 28px;
+    font-family: var(--font-body), sans-serif;
+    font-weight: 500;
+    font-size: clamp(14px, 4.1vw, 17px);
+    line-height: 1;
+    text-decoration: none;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
+  }
+  .rev-cta a:hover {
+    opacity: 0.92;
+  }
+  .rev-cta svg {
+    width: 24px;
+    height: 24px;
+    flex: none;
+  }
+
+  /* ════ DESKTOP ≥1024 (para: ONAS_DESKTOP_MIN_PX) ════ */
+  @media (min-width: 1024px) {
+    .rev {
+      background: #faf8f5;
+      padding: clamp(64px, 6.67vw, 96px) 0 clamp(70px, 7.22vw, 104px);
+    }
+    .rev-in {
+      max-width: 760px;
+      margin-inline: 0;
+    }
+    h2 {
+      font-size: clamp(36px, 3.61vw, 52px);
+      line-height: 1.12;
+    }
+    .rev-lead {
+      margin: 14px 0 40px;
+      font-size: clamp(15px, 1.22vw, 17.5px);
+      line-height: 1.6;
+    }
+    .rev-rate--m {
+      display: none;
+    }
+    .rev-rate--d {
+      display: inline-flex;
+      margin-left: 10px;
+      vertical-align: baseline;
+      font-family: var(--font-display), sans-serif;
+      font-weight: 200;
+      font-size: clamp(15px, 1.22vw, 17.5px);
+      color: var(--muted);
+    }
+    .rev-car {
+      display: none;
+    }
+    .rev-marq {
+      display: flex;
+      width: max-content;
+      animation: dxmq 50s linear infinite;
+    }
+    .rev-marq2 {
+      animation: dxmqr 50s linear infinite;
+      margin-top: 18px;
+    }
+    .rev-marq .rc {
+      width: 400px;
+      padding: 24px;
+      gap: 11px;
+      margin-right: 18px;
+    }
+    .rev-marq .rc-txt {
+      -webkit-line-clamp: 3;
+      line-height: 1.55;
+    }
+    .rev-cta {
+      padding-block: 44px 0;
+      display: flex;
+    }
+    .rev-cta a {
+      justify-content: flex-start;
+      padding: clamp(15px, 1.32vw, 19px) clamp(26px, 2.5vw, 36px);
+      font-size: clamp(15px, 1.18vw, 17px);
+      box-shadow: none;
+    }
+    .rev-cta a:hover {
+      background: #2b2b2b;
+      opacity: 1;
+    }
+    .rev-cta svg {
+      width: 20px;
+      height: 20px;
+      transition: transform 0.55s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .rev-cta a:hover svg {
+      transform: translate(5px, -5px);
+    }
+  }
+
+  @keyframes dxmq {
+    to {
+      transform: translateX(-50%);
+    }
+  }
+  @keyframes dxmqr {
+    from {
+      transform: translateX(-50%);
+    }
+    to {
+      transform: translateX(0);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .rev-marq,
+    .rev-marq2 {
+      animation: none;
+    }
+    .rev-cta svg {
+      transition: none;
+    }
+  }
+</style>

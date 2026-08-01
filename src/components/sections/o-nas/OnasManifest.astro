@@ -1,0 +1,87 @@
+---
+// Sekcja MANIFEST (eksport: .manifest z o-nas.html) — WYŁĄCZNIE desktop
+// (na mobile akapit manifestu żyje w karcie hero — D-P3). Ciemne tło
+// kaszmirowe (reuse ko-bg pod blur) z powolnym zoom-outem scrollem;
+// akapit rozjaśniany słowo po słowie (onas-motion dzieli na spany —
+// wzorzec cytatu HomeAbout; bez JS / przy reduce pełna jasność).
+import { MANIFEST_TEXT } from "./onas-content";
+import bgImg from "@/assets/home/ko-bg.webp";
+---
+
+<section class="manifest">
+  <img
+    class="manifest-bg"
+    src={bgImg.src}
+    width={bgImg.width}
+    height={bgImg.height}
+    alt=""
+    aria-hidden="true"
+    loading="lazy"
+    decoding="async"
+    data-bgzoom
+  />
+  <span class="manifest-tint" aria-hidden="true"></span>
+  <div class="manifest-in">
+    <p class="manifest-kick">MANIFEST</p>
+    {/* :global na spanach — onas-motion dzieli tekst po stronie klienta */}
+    <p class="manifest-p" data-manifest>{MANIFEST_TEXT}</p>
+  </div>
+</section>
+
+<style>
+  .manifest {
+    display: none;
+  }
+
+  /* ════ DESKTOP ≥1024 (para: ONAS_DESKTOP_MIN_PX) ════ */
+  @media (min-width: 1024px) {
+    .manifest {
+      display: block;
+      position: relative;
+      overflow: hidden;
+      background: #100f0d;
+      padding: clamp(70px, 9.03vw, 130px) 0 clamp(76px, 9.72vw, 140px);
+    }
+    .manifest-bg {
+      position: absolute;
+      inset: -40px;
+      width: calc(100% + 80px);
+      height: calc(100% + 80px);
+      object-fit: cover;
+      object-position: 10% 58%;
+      filter: blur(9px);
+      transform: scale(1.25);
+    }
+    .manifest-tint {
+      position: absolute;
+      inset: 0;
+      background: rgba(22, 19, 16, 0.82);
+    }
+    .manifest-in {
+      position: relative;
+      width: 100%;
+      max-width: var(--col);
+      margin-inline: auto;
+      padding-inline: var(--pad);
+    }
+    .manifest-kick {
+      font-family: var(--font-display), sans-serif;
+      font-weight: 500;
+      font-size: clamp(10.5px, 0.8vw, 11.5px);
+      line-height: 1;
+      letter-spacing: 0.24em;
+      /* eksport .45 — podbite (drobny druk na ciemnym tle, ratchet axe) */
+      color: rgba(255, 255, 255, 0.7);
+      margin-bottom: 40px;
+    }
+    .manifest-p {
+      font-family: var(--font-display), sans-serif;
+      font-weight: 200;
+      font-size: clamp(24px, 2.64vw, 38px);
+      line-height: 1.5;
+      color: #fff;
+      max-width: 1180px;
+      text-wrap: pretty;
+    }
+  }
+</style>

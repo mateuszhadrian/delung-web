@@ -1,0 +1,308 @@
+---
+// Hero /o-nas/ (eksport: .hero z o-nas.html). Mobile (<1024, jasny):
+// zdjęcie Adama (parallax) + nachodząca biała karta (logo, certyfikat,
+// kicker, h1-cytat, zielona linia, akapit MANIFESTU). Desktop (≥1024,
+// ciemny #15130f): grid tekst/zdjęcie — h1 serif italic, akapit INTRO,
+// bus firmowy z halo; certyfikat z glow na kolumnie zdjęcia. Akapity
+// występują w obu gałęziach per-breakpoint (D-P3 — zamiast relokacji
+// JS-em); te same pliki obrazów w obu gałęziach = jeden fetch.
+// data-navref = referencja postępu navbara `over` (4.1).
+import { MANIFEST_TEXT, INTRO_TEXT } from "./onas-content";
+import adamHero from "@/assets/o-nas/adam-hero.webp";
+import certImg from "@/assets/home/cert-firma-godna.webp";
+import fiatImg from "@/assets/o-nas/fiat-bus.webp";
+import logoDark from "@/assets/logo/delung-logo.webp";
+
+const CERT_ALT = "Certyfikat Firma Godna Zaufania Gold 2026";
+---
+
+<section class="hero" data-navref>
+  <div class="hero-photo">
+    <img
+      src={adamHero.src}
+      width={adamHero.width}
+      height={adamHero.height}
+      alt="Adam Delung przy pracy w warsztacie"
+      fetchpriority="high"
+      decoding="async"
+      data-par="0.1"
+    />
+    <span class="hero-photo-tint" aria-hidden="true"></span>
+    <div class="cert-d">
+      <img
+        src={certImg.src}
+        width={certImg.width}
+        height={certImg.height}
+        alt=""
+        loading="lazy"
+        decoding="async"
+      />
+    </div>
+  </div>
+
+  <div class="hero-card">
+    <img
+      class="hero-logo"
+      src={logoDark.src}
+      width={logoDark.width}
+      height={logoDark.height}
+      alt=""
+      loading="lazy"
+      decoding="async"
+    />
+    <span class="cert">
+      <img
+        src={certImg.src}
+        width={certImg.width}
+        height={certImg.height}
+        alt={CERT_ALT}
+        loading="lazy"
+        decoding="async"
+      />
+    </span>
+    <p class="hero-kick" data-rev>
+      O FIRMIE DELUNG<span class="hero-kick-d"> · OD 2014</span>
+    </p>
+    <h1 data-rev>„U nas nie usłyszysz, że czegoś nie da się zrobić.”</h1>
+    <div class="hero-rule" aria-hidden="true"></div>
+    {/* mobile: akapit manifestu; desktop: intro (1:1 z eksportem) */}
+    <p class="hero-p hero-p--m" data-rev>{MANIFEST_TEXT}</p>
+    <p class="hero-p hero-p--d">{INTRO_TEXT}</p>
+    <div class="hero-bus" aria-hidden="true">
+      <span class="hero-halo"></span>
+      <img
+        src={fiatImg.src}
+        width={fiatImg.width}
+        height={fiatImg.height}
+        alt=""
+        loading="lazy"
+        decoding="async"
+      />
+    </div>
+  </div>
+</section>
+
+<style>
+  /* ── mobile: zdjęcie + nachodząca karta ── */
+  .hero {
+    position: relative;
+    background: #fff;
+  }
+  .hero-photo {
+    position: relative;
+    height: clamp(300px, 102.6vw, 440px);
+    overflow: hidden;
+    background: #e5e1da;
+  }
+  .hero-photo > img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: 46% 16%;
+  }
+  .hero-photo-tint,
+  .cert-d {
+    display: none;
+  }
+  .hero-card {
+    position: relative;
+    margin: -72px auto 0;
+    width: calc(100% - 40px);
+    max-width: calc(var(--col) - 40px);
+    background: #fff;
+    border-radius: 8px;
+    padding: 26px 24px 28px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.14);
+  }
+  .hero-logo {
+    width: clamp(128px, 38.5vw, 165px);
+    height: auto;
+    margin-bottom: 18px;
+  }
+  .cert {
+    position: absolute;
+    top: clamp(16px, 5.1vw, 22px);
+    right: clamp(16px, 5.1vw, 22px);
+    display: block;
+    width: clamp(66px, 20.5vw, 88px);
+  }
+  .cert img {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+  .hero-kick {
+    font-family: var(--font-display), sans-serif;
+    font-weight: 500;
+    font-size: clamp(10px, 2.82vw, 12px);
+    line-height: 1;
+    letter-spacing: 0.2em;
+    /* eksport --gr (~4.0:1 na bieli) — podbite do --accent-ink (axe) */
+    color: var(--accent-ink);
+    margin-bottom: 12px;
+  }
+  .hero-kick-d {
+    display: none;
+  }
+  h1 {
+    font-family: var(--font-display), sans-serif;
+    font-weight: 200;
+    font-size: clamp(23px, 6.92vw, 30px);
+    line-height: 1.26;
+    color: var(--ink);
+    text-wrap: pretty;
+  }
+  .hero-rule {
+    width: 44px;
+    height: 2px;
+    background: var(--accent);
+    margin: 16px 0;
+  }
+  .hero-p {
+    font-family: var(--font-display), sans-serif;
+    font-weight: 200;
+    font-size: clamp(13.5px, 3.72vw, 15.5px);
+    line-height: 1.52;
+    color: var(--muted);
+    text-wrap: pretty;
+  }
+  .hero-p--d,
+  .hero-bus {
+    display: none;
+  }
+
+  /* ════ DESKTOP ≥1024 (para: ONAS_DESKTOP_MIN_PX) ════ */
+  @media (min-width: 1024px) {
+    .hero {
+      min-height: max(620px, 100svh);
+      display: grid;
+      grid-template-columns: 1fr max(380px, 43.1vw);
+      background: #15130f;
+    }
+    .hero-photo {
+      order: 2;
+      height: auto;
+      background: #1a1815;
+    }
+    .hero-photo > img {
+      top: -11%;
+      height: 122%;
+      object-position: 46% 20%;
+    }
+    .hero-photo-tint {
+      display: block;
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        90deg,
+        rgba(16, 15, 13, 0.7),
+        rgba(16, 15, 13, 0) 40%
+      );
+    }
+    .hero-card {
+      order: 1;
+      margin: 0;
+      width: auto;
+      max-width: none;
+      background: none;
+      border-radius: 0;
+      box-shadow: none;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding-block: clamp(60px, 6.25vw, 90px) 0;
+      padding-right: clamp(34px, 4.17vw, 60px);
+      padding-left: var(--pad);
+    }
+    .hero-logo,
+    .cert {
+      display: none;
+    }
+    .cert-d {
+      display: block;
+      position: absolute;
+      right: clamp(20px, 2.29vw, 33px);
+      bottom: 130px;
+      z-index: 2;
+      width: clamp(96px, 8.6vw, 124px);
+      transform: scale(1.25);
+      transform-origin: 100% 50%;
+      filter: drop-shadow(0 0 2.8px rgba(255, 255, 255, 0.95))
+        drop-shadow(0 0 7.6px rgba(255, 255, 255, 0.7))
+        drop-shadow(0 6px 18px rgba(0, 0, 0, 0.28));
+    }
+    .cert-d img {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+    .hero-kick {
+      font-size: clamp(11px, 0.83vw, 12px);
+      letter-spacing: 0.28em;
+      /* eksport .55 — podbite (drobny druk na ciemnym tle, ratchet axe) */
+      color: rgba(255, 255, 255, 0.7);
+      margin-bottom: 20px;
+    }
+    .hero-kick-d {
+      display: inline;
+    }
+    h1 {
+      font-family: var(--font-serif), serif;
+      font-style: italic;
+      font-weight: 500;
+      font-size: clamp(50px, 5.42vw, 78px);
+      line-height: 1.12;
+      color: #fff;
+    }
+    .hero-rule {
+      width: 56px;
+      margin: 26px 0 24px;
+    }
+    .hero-p--m {
+      display: none;
+    }
+    .hero-p--d {
+      display: block;
+      font-size: clamp(15px, 1.18vw, 17px);
+      line-height: 1.7;
+      color: rgba(255, 255, 255, 0.7);
+      max-width: 56ch;
+    }
+    .hero-bus {
+      display: block;
+      position: relative;
+      height: max(210px, 21.9vw);
+      margin-top: 26px;
+      overflow: visible;
+    }
+    .hero-bus img {
+      position: absolute;
+      left: 0;
+      top: 50%;
+      width: max(240px, 25vw);
+      height: auto;
+      transform-origin: center center;
+      transform: translate(max(193px, 20.14vw), -50%) scale(1.2);
+    }
+    .hero-halo {
+      display: block;
+      position: absolute;
+      left: 0;
+      top: 50%;
+      border-radius: 999px;
+      pointer-events: none;
+      width: max(240px, 25vw);
+      height: max(260px, 27.08vw);
+      background: radial-gradient(
+        closest-side,
+        rgba(255, 255, 255, 0.86) 0%,
+        rgba(255, 255, 255, 0.387) 45%,
+        rgba(255, 255, 255, 0) 78%
+      );
+      filter: blur(max(74px, 7.64vw));
+      transform: translate(max(131px, 13.61vw), calc(-50% - max(27px, 2.78vw)));
+    }
+  }
+</style>
