@@ -15,6 +15,24 @@
 // „re-baseline"; pełna strona hadrianm wylądowała na LCP ~3100 ms
 // i script ~87 KB — to skala spodziewanego wzrostu). Po zbudowaniu
 // wszystkich sekcji zacieśniamy do nowego baseline'u.
+//
+// ZACIEŚNIENIE 2026-08-01 (domknięcie Etapu 4, decyzja Mateusza) —
+// baseline PEŁNEJ strony głównej. Pomiary na `/` z main, mediana z 3
+// przebiegów, 5 punktów (po merge'u PR #8/#10/#11/#12/#13):
+//   perf   0.87–0.90     LCP  3617–4064 ms   TBT 0–2 ms
+//   CLS    0.0117        script 66 723–67 978 B   total 889 453–892 752 B
+// Progi poniżej = zapas nad NAJGORSZĄ próbką (nie nad medianą). Podłogi
+// TBT/CLS zostają luźne celowo: zmierzone wartości są przy zerze, a
+// zacieśnianie ich kupuje zero sygnału i dokłada ryzyko flake'a
+// (patrz szum TBT desktop udokumentowany w lighthouserc.desktop.cjs).
+//
+// ⚠️ LOKALNY `lhci autorun` z tym configiem WYPADA GORZEJ NIŻ CI i to jest
+// normalne: emulacja mobile dokłada stały mnożnik CPU do hosta, więc wynik
+// zależy od obciążenia Maca (pomiar 2026-08-01 zaraz po test:e2e: perf
+// 0.79–0.80, LCP 5255 ms — przy CI 0.87–0.90 / 3617–4064 ms). Czerwony
+// przebieg lokalny NIE jest powodem do ruszania progów; bramkuje CI
+// i tylko pomiar z CI jest podstawą ratchetu. Lokalnie sensownie
+// weryfikują się budżety zasobów (script/total — niezależne od maszyny).
 module.exports = {
   ci: {
     collect: {
@@ -28,27 +46,28 @@ module.exports = {
     assert: {
       aggregationMethod: "median-run",
       assertions: {
-        // 0.9 → 0.75 (decyzja Mateusza, 4.2): strona główna dostała
-        // fotograficzne hero = nowy LCP (niżej); mediana CI/lokalnie
-        // ~0.80–0.82, a zimny pierwszy run potrafi spaść do ~0.5 —
-        // median-run to wyrównuje, próg z małym zapasem.
-        "categories:performance": ["error", { minScore: 0.75 }],
-        // 3500 → 6000 (decyzja Mateusza, 4.2): LCP = pełnoekranowe zdjęcie
-        // hero (jakość kadru > metryka — kalibrowany wycinek 500 KB dla
-        // DPR≥2; wariant 174 KB dla DPR≤1.8 + preload w <head>). Pomiar po
-        // optymalizacjach: ~5.1 s (lokalnie, symulacja jak CI; przed:
-        // 6.4 s). Ratchet: zacieśnić do baseline'u CI przy domknięciu 4.5.
-        "largest-contentful-paint": ["error", { maxNumericValue: 6000 }],
+        // 0.75 → 0.85 (4.5): próg 0.75 był awaryjnym poluzowaniem z 4.2,
+        // ustawionym PRZED pomiarem gotowej strony. Realne CI: 0.87–0.90 —
+        // 0.85 zostawia 2 pkt zapasu i wraca do roli ratchetu.
+        "categories:performance": ["error", { minScore: 0.85 }],
+        // 6000 → 4500 (4.5): LCP = pełnoekranowe zdjęcie hero (jakość kadru
+        // > metryka — kalibrowany wycinek 500 KB dla DPR≥2; wariant 174 KB
+        // dla DPR≤1.8 + preload w <head>). Zmierzone w CI: 3617–4064 ms,
+        // czyli sporo poniżej awaryjnego 6000 z 4.2. 4500 = +11 % nad
+        // najgorszą próbką.
+        "largest-contentful-paint": ["error", { maxNumericValue: 4500 }],
         // Baseline 0 ms — próg-podłoga 150 ms (pojedyncze ms to szum
         // runnera; realna regresja JS i tak go przebije).
         "total-blocking-time": ["error", { maxNumericValue: 150 }],
         // Baseline 0 — 0.02 zostawia miejsce na fonty/obrazy sekcji,
         // wciąż daleko od progu „needs improvement" (0.1).
         "cumulative-layout-shift": ["error", { maxNumericValue: 0.02 }],
-        // Szkielet 59 633 B; pełny bundle hadrianm ~87 KB → 100 KB.
-        "resource-summary:script:size": ["error", { maxNumericValue: 100000 }],
-        // Szkielet 249 KB; sekcje dodadzą obrazy WebP → 2 MB (hadrianm 1.8 MB).
-        "resource-summary:total:size": ["error", { maxNumericValue: 2000000 }],
+        // 100 000 → 80 000 (4.5): pełny bundle wyszedł 67 978 B — poniżej
+        // szacunku hadrianm (~87 KB). 80 KB = +18 % zapasu.
+        "resource-summary:script:size": ["error", { maxNumericValue: 80000 }],
+        // 2 000 000 → 1 200 000 (4.5): pełna strona mobile waży 892 752 B
+        // (obrazy 600 KB, fonty 154 KB). 1,2 MB = +34 % zapasu.
+        "resource-summary:total:size": ["error", { maxNumericValue: 1200000 }],
         // 5 → 6 (4.2): doszły subsety italic Cormoranta (cytat o-nas).
         "resource-summary:font:count": ["warn", { maxNumericValue: 6 }],
       },
