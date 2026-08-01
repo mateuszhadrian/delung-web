@@ -10,7 +10,7 @@ import { fileURLToPath } from "node:url";
 import { expect, test, type Page } from "@playwright/test";
 import { ui } from "../../src/i18n/ui";
 import { CATEGORIES } from "../../src/lib/categories";
-import { OFERTA_PATH } from "../../src/lib/routes";
+import { OFERTA_PATH, POLICY_PATH } from "../../src/lib/routes";
 import {
   collectPageIssues,
   useChromium1920Only,
@@ -113,7 +113,7 @@ test.describe(`${PATH}: meta i treść (jeden profil)`, () => {
     await expect(work).toHaveAttribute("aria-current", "page");
     // Stopka: chrome globalny 4.1 — link polityki + Instagram.
     await expect(
-      page.locator(`.ft-nav a[href="${ui.pl["contact.policyHref"]}"]`),
+      page.locator(`.ft-nav a[href="${POLICY_PATH}"]`),
     ).toBeAttached();
     await expect(page.locator(".ft-soc a").first()).toBeAttached();
   });

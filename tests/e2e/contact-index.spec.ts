@@ -1,11 +1,11 @@
-// Podstrona „Kontakt" (/kontakt/): sekcja Contact z formularzem, scroll
-// NATYWNY (smoothScroll={false}, jak /realizacje/), chrome globalny 4.1
-// (sticky pasek + stopka ft). Mechanikę formularza (walidacja, pułapki,
-// reveal, mock endpointu) testuje contact.spec.ts. PL-only (delung);
-// pełna adaptacja speców do widoków delung — Etap 3/4 instrukcji.
+// Podstrona „Kontakt" (/kontakt/) po porcie na design delung (Etap 5):
+// hero + kafle kontaktowe + formularz + social, scroll NATYWNY
+// (smoothScroll={false} — D-K9), chrome globalny 4.1 (sticky pasek
+// w wariancie `over` + stopka ft). Mechanikę formularza (walidacja,
+// pułapki, sloty, mock endpointu) testuje contact.spec.ts.
 import { expect, test } from "@playwright/test";
 import { ui } from "../../src/i18n/ui";
-import { OFERTA_PATH } from "../../src/lib/routes";
+import { OFERTA_PATH, POLICY_PATH } from "../../src/lib/routes";
 import {
   collectPageIssues,
   useChromium1920Only,
@@ -38,17 +38,22 @@ for (const p of PAGES) {
       );
     });
 
-    test(`pełna sekcja: formularz, reveal danych, footer w chrome strony`, async ({
+    test(`komplet widoku: hero, 4 kafle, formularz, social, stopka`, async ({
       page,
     }) => {
       await gotoReady(page, p.path);
+      // Jedyny h1 strony (kontrakt smoke) siedzi w hero.
+      await expect(page.locator("main h1")).toHaveCount(1);
+      await expect(page.locator(".kt-cards .kt-card")).toHaveCount(4);
       const section = page.locator("#contact");
       await expect(section.locator(".kt-form")).toBeAttached();
-      await expect(section.locator(".kt-rev")).toHaveCount(2);
-      await expect(section.locator(".kt-chip")).toHaveCount(4);
-      // Footer wyszedł z sekcji do chrome'u strony (D4 analizy).
+      // Pola wg designu: imię, telefon, e-mail, wiadomość (bez chipsów).
+      await expect(section.locator(".kt-field")).toHaveCount(4);
+      // Pigułka social renderowana per breakpoint — widoczny JEDEN egzemplarz.
+      await expect(page.locator(".kt-soc a:visible")).toHaveCount(1);
+      // Stopka = chrome strony (Footer.astro), nie sekcja.
       await expect(section.locator(".ft")).toHaveCount(0);
-      await expect(page.locator(".ktp-foot .ft")).toBeAttached();
+      await expect(page.locator("footer.ft")).toBeAttached();
     });
 
     test(`desktop: scroll natywny (bez Lenisa — jak /realizacje/)`, async ({
@@ -78,11 +83,9 @@ for (const p of PAGES) {
       await expect(self).toHaveAttribute("aria-current", "page");
       // Stopka: współdzielony Footer (chrome globalny 4.1).
       await expect(
-        page.locator(
-          `.ktp-foot .ft-nav a[href="${ui[p.lang]["contact.policyHref"]}"]`,
-        ),
+        page.locator(`footer.ft .ft-nav a[href="${POLICY_PATH}"]`),
       ).toBeAttached();
-      await expect(page.locator(".ktp-foot .ft-soc a").first()).toBeAttached();
+      await expect(page.locator("footer.ft .ft-soc a").first()).toBeAttached();
     });
 
     test(`sticky pasek z logo — widoczny u góry także po scrollu`, async ({

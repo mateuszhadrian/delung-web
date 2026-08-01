@@ -1,15 +1,13 @@
-// Sekcja „Kontakt" — od migracji (docs/analiza-podstrona-kontakt.md) żyje
-// na podstronie /kontakt/ (EN: /en/contact/) i tam biega cała suita:
-// reveal danych (antyscraping), walidacja, chipsy, pułapki antyspamowe
-// (honeypot / submit < 4 s = udawany sukces BEZ requestu), wysyłka
-// z mockiem endpointu (200 → .sent, 500 → .kt-srv), fallbacki reduce/no-JS.
-// Chrome podstrony (meta, navbar, BackButton, banner na głównej) testuje
-// contact-index.spec.ts. Checklista: docs/design/kontakt-referencja/
-// README.md; kontrakt endpointu: docs/contact-me-form-analysis-implementation.md §4.
+// Formularz /kontakt/ (Etap 5 — port na design delung): walidacja,
+// opcjonalny telefon, pułapki antyspamowe (honeypot / submit < 4 s =
+// udawany sukces BEZ requestu), wysyłka z mockiem endpointu (200 → .sent,
+// 500 → .kt-srv), sloty antyscrapingowe kafli, fallbacki reduce/no-JS.
+// Chrome podstrony (meta, navbar, stopka, banner na głównej) testuje
+// contact-index.spec.ts. Decyzje: docs/analiza-kontakt.md.
 //
 // Turnstile jest STUBOWANY (route na challenges.cloudflare.com → atrapa
 // window.turnstile) — testy deterministyczne i offline; prawdziwy widget
-// weryfikuje Etap 4 na preview PR-a. Endpoint /api/kontakt jest MOCKOWANY
+// weryfikujemy na preview PR-a. Endpoint /api/kontakt jest MOCKOWANY
 // przez page.route — astro preview nie serwuje Pages Functions; żywotność
 // produkcyjną sprawdza sonda @prod-smoke w smoke.spec.ts.
 import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
@@ -29,8 +27,7 @@ const STUB_TOKEN = "e2e-turnstile-stub-token";
    flake'ował na CI (wolny runner webkit: networkidle + scroll + fill
    przekraczały 4 s i „za szybki" submit przestawał być za szybki) —
    shim z przestawnym offsetem czyni obie strony progu deterministycznymi:
-   skew −10⁷ ms = pułapka NA PEWNO wpada, +10⁷ ms = próg NA PEWNO minięty.
-   Offset jest stały między zmianami, więc nie rozjeżdża timerów UI. ── */
+   skew −10⁷ ms = pułapka NA PEWNO wpada, +10⁷ ms = próg NA PEWNO minięty. ── */
 const SKEW_TRAP_MS = -10_000_000;
 const SKEW_PASS_MS = 10_000_000;
 
@@ -86,16 +83,21 @@ async function mockEndpoint(
 async function gotoContact(page: Page, path = CONTACT_PATH): Promise<void> {
   await gotoReady(page, path);
   await page.locator("#contact .kt-frame").scrollIntoViewIfNeeded();
-  // Wejścia (klasy .on z progów ScrollTriggera) muszą usiąść przed interakcją.
-  await settle(page, 800);
+  await settle(page, 400);
 }
 
 async function fillForm(
   page: Page,
-  over: { name?: string; email?: string; message?: string } = {},
+  over: {
+    name?: string;
+    email?: string;
+    phone?: string;
+    message?: string;
+  } = {},
 ): Promise<void> {
   await page.fill("#kt-name", over.name ?? "Anna Testowa");
   await page.fill("#kt-email", over.email ?? "anna.testowa@example.com");
+  if (over.phone !== undefined) await page.fill("#kt-phone", over.phone);
   await page.fill(
     "#kt-msg",
     over.message ?? "Wiadomość testowa z Playwrighta — co najmniej 10 znaków.",
@@ -112,7 +114,8 @@ test("walidacja: pusty submit → 3 błędy + fokus na Imię; wpisywanie czyści
   const mock = await mockEndpoint(page, () => ({ status: 200 }));
   await gotoContact(page);
 
-  // Pusty submit: 3 pola z błędem, aria-invalid, fokus na pierwszym błędnym.
+  // Pusty submit: 3 pola z błędem (telefon jest opcjonalny — NIE liczy się),
+  // aria-invalid, fokus na pierwszym błędnym.
   await submitBtn(page).click();
   await expect(page.locator("#contact .kt-form .err")).toHaveCount(3);
   await expect(page.locator("#kt-name")).toBeFocused();
@@ -121,6 +124,10 @@ test("walidacja: pusty submit → 3 błędy + fokus na Imię; wpisywanie czyści
     "true",
   );
   await expect(page.locator("#kt-msg")).toHaveAttribute("aria-invalid", "true");
+  await expect(page.locator("#kt-phone")).not.toHaveAttribute(
+    "aria-invalid",
+    "true",
+  );
 
   // Wpisanie w pole czyści JEGO błąd (pozostałe zostają).
   await page.fill("#kt-name", "Anna");
@@ -144,23 +151,30 @@ test("walidacja: pusty submit → 3 błędy + fokus na Imię; wpisywanie czyści
   expect(mock.count()).toBe(0);
 });
 
-test("chipsy tematu: wybór przenosi .sel, jedno zaznaczenie naraz", async ({
+test("telefon jest opcjonalny: pusty przechodzi, wypełniony ląduje w payloadzie", async ({
   page,
 }) => {
+  await installClockSkew(page);
+  await stubTurnstile(page);
+  const mock = await mockEndpoint(page, () => ({ status: 200 }));
   await gotoContact(page);
-  const chips = page.locator("#contact .kt-chip");
-  await expect(chips).toHaveCount(4);
-  await expect(page.locator("#contact .kt-chip.sel")).toHaveCount(0);
 
-  await chips.nth(1).click();
-  await expect(chips.nth(1)).toHaveClass(/sel/);
-  await expect(page.locator("#contact .kt-chip.sel")).toHaveCount(1);
-  await expect(chips.nth(1).locator("input")).toBeChecked();
+  // Bez telefonu — wysyłka przechodzi.
+  await fillForm(page);
+  await setClockSkew(page, SKEW_PASS_MS);
+  await submitBtn(page).click();
+  await expect(frame(page)).toHaveClass(/sent/);
+  expect(mock.count()).toBe(1);
+  expect(mock.bodies[0]).toMatch(/name="phone"\r\n\r\n\r\n/);
 
-  await chips.nth(3).click();
-  await expect(chips.nth(3)).toHaveClass(/sel/);
-  await expect(chips.nth(1)).not.toHaveClass(/sel/);
-  await expect(page.locator("#contact .kt-chip.sel")).toHaveCount(1);
+  // Z telefonem — wartość wchodzi do multipartu.
+  await page.locator("#contact .kt-again").click();
+  await fillForm(page, { phone: "600 123 456" });
+  await setClockSkew(page, SKEW_PASS_MS * 2);
+  await submitBtn(page).click();
+  await expect(frame(page)).toHaveClass(/sent/);
+  expect(mock.count()).toBe(2);
+  expect(mock.bodies[1]).toContain("600 123 456");
 });
 
 test("pułapka: submit < 4 s od załadowania → potwierdzenie BEZ requestu", async ({
@@ -178,7 +192,7 @@ test("pułapka: submit < 4 s od załadowania → potwierdzenie BEZ requestu", as
   await submitBtn(page).click();
 
   await expect(frame(page)).toHaveClass(/sent/);
-  await expect(page.locator("#contact .kt-done h3")).toBeVisible();
+  await expect(page.locator("#contact .kt-done-h")).toBeVisible();
   expect(mock.count()).toBe(0);
 });
 
@@ -216,7 +230,7 @@ test("pułapka: wypełniony honeypot → potwierdzenie BEZ requestu (mimo odczek
   expect(mock.count()).toBe(0);
 });
 
-test("mock 200: wysyłka → .sent + fokus na h3; payload ma lang, elapsed i token Turnstile", async ({
+test("mock 200: wysyłka → .sent + fokus na nagłówku; payload ma lang, elapsed i token", async ({
   page,
 }) => {
   await installClockSkew(page);
@@ -224,20 +238,19 @@ test("mock 200: wysyłka → .sent + fokus na h3; payload ma lang, elapsed i tok
   const mock = await mockEndpoint(page, () => ({ status: 200 }));
   await gotoContact(page);
 
-  await fillForm(page);
-  await page.locator("#contact .kt-chip").first().click();
+  await fillForm(page, { phone: "600 000 000" });
   await setClockSkew(page, SKEW_PASS_MS);
   await submitBtn(page).click();
 
   await expect(frame(page)).toHaveClass(/sent/);
-  await expect(page.locator("#contact .kt-done h3")).toBeFocused();
+  await expect(page.locator("#contact .kt-done-h")).toBeFocused();
   expect(mock.count()).toBe(1);
 
-  // Kontrakt endpointu (§4.2): pola z formularza + dokładane przez skrypt.
+  // Kontrakt endpointu: pola z formularza + dokładane przez skrypt.
   const body = mock.bodies[0];
   expect(body).toContain('name="name"');
   expect(body).toContain("anna.testowa@example.com");
-  expect(body).toContain('name="temat"');
+  expect(body).toContain('name="phone"');
   expect(body).toContain('name="firma"');
   expect(body).toContain(STUB_TOKEN);
   expect(body).toMatch(/name="lang"\r\n\r\npl/);
@@ -283,28 +296,25 @@ test("mock 500: w trakcie disabled + „Wysyłam…”; błąd → .kt-srv, form
   expect(mock.count()).toBe(2);
 });
 
-test("[ Wyślij kolejną ]: reset pól, chipsów i zegara antyspamu", async ({
-  page,
-}) => {
+test("„Wyślij kolejną”: reset pól i zegara antyspamu", async ({ page }) => {
   await installClockSkew(page);
   await stubTurnstile(page);
   const mock = await mockEndpoint(page, () => ({ status: 200 }));
   await gotoContact(page);
 
-  // Pierwsza wysyłka REALNA (zegar za progiem) — po niej [ Wyślij kolejną ].
-  await page.locator("#contact .kt-chip").nth(2).click();
-  await fillForm(page);
+  // Pierwsza wysyłka REALNA (zegar za progiem) — po niej „Wyślij kolejną".
+  await fillForm(page, { phone: "600 000 000" });
   await setClockSkew(page, SKEW_PASS_MS);
   await submitBtn(page).click();
   await expect(frame(page)).toHaveClass(/sent/);
   expect(mock.count()).toBe(1);
 
-  await page.locator("#contact .kt-done .again").click();
+  await page.locator("#contact .kt-again").click();
   await expect(frame(page)).not.toHaveClass(/sent/);
   await expect(page.locator("#kt-name")).toHaveValue("");
   await expect(page.locator("#kt-email")).toHaveValue("");
+  await expect(page.locator("#kt-phone")).toHaveValue("");
   await expect(page.locator("#kt-msg")).toHaveValue("");
-  await expect(page.locator("#contact .kt-chip.sel")).toHaveCount(0);
   await expect(page.locator("#kt-name")).toBeFocused();
 
   // Zegar zresetowany: skew bez zmian, więc elapsed drugiego submitu to
@@ -317,103 +327,17 @@ test("[ Wyślij kolejną ]: reset pól, chipsów i zegara antyspamu", async ({
   expect(mock.count()).toBe(1);
 });
 
-const toastOf = (page: Page, type: string) =>
-  page.locator(`.toast-region .toast[data-type="${type}"]`);
-
-test("toast warning: pusty submit → toast walidacji; ponowny klik NIE stackuje (dedup)", async ({
-  page,
-}) => {
-  await stubTurnstile(page);
-  const mock = await mockEndpoint(page, () => ({ status: 200 }));
-  await gotoContact(page);
-
-  // Pusty submit: obok błędów pod polami wyskakuje jeden toast warning.
-  await submitBtn(page).click();
-  const warn = toastOf(page, "warning");
-  await expect(warn).toHaveCount(1);
-  await expect(warn.locator(".toast__title")).toHaveText("Uzupełnij formularz");
-
-  // Ponowny pusty submit: klucz dedup → nadal JEDEN toast (bez stackowania).
-  await submitBtn(page).click();
-  await expect(toastOf(page, "warning")).toHaveCount(1);
-
-  // Walidacja kliencka nie wypuściła requestu.
-  expect(mock.count()).toBe(0);
-});
-
-test("toast success: wysyłka 200 → toast success obok panelu .sent", async ({
-  page,
-}) => {
-  await installClockSkew(page);
-  await stubTurnstile(page);
-  const mock = await mockEndpoint(page, () => ({ status: 200 }));
-  await gotoContact(page);
-
-  await fillForm(page);
-  await setClockSkew(page, SKEW_PASS_MS);
-  await submitBtn(page).click();
-
-  await expect(frame(page)).toHaveClass(/sent/);
-  const ok = toastOf(page, "success");
-  await expect(ok).toBeVisible();
-  await expect(ok).toHaveAttribute("role", "status");
-  await expect(ok.locator(".toast__title")).toHaveText("Wiadomość wysłana");
-  expect(mock.count()).toBe(1);
-});
-
-test("toast error: mock 500 → toast error (role=alert) obok .kt-srv", async ({
-  page,
-}) => {
-  await installClockSkew(page);
-  await stubTurnstile(page);
-  const mock = await mockEndpoint(page, () => ({ status: 500 }));
-  await gotoContact(page);
-
-  await fillForm(page);
-  await setClockSkew(page, SKEW_PASS_MS);
-  await submitBtn(page).click();
-
-  // Trwały komunikat serwerowy ORAZ transientny toast error.
-  await expect(page.locator("#contact .kt-srv")).toBeVisible();
-  const err = toastOf(page, "error");
-  await expect(err).toBeVisible();
-  await expect(err).toHaveAttribute("role", "alert");
-  await expect(frame(page)).not.toHaveClass(/sent/);
-  expect(mock.count()).toBe(1);
-});
-
-test("reveal e-mail: [ POKAŻ ] → wartość + mailto, [ KOPIUJ ] → [ SKOPIOWANO ] i powrót", async ({
+test("kafle tel/mail: href i wartość składane w JS (sloty D-CH5)", async ({
   page,
 }) => {
   await gotoContact(page);
-  const rev = page.locator('#contact .kt-rev[data-kind="email"]');
-  const act = rev.locator(".kt-act");
+  const tel = page.locator(".kt-cards a[data-tel]");
+  const mail = page.locator(".kt-cards a[data-mail]");
 
-  // Przed odsłonięciem wartość jest zamaskowana.
-  await expect(rev.locator(".kt-val")).toContainText("•");
-
-  await act.click();
-  const link = rev.locator(".kt-val a");
-  await expect(link).toHaveAttribute("href", "mailto:kontakt@delung.pl");
-  await expect(link).toHaveText("kontakt@delung.pl");
-  const copyLbl = (await act.getAttribute("data-copy")) ?? "[ KOPIUJ ]";
-  await expect(act).toHaveText(copyLbl);
-
-  // Drugi klik: feedback kopiowania (także gdy Clipboard API odmówi) i
-  // powrót etykiety po ~1.9 s.
-  await act.click();
-  await expect(act).toHaveText((await act.getAttribute("data-copied")) ?? "");
-  await expect(act).toHaveClass(/ok/);
-  await expect(act).toHaveText(copyLbl, { timeout: 3500 });
-});
-
-test("reveal telefon: tel: bez spacji, tekst ze spacjami", async ({ page }) => {
-  await gotoContact(page);
-  const rev = page.locator('#contact .kt-rev[data-kind="phone"]');
-  await rev.locator(".kt-act").click();
-  const link = rev.locator(".kt-val a");
-  await expect(link).toHaveAttribute("href", "tel:+48690291143");
-  await expect(link).toHaveText("+48 690 291 143");
+  await expect(tel).toHaveAttribute("href", "tel:+48690291143");
+  await expect(tel.locator("[data-slot]")).toHaveText("+48 690 291 143");
+  await expect(mail).toHaveAttribute("href", "mailto:kontakt@delung.pl");
+  await expect(mail.locator("[data-slot]")).toHaveText("kontakt@delung.pl");
 });
 
 test("antyscraping: pełny e-mail i telefon nie występują w źródle ani bundlach", async ({
@@ -426,10 +350,10 @@ test("antyscraping: pełny e-mail i telefon nie występują w źródle ani bundl
   const FORBIDDEN = ["kontakt@delung.pl", "690291143", "690 291 143"];
 
   // SUROWY HTML z sieci (bez wykonania JS) — to widzi scraper. Celowo NIE
-  // page.content(): od chrome'u 4.1 stopka/pasek składają tel i mail w JS
-  // po załadowaniu (design pokazuje je na stałe — D-CH5 w
-  // docs/analiza-chrome-globalny.md), więc DOM po JS ZAWIERA pełne ciągi.
-  // Kontrakt pilnuje statycznego źródła: HTML z sieci + cały dist niżej.
+  // page.content(): od chrome'u 4.1 stopka/pasek i (od Etapu 5) kafle
+  // kontaktowe składają tel i mail w JS po załadowaniu, więc DOM po JS
+  // ZAWIERA pełne ciągi. Kontrakt pilnuje statycznego źródła: HTML
+  // z sieci + cały dist niżej.
   const raw = await (await page.request.get(CONTACT_PATH)).text();
   for (const s of FORBIDDEN) expect(raw).not.toContain(s);
 
@@ -454,26 +378,33 @@ test("antyscraping: pełny e-mail i telefon nie występują w źródle ani bundl
   }
 });
 
-test("mobile: meta ukryta, desktop: widoczna", async ({ page }) => {
+test("warianty per breakpoint: dopiski kafli i nagłówek formularza", async ({
+  page,
+}) => {
   await gotoContact(page);
   const width = page.viewportSize()?.width ?? 0;
-  const meta = page.locator("#contact .kt-meta");
+  // Dopisek „· 24/7" przy etykiecie telefonu i h2 karty formularza istnieją
+  // TYLKO na desktopie; wariant mobilny dostępności — tylko poniżej progu.
+  const desktopOnly = page.locator("#contact .kt-head h2");
+  const mobileOnly = page.locator(".kt-cards .kt-card-val.mOnly");
   if (width < CONTACT_DESKTOP_MIN_PX) {
-    await expect(meta).toBeHidden();
+    await expect(desktopOnly).toBeHidden();
+    await expect(mobileOnly).toBeVisible();
   } else {
-    await expect(meta).toBeVisible();
+    await expect(desktopOnly).toBeVisible();
+    await expect(mobileOnly).toBeHidden();
   }
 });
 
 /* Świadomy, PUNKTOWY wyjątek od zakazu emulacji reduced-motion
-   (.claude/rules/testing.md) — ten sam wzorzec co w faq.spec.ts: reguła
-   chroni przed testami „przechodzącymi" na martwej stronie, a ten describe
-   assertuje ODWROTNOŚĆ — że formularz i reveal przy reduce nadal DZIAŁAJĄ
-   (contact-ui.ts ładowany poza bramką motion; wymaganie z referencji). */
-test.describe("prefers-reduced-motion: reduce — treść widoczna, funkcje działają", () => {
+   (.claude/rules/testing.md): reguła chroni przed testami „przechodzącymi"
+   na martwej stronie, a ten test assertuje ODWROTNOŚĆ — że przy reduce
+   treść jest widoczna bez scrolla, a formularz nadal DZIAŁA (contact-ui.ts
+   ładowany poza bramką motion). */
+test.describe("prefers-reduced-motion: reduce — treść widoczna, formularz działa", () => {
   test.use({ contextOptions: { reducedMotion: "reduce" } });
 
-  test("sekcja widoczna bez scrolla, reveal i pułapka formularza działają", async ({
+  test("sekcje widoczne bez scrolla, pułapka formularza działa", async ({
     page,
   }) => {
     await installClockSkew(page);
@@ -481,17 +412,10 @@ test.describe("prefers-reduced-motion: reduce — treść widoczna, funkcje dzia
     const mock = await mockEndpoint(page, () => ({ status: 200 }));
     await page.goto(CONTACT_PATH, { waitUntil: "networkidle" });
 
-    // Stany startowe wejść bramkuje media query — przy reduce nic nie jest
-    // schowane (opacity 1 bez czekania na ScrollTrigger).
-    await expect(page.locator("#contact .kt-lead h2")).toBeVisible();
+    // Stany startowe revealów uzbraja html.js-motion — przy reduce klasa
+    // nie wchodzi, więc treść jest widoczna od razu (opacity 1).
+    await expect(page.locator("main h1")).toBeVisible();
     await expect(frame(page)).toHaveCSS("opacity", "1");
-
-    const rev = page.locator('#contact .kt-rev[data-kind="email"]');
-    await rev.locator(".kt-act").click();
-    await expect(rev.locator(".kt-val a")).toHaveAttribute(
-      "href",
-      "mailto:kontakt@delung.pl",
-    );
 
     await fillForm(page);
     await setClockSkew(page, SKEW_TRAP_MS); // pułapka „za szybko" na pewno
@@ -499,46 +423,24 @@ test.describe("prefers-reduced-motion: reduce — treść widoczna, funkcje dzia
     await expect(frame(page)).toHaveClass(/sent/);
     expect(mock.count()).toBe(0);
   });
-
-  test("toast przy reduce: pojawia się i SAM znika (timer JS, nie animationend)", async ({
-    page,
-  }) => {
-    await page.goto(CONTACT_PATH, { waitUntil: "networkidle" });
-
-    // Przy reduce pasek postępu ma animation:none — auto-znikaniem steruje
-    // timer JS (referencja tu nie znikała wcale; świadoma naprawa).
-    await page.evaluate(() =>
-      (
-        window as unknown as {
-          __toast?: { info(m: string, o?: { duration?: number }): void };
-        }
-      ).__toast?.info("Test", { duration: 400 }),
-    );
-    const t = page.locator(".toast-region .toast");
-    await expect(t).toBeVisible();
-    // Brak slajdu przy reduce: transform zneutralizowany (matrix tożsamościowy).
-    await expect(t).toHaveCSS("transform", "none");
-    await expect(t).toHaveCount(0, { timeout: 4000 });
-  });
 });
 
 test.describe("fallback bez JS", () => {
   test.use({ javaScriptEnabled: false });
 
-  test("pełna treść widoczna, dane zamaskowane (świadomy trade-off)", async ({
+  test("pełna treść widoczna, dane kontaktowe zamaskowane (świadomy trade-off)", async ({
     page,
   }) => {
     await page.goto(CONTACT_PATH, { waitUntil: "networkidle" });
-    // Bez klasy .js na sekcji stany startowe wejść nie są uzbrojone.
-    await expect(page.locator("#contact .kt-lead h2")).toBeVisible();
+    await expect(page.locator("main h1")).toBeVisible();
     await expect(page.locator("#contact .kt-form")).toBeVisible();
     await expect(page.locator("#contact .kt-send")).toBeVisible();
-    // Footer żyje w chrome strony (.ktp-foot), nie w sekcji.
-    await expect(page.locator(".ktp-foot .ft")).toBeVisible();
-    // Reveal wymaga JS — wartości zostają zamaskowane, bez pełnych ciągów.
-    for (const kind of ["email", "phone"]) {
+    // Stopka = chrome strony (Footer.astro), nie sekcja.
+    await expect(page.locator("footer.ft")).toBeVisible();
+    // Sloty wymagają JS — wartości zostają zamaskowane, bez pełnych ciągów.
+    for (const attr of ["data-tel", "data-mail"]) {
       await expect(
-        page.locator(`#contact .kt-rev[data-kind="${kind}"] .kt-val`),
+        page.locator(`.kt-cards a[${attr}] [data-slot]`),
       ).toContainText("•");
     }
   });

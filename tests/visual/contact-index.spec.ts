@@ -1,52 +1,61 @@
-// Podstrona /kontakt — zrzuty statycznych regionów na WSZYSTKICH
-// 6 profilach (strona bez pinowanych scen → element-screenshoty jak
-// sections.spec.ts, żaden sweep nie jest potrzebny; wzorzec
-// work-index.spec.ts). Determinizm: freeze.css (zatrzymuje drift chmur
-// ambientu na desktopie i wejścia sekcji; mobile ma statyczną teksturę).
+// Podstrona /kontakt/ po porcie na design delung (Etap 5) — zrzuty
+// statycznych regionów na WSZYSTKICH 6 profilach (widok bez pinowanych
+// scen → element-screenshoty, żaden sweep nie jest potrzebny; wzorzec
+// proces.spec.ts). Determinizm: freeze.css (prepareSweep) zeruje
+// czasowe animacje i wejścia [data-rev].
 // Formularz zrzucamy PRZED interakcją (stan spoczynkowy — mechanikę
 // weryfikuje e2e contact.spec.ts).
 import { expect, test, type Page } from "@playwright/test";
 import { usePreviewGuard } from "../helpers/guards";
-import { settle } from "../helpers/scroll";
+import { scrollPageTo, settle } from "../helpers/scroll";
 import { prepareSweep } from "../helpers/visual";
 
 const PATH = "/kontakt/";
 
 usePreviewGuard();
 
-async function prepare(page: Page) {
-  // prepareSweep = gotoReady + freeze.css + repaint (wspólny helper).
-  await prepareSweep(page, PATH);
+/** Dojazd do sekcji + mikro-scroll (re-rasteryzacja sticky paska WebKit —
+ *  wzorzec tests/visual/index.spec.ts) + zrzut elementu. */
+async function shootSection(page: Page, selector: string, name: string) {
+  const el = page.locator(selector);
+  await el.scrollIntoViewIfNeeded();
+  await settle(page, 300);
+  const y = await page.evaluate(() => window.scrollY);
+  await scrollPageTo(page, y + 12);
+  await scrollPageTo(page, y);
+  await settle(page, 300);
+  await expect(el).toHaveScreenshot(name);
 }
 
-test("podstrona kontakt: widok startowy vs baseline", async ({ page }) => {
-  await prepare(page);
-  // Zrzut viewportu: sticky pasek chrome'u 4.1 (logo + linki/MENU) +
-  // nagłówek sekcji na warstwie ambientu (red).
-  await expect(page).toHaveScreenshot("contact-index-top.png");
+test("kontakt: widok startowy vs baseline", async ({ page }) => {
+  await prepareSweep(page, PATH);
+  await scrollPageTo(page, 10);
+  await scrollPageTo(page, 0);
+  await settle(page, 300);
+  // Desktop: rozmyte hero + navbar `over` + kafle wjeżdżające na jego dół;
+  // mobile: jasny hero tekstowy pod białym paskiem.
+  await expect(page).toHaveScreenshot("contact-top.png");
 });
 
-test("podstrona kontakt: sekcja formularza vs baseline", async ({
-  page,
-}, testInfo) => {
-  await prepare(page);
-  const section = page.locator("#contact");
-  await section.scrollIntoViewIfNeeded();
-  await settle(page);
-  // Wysoki, PRZEZROCZYSTY element nad ambientem na chromium-pixel-5
-  // (DPR 2.75) — ta sama rodzina subpikselowego jittera stitchowania co
-  // #contact w sections.spec.ts; podniesiony próg pochłania jitter, realną
-  // regresję (>2% pikseli) i tak złapie.
-  const ratio = testInfo.project.name === "chromium-pixel-5" ? 0.02 : undefined;
-  await expect(section).toHaveScreenshot("contact-index-form.png", {
-    ...(ratio !== undefined ? { maxDiffPixelRatio: ratio } : {}),
-  });
+test("kontakt: kafle kontaktowe vs baseline", async ({ page }) => {
+  await prepareSweep(page, PATH);
+  // Wartości tel/mail składa JS (sloty D-CH5) — prepareSweep czeka na
+  // gotowość strony, więc na zrzucie są już pełne dane, nie maska.
+  await shootSection(page, ".kt-cards", "contact-cards.png");
 });
 
-test("podstrona kontakt: stopka vs baseline", async ({ page }) => {
-  await prepare(page);
-  const foot = page.locator(".ktp-foot");
-  await foot.scrollIntoViewIfNeeded();
-  await settle(page);
-  await expect(foot).toHaveScreenshot("contact-index-footer.png");
+test("kontakt: karta formularza vs baseline", async ({ page }) => {
+  await prepareSweep(page, PATH);
+  await shootSection(page, "#contact .kt-frame", "contact-form.png");
+});
+
+test("kontakt: pigułka social vs baseline", async ({ page }) => {
+  await prepareSweep(page, PATH);
+  // Duplikat per-breakpoint (D-K3) — zrzucamy widoczny egzemplarz.
+  await shootSection(page, ".kt-soc-sec:visible", "contact-soc.png");
+});
+
+test("kontakt: stopka vs baseline", async ({ page }) => {
+  await prepareSweep(page, PATH);
+  await shootSection(page, "footer.ft", "contact-footer.png");
 });
