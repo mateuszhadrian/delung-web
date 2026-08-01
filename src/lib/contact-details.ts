@@ -24,18 +24,29 @@ export const buildEmail = (): string =>
 /** Wypełnia sloty telefonu/maila w DOM (chrome renderuje je puste+hidden).
  *  Kotwica z wewnętrznym [data-slot] (wiersze bannera kontaktu — ikona
  *  i etykieta zostają) dostaje tekst do slotu; bez slotu — jak dotąd,
- *  w textContent całej kotwicy. */
+ *  w textContent całej kotwicy. Wariant `data-tel="href"`/`data-mail="href"`
+ *  (4.5 — np. „Zadzwoń teraz" w CTA procesu): podmieniamy WYŁĄCZNIE cel
+ *  linku, etykieta kotwicy zostaje nietknięta. */
 export function fillContactSlots(root: ParentNode = document): void {
-  const fill = (a: HTMLAnchorElement, href: string, text: string) => {
+  const fill = (
+    a: HTMLAnchorElement,
+    mode: string | undefined,
+    href: string,
+    text: string,
+  ) => {
     a.href = href;
-    (a.querySelector<HTMLElement>("[data-slot]") ?? a).textContent = text;
+    if (mode !== "href") {
+      (a.querySelector<HTMLElement>("[data-slot]") ?? a).textContent = text;
+    }
     a.hidden = false;
   };
   root
     .querySelectorAll<HTMLAnchorElement>("a[data-tel]")
-    .forEach((a) => fill(a, buildPhoneHref(), buildPhoneDisplay()));
+    .forEach((a) =>
+      fill(a, a.dataset.tel, buildPhoneHref(), buildPhoneDisplay()),
+    );
   root.querySelectorAll<HTMLAnchorElement>("a[data-mail]").forEach((a) => {
     const email = buildEmail();
-    fill(a, "mailto:" + email, email);
+    fill(a, a.dataset.mail, "mailto:" + email, email);
   });
 }
