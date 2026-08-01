@@ -224,8 +224,12 @@ treść/sekcje budowane od nowa wg `docs/design/`).
   — main po #13 był z tego powodu czerwony). Poluzowane celowo zostają
   desktop `perf` 0,9 (min. próbka 0,92 — score ciągnie szumiący TBT) oraz
   mobile TBT 150 / CLS 0,02 (podłogi przy zerze).
-- **Etap 5 (formularz + /kontakt/) — W TOKU** (decyzje:
-  `docs/analiza-kontakt.md` — czytać PRZED pracą przy tym widoku).
+- **Etap 5 (formularz + /kontakt/) — WYKONANY** (2026-08-02; PR #16 widok
+  i formularz, #17 determinizm zdjęć w testach wizualnych, #18 porządki
+  i wyjście GSAP-a; decyzje: `docs/analiza-kontakt.md` — czytać PRZED
+  pracą przy tym widoku). **Dziedzictwo szablonu = SPŁACONE W CAŁOŚCI**:
+  w projekcie nie ma już ciemnego motywu, ambientu, toastów, GSAP-a ani
+  progów 861/760 — każdy widok stoi na designie delung.
   Kroki w chmurze WYKONANE (2026-08-01): **osobne konto Resend klienta**
   na `kontakt@delung.pl` (darmowy plan = 1 domena, konto Mateusza zajęte
   przez hadrianm; 2FA + Setup Key u Mateusza, przekazanie w Etapie 7),
