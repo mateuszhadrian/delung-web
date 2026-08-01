@@ -5,20 +5,28 @@
 // wg docs/design/kontakt.html (decyzja D4).
 
 export const CONTACT_TO = "kontakt@delung.pl";
-export const CONTACT_FROM_NOTIFY = "Formularz delung.pl <no-reply@delung.pl>";
-export const CONTACT_FROM_CONFIRM = "Delung Meble <no-reply@delung.pl>";
+// Nadawcy MUSZĄ siedzieć na domenie zweryfikowanej w Resendzie
+// (`send.delung.pl` — Etap 5; apeks `delung.pl` zostaje przy skrzynce
+// Zimbra). Adres spoza zweryfikowanej domeny = odmowa wysyłki po stronie
+// Resenda, nie błąd naszego kodu.
+export const CONTACT_FROM_NOTIFY =
+  "Formularz delung.pl <no-reply@send.delung.pl>";
+export const CONTACT_FROM_CONFIRM = "Delung Meble <no-reply@send.delung.pl>";
 
 export const MIN_FILL_MS = 4000;
 export const NAME_MAX = 100;
 export const EMAIL_MAX = 254;
+export const PHONE_MAX = 40;
 export const MESSAGE_MIN = 10;
 export const MESSAGE_MAX = 5000;
 
 // Ta sama reguła co walidacja kliencka (referencja kontakt.js).
 export const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
-// Chipsy tematu = kategorie zapytań (contact.topic* w ui.ts). Wartość
-// spoza listy jest ignorowana, nie odrzucana (kontrakt §4.2 wzorca).
+// Temat zgłoszenia. UWAGA (Etap 5): formularz z designu delung NIE ma już
+// chipsów tematu — pole `temat` przychodzi puste i mail pokazuje „—".
+// Lista zostaje jako kontrakt serwera (tolerancja starych POST-ów i punkt
+// zaczepienia, gdyby temat wrócił jako <select>).
 export const TOPICS = [
   "Kuchnia",
   "Szafa / garderoba",
@@ -34,6 +42,8 @@ export type ContactLang = "pl";
 export interface ContactRaw {
   name: string;
   email: string;
+  /** Opcjonalny (Etap 5, pole z designu) — może być pusty. */
+  phone: string;
   temat: string;
   message: string;
   firma: string;
@@ -44,6 +54,10 @@ export interface ContactRaw {
 export interface ContactData {
   name: string;
   email: string;
+  /** "" gdy nie podano. Numery bywają pisane na kilkanaście sposobów —
+   *  twarda regexpa robiłaby tylko fałszywe odrzuty, więc pole jest
+   *  przycinane, nie walidowane. */
+  phone: string;
   /** "" gdy nie wybrano albo wartość spoza TOPICS. */
   temat: string;
   message: string;
@@ -84,7 +98,11 @@ export function validateSubmission(raw: ContactRaw): ValidationResult {
     ? tematRaw
     : "";
 
-  return { ok: true, data: { name, email, temat, message, lang: "pl" } };
+  // Telefon: opcjonalny i NIE odrzucający zgłoszenia — jedna linia,
+  // przycięta do PHONE_MAX (śmieciowy payload nie rozepcha maila).
+  const phone = stripNewlines(raw.phone).slice(0, PHONE_MAX);
+
+  return { ok: true, data: { name, email, phone, temat, message, lang: "pl" } };
 }
 
 export function escapeHtml(s: string): string {
@@ -133,6 +151,7 @@ export function buildNotifyEmail(
     "",
     `Od: ${name}`,
     `E-mail (odpowiedz na ten adres): ${data.email}`,
+    `Telefon: ${data.phone || "—"}`,
     `Temat: ${data.temat || "—"}`,
     `Data: ${sentAt}`,
     "",
@@ -144,6 +163,7 @@ export function buildNotifyEmail(
     "<p>Nowa wiadomość z formularza na delung.pl</p>",
     `<p><strong>Od:</strong> ${escapeHtml(name)}<br>`,
     `<strong>E-mail (odpowiedz na ten adres):</strong> ${escapeHtml(data.email)}<br>`,
+    `<strong>Telefon:</strong> ${escapeHtml(data.phone || "—")}<br>`,
     `<strong>Temat:</strong> ${escapeHtml(data.temat || "—")}<br>`,
     `<strong>Data:</strong> ${escapeHtml(sentAt)}</p>`,
     `<div style="white-space:pre-wrap;border-top:1px solid #ccc;padding-top:12px">${escapeHtml(data.message)}</div>`,
