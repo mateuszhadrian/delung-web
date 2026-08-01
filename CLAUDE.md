@@ -195,14 +195,43 @@ treść/sekcje budowane od nowa wg `docs/design/`).
   Nowe specy: e2e filtry/deep-link/detal/podgląd/wideo-funkcjonalnie
   (`play()` bez sieci — `paused===false`), visual top/grid/cta/detal/
   podgląd/wideo pod maską (stary baseline stopki skasowany).
-- Etapy 4.5–7 — przed nami (widoki → formularz → SEO/pomiar → przekazanie).
-- PRZEJŚCIOWE dziedzictwo szablonu (do wymiany w Etapie 4.5/5): widoki
-  `/kontakt/` i `/polityka-prywatnosci/` na ciemnym motywie
-  (`src/styles/legacy-dark.css` — strona delung jest JASNA; **UWAGA:
-  plik importują OBA** — kasacja legacy-dark z planu 4.5 możliwa
-  dopiero, gdy i kontakt przejdzie na jasny motyw w Etapie 5),
-  breakpoint 861 w odziedziczonym widoku kontaktu (docelowo **1024 px**),
-  placeholder `TODO_*` w `contact-config.ts` (Turnstile, Etap 5).
+- **Etap 4.5 (/proces-wspolpracy/ + /o-nas/ + /polityka-prywatnosci/) —
+  WYKONANY** (2026-08-01, PR #12 proces, #13 o-nas, #14 polityka; decyzje:
+  `docs/analiza-proces-onas-polityka.md` — czytać PRZED pracą przy tych
+  widokach): navbar dostał modyfikator `tone="dark"` wariantu `over`
+  (KOREKTA 4.1 — klasa `dark` ma realny CSS w `proces.html`; używają go
+  `ProcesPage`/`OnasPage`, `/realizacje/` i reszta zostają na `plain`);
+  treść przenoszona w eksportach JS-em (`relocate()`, klonowanie zdjęć
+  kroków) renderowana jako **duplikaty per-breakpoint w SSR** (wzorzec
+  karty CTA z 4.3); dane 6 opinii wyciągnięte do `src/lib/opinie.ts`
+  (współdzielone przez `HomeOpinie` i sekcję opinii o-nas — markup osobny,
+  baseline'y home nietknięte); ruch w `proces-motion.ts`/`onas-motion.ts`
+  za motion-gate, bez GSAP; **`SkeletonPage.astro` SKASOWANY** (stracił
+  ostatniego konsumenta). Polityka: pełny port na markup `pp-*` designu
+  (cream `pp-head`, desktopowy sticky TOC `#pp-NN` pod `--hdr-h`,
+  `pp-cta`), treść 9 sekcji RODO i klasa `.pp-sec` BEZ zmian, import
+  `legacy-dark.css` usunięty, antyscraping przeszedł na wspólne sloty
+  `contact-details.ts` (+ wariant href-only `data-tel="href"`); visual
+  polityki celowo na 2 profilach (dokument niezależny od profilu).
+- **Domknięcie Etapu 4 — WYKONANE** (2026-08-01, PR #15): budżety LHCI
+  zacieśnione do baseline'u PEŁNEJ strony (5 pomiarów z main, mediana
+  z 3 przebiegów — liczby i uzasadnienia w komentarzach `lighthouserc*.cjs`;
+  osobny commit, decyzja Mateusza): mobile perf 0,75→0,85, LCP 6000→4500,
+  script 100k→80k, total 2 MB→1,2 MB; desktop LCP 2000→1800, CLS
+  0,02→0,01, script 100k→80k, total 2 MB→1,8 MB, fonty warn 5→6. Osobno
+  (jeszcze w PR #14) desktop **TBT 100→200 ms**: próg-podłoga z Etapu 3
+  leżał w środku pasma szumu runnera (22–138 ms przy IDENTYCZNYCH bajtach
+  — main po #13 był z tego powodu czerwony). Poluzowane celowo zostają
+  desktop `perf` 0,9 (min. próbka 0,92 — score ciągnie szumiący TBT) oraz
+  mobile TBT 150 / CLS 0,02 (podłogi przy zerze).
+- Etapy 5–7 — przed nami (formularz + /kontakt/ → SEO/pomiar → przekazanie).
+- PRZEJŚCIOWE dziedzictwo szablonu — już TYLKO widok `/kontakt/`
+  (do wymiany w Etapie 5): ciemny motyw `src/styles/legacy-dark.css`
+  (strona delung jest JASNA) — po porcie polityki w 4.5 **plik importuje
+  wyłącznie `ContactPage.astro`**, więc jego kasacja to ostatni krok
+  Etapu 5 (weryfikacja grepem przed usunięciem); breakpoint 861
+  w odziedziczonym widoku kontaktu (docelowo **1024 px**); placeholder
+  `TODO_*` w `contact-config.ts` (Turnstile, Etap 5).
 
 ## Mapa projektu
 
@@ -231,9 +260,23 @@ treść/sekcje budowane od nowa wg `docs/design/`).
   overlay `#work-detail` (`WorkDetailOverlay.astro` + `open-detail.ts`
   na `overlay.ts`: klon z `<template>`, galeria, podgląd pełnoekranowy,
   projnav, wideo tap-toggle); ruch w `work-motion.ts` (motion-gate).
+- `src/components/sections/proces/` — /proces-wspolpracy/ (4.5): sekcje
+  `Proces*.astro` + `proces-config.ts` (PROCES_DESKTOP_MIN_PX=1024,
+  importują testy) + `proces-motion.ts`; strona przez `ProcesPage.astro`
+  (navbar `over` + `tone="dark"`). Sekcja `efekt` istnieje TYLKO na
+  desktopie.
+- `src/components/sections/o-nas/` — /o-nas/ (4.5): sekcje `Onas*.astro` +
+  `onas-config.ts` (ONAS_DESKTOP_MIN_PX=1024) + `onas-motion.ts`; strona
+  przez `OnasPage.astro` (navbar `over` + `tone="dark"`). Dane opinii
+  z `src/lib/opinie.ts` — WSPÓŁDZIELONE z `HomeOpinie` (markup osobny,
+  tylko dane); manifest i tor zespołu to sceny przypięte desktop-only.
+- `src/components/PolicyPage.astro` — /polityka-prywatnosci/ (4.5): markup
+  `pp-*` designu, treść 9 sekcji RODO inline (dokument prawny), klasa
+  `.pp-sec` = kontrakt `policy.spec.ts`; jasny motyw (bez legacy-dark).
 - `src/components/sections/contact/` — formularz kontaktowy (Pages Function
   `functions/api/kontakt.ts`, Resend + Turnstile + antyspam + KV quota);
-  widok docelowy wg `docs/design/kontakt.html` w Etapie 5.
+  widok docelowy wg `docs/design/kontakt.html` w Etapie 5. JEDYNY
+  konsument `src/styles/legacy-dark.css` (kasacja pliku = koniec Etapu 5).
 - `src/scripts/` — `overlay.ts` (generyczne nakładki modal/sheet —
   focus-trap, Esc, swipe-down), `smooth-scroll.ts` (Lenis TYLKO desktop; dotyk = scroll
   natywny — decyzja 4.2, reguły), `section-helpers.ts`, `anchors.ts`,
