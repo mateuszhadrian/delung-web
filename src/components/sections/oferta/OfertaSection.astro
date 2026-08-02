@@ -1,9 +1,10 @@
 ---
 // Sekcja oferty (część 4.3; eksport: .of z docs/design/oferta.html).
 // Mobile: head + karuzela 3 kafli (gotchas sections.md) + kafel „zobacz
-// pełną ofertę" → /kategorie/ + pasek postępu; kafel KONKRETNEJ kategorii
-// linkuje /kategorie/#<slug> — hash otwiera tam kartę kategorii
-// (kategorie.ts; korekta Mateusza po testach 4.3). Desktop: head dwukolumnowy
+// pełną ofertę" → /kategorie/ + pasek postępu; tap w kafel KONKRETNEJ
+// kategorii otwiera jej kartę-sheet W MIEJSCU (kat-sheets.ts, D-P3 —
+// korekta D-OK3), a href /kategorie/#<slug> zostaje fallbackiem bez JS.
+// Desktop: head dwukolumnowy
 // + zakładki (wzorzec ARIA tabs, D-OK2) + panel kategorii; panel 01
 // aktywny w SSR (bez JS widać pierwszą kategorię). Animacje przełączenia
 // panelu = keyframes CSS odpalane klasą .anim (oferta.ts) — bez GSAP;
@@ -158,7 +159,11 @@ const kafle = OFERTA_CATEGORIES.slice(0, OFERTA_KAFLE_MOBILE);
         kafle.map((c) => {
           const img = ofertaImage(c.slug);
           return (
-            <a class="of-card" href={`${KATEGORIE_PATH}#${c.slug}`}>
+            <a
+              class="of-card"
+              href={`${KATEGORIE_PATH}#${c.slug}`}
+              data-kat-link={c.slug}
+            >
               <img
                 src={img.src}
                 width={img.width}

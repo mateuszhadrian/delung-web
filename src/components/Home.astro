@@ -16,6 +16,7 @@ import HomeRealizacje from "@/components/sections/home/HomeRealizacje.astro";
 import HomeAbout from "@/components/sections/home/HomeAbout.astro";
 import HomeOpinie from "@/components/sections/home/HomeOpinie.astro";
 import HomeKontakt from "@/components/sections/home/HomeKontakt.astro";
+import KategorieSheets from "@/components/sections/oferta/KategorieSheets.astro";
 // Preload hero mobile (LCP): obraz startował ~1.9 s po TTFB — czekał
 // w kolejce za preloadowanymi fontami/CSS. imagesrcset IDENTYCZNY jak
 // w <source> HomeHero (zmieniać w parze).
@@ -62,6 +63,9 @@ const DESCRIPTION =
   </main>
 
   <Footer />
+
+  {/* Karty kategorii — tap w kafel zajawki otwiera je w miejscu (D-P2). */}
+  <KategorieSheets />
 </BaseLayout>
 
 <style is:global>

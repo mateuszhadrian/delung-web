@@ -15,7 +15,7 @@ const q = <T extends HTMLElement = HTMLElement>(s: string) =>
 const tabs = qa<HTMLButtonElement>("[data-oftab]");
 const panels = qa("[data-ofpanel]");
 
-function select(i: number, focus = false) {
+function select(i: number, focus = false, anim = true) {
   tabs.forEach((t, k) => {
     const on = k === i;
     t.classList.toggle("on", on);
@@ -24,11 +24,25 @@ function select(i: number, focus = false) {
   });
   panels.forEach((p, k) => {
     // .anim od pierwszej interakcji; restart animacji robi sam browser
-    // (display: none → grid przy każdym przełączeniu).
-    p.classList.add("anim");
+    // (display: none → grid przy każdym przełączeniu). Deep-link na
+    // wejściu wybiera panel BEZ animacji — pierwszy render zostaje
+    // statyczny jak w eksporcie (D-P1).
+    if (anim) p.classList.add("anim");
     p.classList.toggle("on", k === i);
   });
   if (focus) tabs[i]?.focus();
+}
+
+/* ── deep-link zakładki: /oferta/#<slug> (D-P1) ──
+   Kanoniczny adres kategorii: na desktopie zaznacza zakładkę, poniżej
+   progu otwiera kartę-sheet (kat-sheets.ts). Hash niesie goły slug —
+   id zakładek/paneli mają prefiksy, więc przeglądarka nie scrolluje.
+   Zły/pusty slug = panel 01 z SSR, bez ruchu. Zaznaczamy niezależnie od
+   progu: po obrocie telefonu w widok desktop panel jest już właściwy. */
+const hashSlug = decodeURIComponent(location.hash.slice(1));
+if (hashSlug) {
+  const i = tabs.findIndex((t) => t.id === `of-tab-${hashSlug}`);
+  if (i > 0) select(i, false, false);
 }
 
 tabs.forEach((t, i) => {

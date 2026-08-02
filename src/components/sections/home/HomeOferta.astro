@@ -5,10 +5,17 @@
 // postępem scrolla (home-scroll.ts), licznik 01/06, CTA w pasie pod kaflami.
 // Fallback desktop (reduce / bez JS): sekcja w flow, tor jako zwykły
 // overflow-x — pełna treść bez ruchu (D-SG9).
-// Dane kafli = treści marketingowe eksportu 1:1 (D-SG4); categories.ts
-// (kontrakt CMS) nietknięte — kafle linkują całą /oferta/.
+// Dane kafli = treści marketingowe eksportu 1:1 (D-SG4) w
+// home-oferta-content.ts; categories.ts (kontrakt CMS) nietknięte —
+// kafel niesie SLUG kategorii i linkuje `/oferta/#<slug>` (D-P1:
+// desktop otwiera tę zakładkę), a poniżej progu desktop tap otwiera
+// kartę-sheet W MIEJSCU (D-P2, kat-sheets.ts; href zostaje fallbackiem
+// bez JS). Mapowanie slug → zdjęcie trzymamy tutaj (dane w .ts muszą
+// zostać czyste pod unit test — wzorzec oferta-images.ts).
+import type { CategorySlug } from "@/lib/categories";
 import { OFERTA_PATH } from "@/lib/routes";
 import HomeCta from "./HomeCta.astro";
+import { HOME_KAFLE } from "./home-oferta-content";
 import catKuchnie from "@/assets/home/cat-kuchnie.webp";
 import catSzafy from "@/assets/home/cat-szafy.webp";
 import catKomercyjne from "@/assets/home/cat-komercyjne.webp";
@@ -16,62 +23,16 @@ import catDekoracje from "@/assets/home/cat-dekoracje.webp";
 import catLazienki from "@/assets/home/cat-lazienki.webp";
 import catNietypowe from "@/assets/home/cat-nietypowe.webp";
 
-const KAFLE = [
-  {
-    num: "01",
-    name: "Kuchnie i sprzęt AGD",
-    nameM: "Kuchnie pod klucz",
-    sub: "Zabudowa + AGD",
-    img: catKuchnie,
-    pos: "0% 50%",
-    mobile: true,
-  },
-  {
-    num: "02",
-    name: "Szafy i garderoby",
-    nameM: "Szafy i garderoby",
-    sub: "Na wymiar",
-    img: catSzafy,
-    pos: "0% 50%",
-    mobile: true,
-  },
-  {
-    num: "03",
-    name: "Wnętrza komercyjne",
-    nameM: "Wnętrza komercyjne",
-    sub: "Dla biznesu (B2B)",
-    img: catKomercyjne,
-    pos: "100% 50%",
-    mobile: true,
-  },
-  {
-    num: "04",
-    name: "Dekoracje okienne",
-    nameM: "Dekoracje okienne",
-    sub: "Tekstylia",
-    img: catDekoracje,
-    pos: "50% 50%",
-    mobile: false,
-  },
-  {
-    num: "05",
-    name: "Zabudowy łazienkowe",
-    nameM: "Zabudowy łazienkowe",
-    sub: "Strefy mokre",
-    img: catLazienki,
-    pos: "50% 50%",
-    mobile: false,
-  },
-  {
-    num: "06",
-    name: "Meble nietypowe",
-    nameM: "Meble nietypowe",
-    sub: "Zadania specjalne",
-    img: catNietypowe,
-    pos: "50% 50%",
-    mobile: false,
-  },
-] as const;
+const IMGS: Partial<Record<CategorySlug, typeof catKuchnie>> = {
+  kuchnie: catKuchnie,
+  "szafy-garderoby": catSzafy,
+  "wnetrza-komercyjne": catKomercyjne,
+  "dekoracje-okienne": catDekoracje,
+  "zabudowy-lazienkowe": catLazienki,
+  "meble-nietypowe": catNietypowe,
+};
+
+const KAFLE = HOME_KAFLE.map((k) => ({ ...k, img: IMGS[k.slug]! }));
 ---
 
 <section class="of" data-home-of>
@@ -101,7 +62,11 @@ const KAFLE = [
       <div class="of-track" data-oftrack data-rev data-lenis-prevent-horizontal>
         {
           KAFLE.map((k) => (
-            <a class:list={["cat", { xtra: !k.mobile }]} href={OFERTA_PATH}>
+            <a
+              class:list={["cat", { xtra: !k.mobile }]}
+              href={`${OFERTA_PATH}#${k.slug}`}
+              data-kat-link={k.slug}
+            >
               <img
                 src={k.img.src}
                 width={k.img.width}

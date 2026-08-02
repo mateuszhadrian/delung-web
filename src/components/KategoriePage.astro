@@ -5,11 +5,13 @@
 // na /oferta/ PRZED paintem (inline skrypt w slocie head — mechanizm
 // z Etapu 0, NIE RUSZAĆ) + canonical wskazuje /oferta/ (brak duplicate
 // content). Lenis wyłączony (strona mobile-only — dotyk = scroll
-// natywny). Karty kategorii: overlay.ts (bundlowany przez Navbar).
+// natywny). Karty kategorii: <KategorieSheets /> (markup + mechanika),
+// szkielet nakładek z overlay.ts (bundlowany przez Navbar).
 import BaseLayout from "@/layouts/BaseLayout.astro";
 import Navbar from "@/components/navbar/Navbar.astro";
 import Footer from "@/components/Footer.astro";
 import KategorieSection from "@/components/sections/oferta/KategorieSection.astro";
+import KategorieSheets from "@/components/sections/oferta/KategorieSheets.astro";
 import { OFERTA_PATH } from "@/lib/routes";
 
 const DESCRIPTION =
@@ -50,6 +52,9 @@ const DESCRIPTION =
   </main>
 
   <Footer />
+
+  {/* Karty kategorii — komponent współdzielony z / i /oferta/ (D-P2). */}
+  <KategorieSheets />
 </BaseLayout>
 
 <style is:global>
@@ -75,8 +80,7 @@ const DESCRIPTION =
 </style>
 
 <script>
-  import "@/components/sections/oferta/kategorie";
-
+  // Otwieranie kart kategorii niesie sam <KategorieSheets /> (kat-sheets.ts).
   // Ruch — dynamicznie, tylko przy motion OK (wzorzec D-SG9).
   if (matchMedia("(prefers-reduced-motion: no-preference)").matches) {
     import("@/components/sections/oferta/oferta-motion");
