@@ -186,6 +186,18 @@ tego przycisku). **D-CH4 zostaje nietknięte**: „Proces współpracy" dalej
 NIE wchodzi do nawigacji navbara, żyje w stopce i teraz dodatkowo
 w CTA sekcji.
 
+### D-P7. CTA zajawki oferty: duplikat per-breakpoint (dorzucone po PR B)
+
+Jeden link z dwiema etykietami (`lbl-d`/`lbl-m`) prowadził na obu
+progach na `/oferta/` — na mobile użytkownik po tapnięciu „Zobacz pełną
+ofertę" trafiał na tę samą karuzelę 3 kafli, z której wyszedł. Komplet
+6 kategorii mieszka na mobile w `/kategorie/`, więc CTA rozjeżdża się
+na duplikat per-breakpoint (wzorzec 4.3/4.5): `of-ctaD` → `/oferta/`
+(desktop, zakładki) i `of-ctaM` → `/kategorie/` (mobile, lista);
+widoczny zawsze JEDEN egzemplarz, drugi na `display: none` (drzewo
+dostępności bez duplikatu). Kafle KATEGORII zostają na deep-linku
+`/oferta/#<slug>` z D-P1 — zmiana dotyczy wyłącznie CTA sekcji.
+
 ### D-P6. Link „Zobacz więcej opinii w Google" → panel opinii firmy
 
 Stała `OPINIE_GOOGLE_URL` (`src/lib/opinie.ts`) dostaje adres, który
@@ -306,6 +318,11 @@ baselines" z brancha PR-a → `git pull` → lokalny `pnpm test:visual:update`
 2. **PR B — `fix/home-cta-i-link-opinii`** (D-P4/D-P5/D-P6): trzy drobne
    poprawki wyglądu/treści + 6 baseline'ów. Wchodzi **po** A (oba
    dotykają `HomeOferta.astro` — sekwencyjnie, żeby nie było konfliktu).
+3. **PR C — `fix/home-cta-pelna-oferta`** (D-P7, dorzucony po testach
+   PR-a B): CTA sekcji oferty na stronie głównej rozdzielone na duplikat
+   per-breakpoint — mobile „Zobacz pełną ofertę" → `/kategorie/`,
+   desktop „Sprawdź ofertę" → `/oferta/`. Zero baseline'ów (każdy próg
+   widzi to samo co wcześniej), zero nowych plików.
 
 Oba PR-y aktualizują ten dokument (status) i CLAUDE.md dopiero na
 końcu rundy (jeden wpis „Runda poprawek wizualnych" z datą i numerami

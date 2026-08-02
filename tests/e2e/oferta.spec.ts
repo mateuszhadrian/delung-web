@@ -330,13 +330,21 @@ test.describe("dojście ze strony głównej — kafle zajawki oferty", () => {
     await expect(sheet).toBeHidden();
   });
 
-  test("CTA „Zobacz pełną ofertę” dalej nawiguje na /oferta/", async ({
+  // CTA sekcji to duplikat per-breakpoint: mobile prowadzi na listę
+  // kategorii (komplet 6 — karuzela pokazuje 3), desktop na /oferta/
+  // (komplet siedzi w zakładkach). Widoczny zawsze jeden egzemplarz.
+  test("CTA sekcji prowadzi tam, gdzie na tym progu jest pełna oferta", async ({
     page,
+    isMobile,
   }) => {
     await gotoReady(page);
     await revealOferta(page);
-    await page.locator("[data-home-of] .of-cta a").click();
-    await expect(page).toHaveURL(new RegExp(`${OFERTA_PATH}$`));
+    const cta = page.locator("[data-home-of] .of-cta a:visible");
+    await expect(cta).toHaveCount(1);
+    const target = isMobile ? KATEGORIE_PATH : OFERTA_PATH;
+    await expect(cta).toHaveAttribute("href", target);
+    await cta.click();
+    await expect(page).toHaveURL(new RegExp(`${target}$`));
     await expect(page.locator("main h1")).toBeVisible();
   });
 });

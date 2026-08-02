@@ -1,6 +1,8 @@
 ---
 // Zajawka oferty (eksport: .of). Mobile: karuzela 3 kafli (scroll-snap,
-// gotchas sections.md) + CTA „Zobacz pełną ofertę". Desktop przy motion OK
+// gotchas sections.md) + CTA „Zobacz pełną ofertę" → /kategorie/ (tam
+// mieszka komplet 6 kategorii; desktopowy odpowiednik „Sprawdź ofertę"
+// prowadzi na /oferta/ — duplikat per-breakpoint). Desktop przy motion OK
 // (html.js-motion): scena przypięta 300vh — poziomy tor 6 kafli napędzany
 // postępem scrolla (home-scroll.ts), licznik 01/06, CTA w pasie pod kaflami.
 // Fallback desktop (reduce / bez JS): sekcja w flow, tor jako zwykły
@@ -13,7 +15,7 @@
 // bez JS). Mapowanie slug → zdjęcie trzymamy tutaj (dane w .ts muszą
 // zostać czyste pod unit test — wzorzec oferta-images.ts).
 import type { CategorySlug } from "@/lib/categories";
-import { OFERTA_PATH } from "@/lib/routes";
+import { KATEGORIE_PATH, OFERTA_PATH } from "@/lib/routes";
 import HomeCta from "./HomeCta.astro";
 import { HOME_KAFLE } from "./home-oferta-content";
 import catKuchnie from "@/assets/home/cat-kuchnie.webp";
@@ -101,9 +103,16 @@ const KAFLE = HOME_KAFLE.map((k) => ({ ...k, img: IMGS[k.slug]! }));
         }
       </div>
       <div class="of-cta" data-ofcta data-rev>
-        <HomeCta href={OFERTA_PATH}>
-          <span class="lbl-d">Sprawdź ofertę</span>
-          <span class="lbl-m">Zobacz pełną ofertę</span>
+        {
+          /* Duplikat per-breakpoint (wzorzec 4.3/4.5) zamiast jednego
+            linku z dwiema etykietami: komplet 6 kategorii mieszka na
+            mobile w /kategorie/ (karuzela pokazuje 3), a na desktopie
+            w zakładkach /oferta/. W drzewie dostępności zawsze jeden
+            egzemplarz — drugi na display:none. */
+        }
+        <HomeCta class="of-ctaD" href={OFERTA_PATH}>Sprawdź ofertę</HomeCta>
+        <HomeCta class="of-ctaM" href={KATEGORIE_PATH}>
+          Zobacz pełną ofertę
         </HomeCta>
       </div>
     </div>
@@ -266,7 +275,8 @@ const KAFLE = HOME_KAFLE.map((k) => ({ ...k, img: IMGS[k.slug]! }));
     padding-block: 22px 0;
     padding-inline: var(--pad);
   }
-  .lbl-d {
+  /* Widoczny zawsze JEDEN egzemplarz CTA (duplikat per-breakpoint). */
+  .of-cta :global(.of-ctaD) {
     display: none;
   }
 
@@ -343,10 +353,10 @@ const KAFLE = HOME_KAFLE.map((k) => ({ ...k, img: IMGS[k.slug]! }));
     .cat-arr {
       display: none;
     }
-    .lbl-d {
-      display: inline;
+    .of-cta :global(.of-ctaD) {
+      display: flex;
     }
-    .lbl-m {
+    .of-cta :global(.of-ctaM) {
       display: none;
     }
     /* CTA — biała pigułka jak w eksporcie (tor leży na białym tle) */
