@@ -109,6 +109,55 @@ test("ikony marki i manifest odpowiadają 200 i mają właściwy format", async 
   }
 });
 
+// Dane strukturalne (Etap 6, D-E4/D-E6). Czytamy je z SUROWEGO HTML-a, nie
+// z DOM-u — JSON-LD ma być w statycznym źródle, bo tak go widzi robot.
+const jsonLdFrom = (html: string) =>
+  [
+    ...html.matchAll(
+      /<script type="application\/ld\+json">([\s\S]*?)<\/script>/g,
+    ),
+  ].map((m) => JSON.parse(m[1]));
+
+test("JSON-LD /kontakt/: LocalBusiness z adresem, geo i godzinami — bez telefonu", async ({
+  request,
+}) => {
+  const nodes = jsonLdFrom(await (await request.get(CONTACT_PATH)).text());
+  expect(nodes).toHaveLength(1);
+  const [node] = nodes;
+
+  expect(node["@type"]).toBe("FurnitureStore");
+  expect(node.name).toBe("Delung Meble");
+  expect(node.address).toMatchObject({
+    streetAddress: "Strażacka 27a",
+    postalCode: "98-300",
+    addressLocality: "Gaszyn",
+    addressCountry: "PL",
+  });
+  expect(node.geo).toMatchObject({ latitude: 51.199061, longitude: 18.552351 });
+  expect(node.openingHoursSpecification).toHaveLength(2);
+  expect(node.sameAs).toContain("https://www.instagram.com/delung_meble/");
+  expect(String(node.image).startsWith(SITE)).toBe(true);
+
+  // Kontrakt D-CH5 — dublet asercji z contact.spec.ts, bo tu jest najłatwiej
+  // o nieuważne „dodajmy telefon, przecież Google to lubi".
+  expect(node.telephone).toBeUndefined();
+  expect(node.email).toBeUndefined();
+});
+
+test("JSON-LD /: WebSite z wydawcą wskazującym węzeł firmy", async ({
+  request,
+}) => {
+  const nodes = jsonLdFrom(await (await request.get(HOME_PATH)).text());
+  expect(nodes).toHaveLength(1);
+  const [node] = nodes;
+
+  expect(node["@type"]).toBe("WebSite");
+  expect(node.url).toBe(`${SITE}/`);
+  expect(node.publisher["@type"]).toBe("Organization");
+  expect(node.publisher["@id"]).toBe(`${SITE}/#firma`);
+  expect(node.publisher.logo.url).toBe(`${SITE}/og-image.png`);
+});
+
 test("robots.txt blokuje /admin i wskazuje sitemapę", async ({ request }) => {
   const res = await request.get("/robots.txt");
   expect(res.ok()).toBe(true);
