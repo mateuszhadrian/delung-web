@@ -1,16 +1,22 @@
 {
   "name": "Delung Meble",
   "short_name": "Delung",
+  "description": "Delung Meble — meble na wymiar: kuchnie, szafy, łazienki i realizacje komercyjne.",
+  "lang": "pl",
+  "start_url": "/",
+  "scope": "/",
   "icons": [
     {
       "src": "/icon-192.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
     },
     {
       "src": "/icon-512.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
     }
   ],
   "theme_color": "#ffffff",
