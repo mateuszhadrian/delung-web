@@ -149,11 +149,24 @@ Wspólna mechanika trzech stron ląduje w jednym module: `kategorie.ts`
 `.of-cta .btn-dark:hover` dostaje **nieprzezroczysty** odpowiednik
 dzisiejszego przyciemnienia (5 % czerni na bieli = `#f2f2f2`), więc
 przycisk zachowuje się jak zwykły button niezależnie od tego, co leży
-pod nim. Przy okazji przegląd pozostałych CTA — każde półprzezroczyste
-wypełnienie hovera na przycisku, który może wylądować na zdjęciu,
-dostaje ten sam traktament (`HomeCta` `.btn-out:hover`,
-`rgba(26,26,26,.06)` na tle cream/białym). Zmiana jest niewidoczna na
-baseline'ach (zrzuty nie łapią hovera) i nie rusza geometrii.
+pod nim. Przegląd reszty CTA wskazał **cztery białe pigułki leżące na
+zdjęciach** — wszystkie dostają to samo wypełnienie:
+
+| Przycisk | Było | Jest |
+| -------- | ---- | ---- |
+| `.of-cta .btn-dark:hover` (home, scena oferty) | `rgba(26,26,26,.05)` | `#f2f2f2` |
+| `.kt-cta a:hover` (/kategorie/, CTA na rozmytym tle) | `opacity: .94` | `#f2f2f2` |
+| `.pr-btn:hover` (/oferta/, CTA procesu na zdjęciu) | `opacity: .94` | `#f2f2f2` |
+| `.cta-white:hover` (/proces-wspolpracy/, desktop) | `opacity: .92` | `#f2f2f2` |
+
+**Nie ruszamy** przycisków szklanych z designu (`.hero-btn`,
+`.cta-ghost`): tam półprzezroczyste tło + `backdrop-filter` to
+zamierzona stylistyka, a hover je DOMYKA (0.08 → 0.18), nie rozrzedza.
+Przyciski z obrysem na płaskich tłach (`.btn-out`, `.cta-out`) też
+zostają — na jednolitym kolorze półprzezroczystości nie widać.
+
+Zmiana jest niewidoczna na baseline'ach (zrzuty nie łapią hovera) i nie
+rusza geometrii.
 
 To **nie** jest zmiana układu: nachodzenie CTA na tor kafli przy niskim
 ekranie zostaje (tak wygląda scena przypięta w designie) — znika tylko
@@ -186,8 +199,8 @@ w kodzie zostaje wariant obcięty do części niosącej znaczenie:
 - tryb lokalny: `tbm=lcl`, zapytanie: `q=`, język: `hl=pl`,
 - zakładka opinii: `#lkt=LocalPoiReviews`.
 
-Wariant do weryfikacji klikiem przez Mateusza (jeśli nie zadziała —
-wpisuję pełny adres 1:1, bez skracania):
+Wariant **zweryfikowany klikiem przez Mateusza** (2026-08-02) i wpisany
+do kodu:
 
 ```
 https://www.google.com/search?q=Delung+Meble&tbm=lcl&rldimm=10496135886078434411&hl=pl#lkt=LocalPoiReviews
@@ -264,7 +277,17 @@ Liczby policzone z drzewa `tests/visual/__screenshots__` (434 pliki):
 | PR | Co się zmienia wizualnie | Pliki do regeneracji |
 | -- | ------------------------ | -------------------- |
 | A | nic — sheety są `hidden`, hrefy nie zmieniają pikseli | **0** — POTWIERDZONE przebiegiem (`pnpm test:visual`: 203 zielone, zero diffów) |
-| B | sekcja procesu na home rośnie o przycisk (tylko desktop); hover nie jest łapany przez zrzuty | **6**: `index-proces-{darwin,linux}.png` × `chromium-1366`, `chromium-1920`, `firefox-desktop` |
+| B | sekcja procesu na home rośnie o przycisk (tylko desktop); hover nie jest łapany przez zrzuty | **8** (plan zakładał 6): `index-proces` × `chromium-1366`, `chromium-1920`, `firefox-desktop` **+ `index-opinie` × `chromium-1366`**, każdy w wariancie `-darwin` i `-linux` |
+
+**Ósmy i siódmy plik — skąd `index-opinie`:** treść sekcji opinii jest
+identyczna, przesunęła się o **1 px w pionie**. Zrzut sekcji robimy po
+przewinięciu do niej, a wyższa strona (przycisk procesu) daje ułamkową
+pozycję scrolla, którą przeglądarka zaokrągla w drugą stronę niż
+wcześniej; na `chromium-1920` i `firefox-desktop` zaokrągliło się tak
+samo jak w baseline'ie, stąd tam zielono. Zachowanie powtarzalne, nie
+losowe. Diff pokazany Mateuszowi i zaakceptowany (2026-08-02) —
+strojenie odstępu pod parzystą wysokość sekcji odrzucone (to strojenie
+pod test, nie pod wygląd).
 
 Mobilne `index-proces` zostają nietknięte (CTA na mobile istnieje od
 4.2). Sweepy scen (`index-of-sweep`, `index-re-sweep`) liczą pozycje

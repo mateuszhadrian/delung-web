@@ -365,8 +365,12 @@ const KAFLE = HOME_KAFLE.map((k) => ({ ...k, img: IMGS[k.slug]! }));
       padding: 14px 28px;
       font-size: clamp(14px, 1.04vw, 15px);
     }
+    /* Hover NIEPRZEZROCZYSTY (D-P4): półprzezroczysta czerń zastępowała
+       białe tło i przez przycisk prześwitywały kafle toru — najbardziej
+       na niskim ekranie, gdzie CTA sceny przypiętej leży na zdjęciach.
+       #f2f2f2 = te same 5% czerni, tyle że wypełnieniem. */
     .of-cta :global(.btn-dark:hover) {
-      background: rgba(26, 26, 26, 0.05);
+      background: #f2f2f2;
     }
     .of-cta :global(.btn-dark svg) {
       width: 18px;

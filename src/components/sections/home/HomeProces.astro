@@ -2,8 +2,10 @@
 // Zajawka procesu współpracy (eksport: .pr). Mobile: pionowa oś 4 kroków
 // + linia postępu (scaleY z home-scroll) + CTA. Desktop: naprzemienna oś
 // czasu tekst↔zdjęcie, reveal kroków (klasa .rev z home-scroll), wielka
-// cyfra w tle; CTA za designem TYLKO mobile (desktop linkuje proces
-// wyłącznie stopką — D-CH4/D-SG5). Numery kroków: dwa spany (KROK 01 /
+// cyfra w tle; CTA na OBU progach — na desktopie wyśrodkowane pod osią
+// (D-P5, korekta D-SG5: eksport przycisku nie ma, ale bez niego wyjście
+// z sekcji było tylko przez stopkę; navbar bez zmian — D-CH4).
+// Numery kroków: dwa spany (KROK 01 /
 // 01) przełączane CSS — eksport synchronizował je JS.
 import { PROCESS_PATH } from "@/lib/routes";
 import HomeCta from "./HomeCta.astro";
@@ -379,8 +381,15 @@ const KROKI = [
       transform: none;
       opacity: 1;
     }
+    /* CTA na desktopie WIDOCZNE (D-P5 — korekta D-SG5): eksport go tu
+       nie ma, ale bez niego z sekcji nie dało się wejść na
+       /proces-wspolpracy/ inaczej niż stopką. Wyśrodkowane pod osią
+       kroków, tak jak nagłówek sekcji. D-CH4 bez zmian — trasa dalej
+       NIE wchodzi do navbara. */
     .pr-cta {
-      display: none;
+      display: flex;
+      justify-content: center;
+      margin-top: clamp(26px, 2.78vw, 40px);
     }
 
     /* Fallback bez ruchu (reduce / bez JS): kroki od razu widoczne. */

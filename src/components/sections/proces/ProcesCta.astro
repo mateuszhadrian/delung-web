@@ -309,8 +309,11 @@ const BLANK_IMG =
       color: var(--ink);
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
     }
+    /* Biała pigułka na zdjęciu — hover wypełnieniem, nie
+       przezroczystością (D-P4); `cta-ghost` niżej zostaje szklany
+       z designu (tam hover DOMYKA tło, a nie rozrzedza). */
     .cta-white:hover {
-      opacity: 0.92;
+      background: #f2f2f2;
     }
     .cta-ghost {
       border: 1px solid rgba(255, 255, 255, 0.65);
