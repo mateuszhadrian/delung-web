@@ -287,9 +287,14 @@ treść/sekcje budowane od nowa wg `docs/design/`).
   `oferta-content.ts` (treści kluczowane slugami categories.ts; `inne`
   bez treści) + `oferta-images.ts` + `oferta-config.ts`
   (OFERTA_DESKTOP_MIN_PX=1024, importują testy) + sekcje `Oferta*`/
-  `KategorieSection` + skrypty `oferta.ts`/`kategorie.ts` (funkcjonalne,
-  zawsze) i `oferta-motion.ts` (motion-gate, wspólny obu stron);
-  deep-link `/kategorie/#<slug>` otwiera kartę kategorii.
+  `KategorieSection` + skrypty `oferta.ts`/`kat-sheets.ts` (funkcjonalne,
+  zawsze) i `oferta-motion.ts` (motion-gate, wspólny obu stron).
+  Karty kategorii (6 sheetów `#kat-<slug>` + mechanika) =
+  `KategorieSheets.astro` — komponent WSPÓŁDZIELONY przez `/kategorie/`,
+  `/` i `/oferta/` (runda poprawek): tap w kafel kategorii na mobile
+  otwiera kartę W MIEJSCU, kanoniczny deep-link kategorii to
+  `/oferta/#<slug>` (desktop = zakładka, mobile = karta);
+  `/kategorie/#<slug>` działa jak dotąd.
 - `src/components/sections/work/` — Realizacje (4.4): dane z Content
   Collections (`src/content/realizacje/*.json`; schema Zod:
   `src/content.schema.ts` — źródło prawdy, `content.config.ts` tylko ją
