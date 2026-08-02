@@ -17,6 +17,8 @@ import HomeAbout from "@/components/sections/home/HomeAbout.astro";
 import HomeOpinie from "@/components/sections/home/HomeOpinie.astro";
 import HomeKontakt from "@/components/sections/home/HomeKontakt.astro";
 import KategorieSheets from "@/components/sections/oferta/KategorieSheets.astro";
+import JsonLd from "@/components/seo/JsonLd.astro";
+import { webSite } from "@/lib/jsonld";
 // Preload hero mobile (LCP): obraz startował ~1.9 s po TTFB — czekał
 // w kolejce za preloadowanymi fontami/CSS. imagesrcset IDENTYCZNY jak
 // w <source> HomeHero (zmieniać w parze).
@@ -32,6 +34,12 @@ const DESCRIPTION =
 ---
 
 <BaseLayout description={DESCRIPTION}>
+  {
+    /* Nazwa serwisu + wydawca z logo dla wyników wyszukiwania (D-E6);
+       węzeł firmy z pełnym NAP-em siedzi na /kontakt/. */
+  }
+  <JsonLd slot="head" data={webSite(Astro.site!)} />
+
   <link
     slot="head"
     rel="preload"

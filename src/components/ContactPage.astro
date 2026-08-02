@@ -16,6 +16,8 @@ import ContactHero from "@/components/sections/contact/ContactHero.astro";
 import ContactCards from "@/components/sections/contact/ContactCards.astro";
 import ContactSoc from "@/components/sections/contact/ContactSoc.astro";
 import ContactForm from "@/components/sections/contact/ContactForm.astro";
+import JsonLd from "@/components/seo/JsonLd.astro";
+import { localBusiness } from "@/lib/jsonld";
 import { useTranslations } from "@/i18n/utils";
 
 const t = useTranslations("pl");
@@ -26,6 +28,12 @@ const t = useTranslations("pl");
   description={t("contactPage.description")}
   smoothScroll={false}
 >
+  {
+    /* Dane strukturalne firmy (D-E4): adres, geo, godziny pracowni, IG
+       i wizytówka Google. BEZ telefonu i e-maila — patrz src/lib/jsonld.ts. */
+  }
+  <JsonLd slot="head" data={localBusiness(Astro.site!)} />
+
   <script is:inline>
     // PRZED paintem: motion OK → html.js-motion (uzbraja stany startowe
     // revealów — reszta w contact-motion.ts, ładowanym niżej).
