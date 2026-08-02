@@ -349,9 +349,20 @@ zmian.
 >    strony głównej (współdzielony `KategorieSheets.astro` renderowany
 >    obok `<Footer />`). `categories.ts` i treści marketingowe kafli —
 >    bez zmian. CTA „Zobacz pełną ofertę" dalej nawiguje na `/oferta/`.
->
-> (Korekta D-SG5 — desktopowe CTA procesu — wchodzi osobnym PR-em B tej
-> samej rundy.)
+> 2. **D-SG5 — desktop DOSTAJE CTA do procesu** (PR B tej samej rundy).
+>    „Za designem: desktop bez CTA" przestaje obowiązywać — eksport tego
+>    przycisku nie ma, ale bez niego z sekcji nie dało się wejść na
+>    `/proces-wspolpracy/` inaczej niż stopką (świadoma dewiacja od
+>    designu na życzenie Mateusza). `.pr-cta` widoczne także ≥1024:
+>    wariant `out`, wyśrodkowany pod osią kroków (nagłówek sekcji na
+>    desktopie też jest wyśrodkowany), odstęp `clamp(26px, 2.78vw, 40px)`.
+>    **D-CH4 zostaje nietknięte** — „Proces współpracy" dalej NIE wchodzi
+>    do navbara, żyje w stopce i teraz w CTA tej sekcji.
+> 3. **Hover CTA nigdy półprzezroczysty** (D-P4): `.of-cta .btn-dark:hover`
+>    zamieniało białe tło na `rgba(26,26,26,.05)`, więc przez przycisk
+>    prześwitywały kafle toru (widoczne zwłaszcza na niskim ekranie, gdzie
+>    CTA sceny przypiętej leży na zdjęciach) — teraz `#f2f2f2`, czyli te
+>    same 5 % czerni wypełnieniem.
 
 - **LCP mobile** (hero pełnoekranowe): najpoważniejszy budżet —
   2563/3500 ms przed hero. Mitigacje D-SG3; wynik z CI raportuję przed

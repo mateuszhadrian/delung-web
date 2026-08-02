@@ -141,6 +141,22 @@ test.describe("proces desktop (hero + swap + EFEKT + CTA)", () => {
   });
 });
 
+// Zajawka procesu na stronie głównej ma CTA na OBU progach (D-P5 —
+// korekta D-SG5: desktop dostał przycisk, którego eksport nie miał).
+test("dojście ze strony głównej: CTA zajawki procesu nawiguje na widok", async ({
+  page,
+}) => {
+  await gotoReady(page);
+  const cta = page.locator(".pr-cta a");
+  await expect(cta).toBeVisible();
+  await expect(cta).toHaveAttribute("href", PROCESS_PATH);
+  await cta.scrollIntoViewIfNeeded();
+  await settle(page, 300);
+  await cta.click();
+  await expect(page).toHaveURL(new RegExp(`${PROCESS_PATH}?$`));
+  await expect(page.locator("main h1")).toBeVisible();
+});
+
 test("antyscraping: surowy HTML strony bez numeru i adresu (kontrakt D-CH5)", async ({
   page,
 }) => {

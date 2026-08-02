@@ -58,8 +58,17 @@ export const OPINIE = [
 
 export type Opinia = (typeof OPINIE)[number];
 
-/** Link „Zobacz więcej opinii w Google" (wspólny obu sekcjom). */
-export const OPINIE_GOOGLE_URL = "https://www.google.com/search?q=Delung+Meble";
+/** Link „Zobacz więcej opinii w Google" (wspólny obu sekcjom) — panel
+ *  lokalny firmy z otwartą zakładką opinii, nie gołe wyszukiwanie
+ *  (D-P6). Adres obcięty do części niosącej znaczenie: `rldimm` = CID
+ *  profilu Delung Meble, `tbm=lcl` = tryb lokalny, `#lkt=LocalPoiReviews`
+ *  = zakładka opinii. Parametry sesyjne z paska adresu (sca_esv, sxsrf,
+ *  ved, stick, biw/bih/dpr) świadomie wycięte — to kontekst tamtej sesji
+ *  wyszukiwania, nie identyfikator firmy. Wariant zweryfikowany klikiem
+ *  przez Mateusza. */
+export const OPINIE_GOOGLE_URL =
+  "https://www.google.com/search?q=Delung+Meble&tbm=lcl" +
+  "&rldimm=10496135886078434411&hl=pl#lkt=LocalPoiReviews";
 
 /** Gwiazdka ocen jako path SVG (znak ★ tekstem nie przechodzi ratchetu
  *  axe — D-SG7); rysowana inline w sekcjach z aria-hidden. */
