@@ -270,7 +270,8 @@ treść/sekcje budowane od nowa wg `docs/design/`).
   zacieśnienie do nowego baseline'u to osobna decyzja Mateusza i osobny
   commit (kandydat: Etap 6).
 - **Runda poprawek wizualnych (przed Etapem 6) — WYKONANA** (2026-08-02,
-  PR #20 kafle kategorii, PR #21 CTA i link opinii; decyzje D-P1–D-P6:
+  PR #20 kafle kategorii, PR #21 CTA i link opinii, PR #22 CTA zajawki
+  oferty per breakpoint (mobile → `/kategorie/`); decyzje D-P1–D-P7:
   `docs/analiza-poprawki-wizualne.md` — czytać RAZEM z analizami widoków,
   bo koryguje D-SG4, D-SG5 i D-OK3). PR A: kanoniczny deep-link kategorii
   `/oferta/#<slug>` (desktop zaznacza zakładkę BEZ animacji przełączenia,

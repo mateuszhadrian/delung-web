@@ -358,7 +358,14 @@ zmian.
 >    desktopie też jest wyśrodkowany), odstęp `clamp(26px, 2.78vw, 40px)`.
 >    **D-CH4 zostaje nietknięte** — „Proces współpracy" dalej NIE wchodzi
 >    do navbara, żyje w stopce i teraz w CTA tej sekcji.
-> 3. **Hover CTA nigdy półprzezroczysty** (D-P4): `.of-cta .btn-dark:hover`
+> 3. **CTA sekcji oferty = duplikat per-breakpoint** (PR C rundy): mobile
+>    „Zobacz pełną ofertę" prowadzi na `/kategorie/` (tam mieszka komplet
+>    6 kategorii — karuzela pokazuje 3), desktop „Sprawdź ofertę" zostaje
+>    na `/oferta/` (komplet w zakładkach). Wcześniej jeden link z dwiema
+>    etykietami prowadził na obu progach na `/oferta/`, czyli na mobile
+>    do tej samej karuzeli 3 kafli. Klasy `of-ctaD`/`of-ctaM` (widoczny
+>    zawsze jeden egzemplarz) zastąpiły przełączane etykiety `lbl-d/lbl-m`.
+> 4. **Hover CTA nigdy półprzezroczysty** (D-P4): `.of-cta .btn-dark:hover`
 >    zamieniało białe tło na `rgba(26,26,26,.05)`, więc przez przycisk
 >    prześwitywały kafle toru (widoczne zwłaszcza na niskim ekranie, gdzie
 >    CTA sceny przypiętej leży na zdjęciach) — teraz `#f2f2f2`, czyli te
