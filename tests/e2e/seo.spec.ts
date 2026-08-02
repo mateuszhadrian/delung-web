@@ -59,10 +59,54 @@ test("head /: canonical + OG/Twitter", async ({ page }) => {
     .locator('meta[property="og:title"]')
     .getAttribute("content");
   expect(ogTitle).toBe(await page.title());
+  // Kadr og-image i typ karty chodzą w parze (D-E2): 1200×630 + karta „large".
+  await expect(head.locator('meta[property="og:image:width"]')).toHaveAttribute(
+    "content",
+    "1200",
+  );
+  await expect(
+    head.locator('meta[property="og:image:height"]'),
+  ).toHaveAttribute("content", "630");
   await expect(head.locator('meta[name="twitter:card"]')).toHaveAttribute(
     "content",
-    "summary",
+    "summary_large_image",
   );
+});
+
+// Ikony marki (Etap 6, D-E1/D-E3): sprawdzamy, że pliki wychodzą z builda
+// niepuste i są tym, za co się podają. Celowo BEZ asercji na Content-Type —
+// nagłówek podaje serwer (astro preview lokalnie, Cloudflare na produkcji),
+// więc byłby to test cudzej konfiguracji, a nie naszego dist/.
+test("ikony marki i manifest odpowiadają 200 i mają właściwy format", async ({
+  request,
+}) => {
+  const MAGIC: Record<string, (b: Buffer) => boolean> = {
+    "/favicon.svg": (b) => b.subarray(0, 400).toString("utf8").includes("<svg"),
+    "/favicon.ico": (b) => b.readUInt32LE(0) === 0x00010000, // reserved=0, typ=1
+    "/apple-touch-icon.png": (b) =>
+      b.subarray(1, 4).toString("latin1") === "PNG",
+    "/icon-192.png": (b) => b.subarray(1, 4).toString("latin1") === "PNG",
+    "/icon-512.png": (b) => b.subarray(1, 4).toString("latin1") === "PNG",
+    "/og-image.png": (b) => b.subarray(1, 4).toString("latin1") === "PNG",
+  };
+  for (const [path, isValid] of Object.entries(MAGIC)) {
+    const res = await request.get(path);
+    expect(res.status(), `ikona ${path}`).toBe(200);
+    const body = await res.body();
+    expect(body.length, `ikona ${path} jest pusta`).toBeGreaterThan(100);
+    expect(isValid(body), `ikona ${path} ma zły format`).toBe(true);
+  }
+
+  const manifest = await request.get("/site.webmanifest");
+  expect(manifest.status()).toBe(200);
+  const parsed = JSON.parse(await manifest.text());
+  expect(parsed.name).toBe("Delung Meble");
+  expect(parsed.start_url).toBe("/");
+  expect(parsed.icons.length).toBeGreaterThan(0);
+  for (const icon of parsed.icons) {
+    const res = await request.get(icon.src);
+    expect(res.status(), `ikona z manifestu ${icon.src}`).toBe(200);
+  }
 });
 
 test("robots.txt blokuje /admin i wskazuje sitemapę", async ({ request }) => {

@@ -48,6 +48,8 @@ treść/sekcje budowane od nowa wg `docs/design/`).
   `pnpm test:smoke:prod` (smoke przeciw produkcji delung.pl)
 - `node scripts/optimize-images.mjs <src> <out.webp> [szer] [q]` —
   PNG z eksportów designów → WebP do `src/assets/`
+- `node scripts/make-icons.mjs` — komplet ikon marki + og-image z wektora
+  `public/favicon.svg` (Etap 6; nie podmieniaj tych plików ręcznie)
 - CI (GitHub Actions) na push/PR — 3 joby (required checks na main):
   `quality` (format:check → lint → typecheck → test:unit → build),
   `e2e` (test:e2e + test:visual na artefakcie dist), `lighthouse`
