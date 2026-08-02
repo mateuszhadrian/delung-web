@@ -280,6 +280,30 @@ pierwszego commita na feature branchu.
 >    — decyzja Mateusza po testach; deep-link FILTRA realizacji (D-OK6)
 >    to nadal osobna sprawa części 4.4.
 
+> **KOREKTA po testach klienckich (2026-08-02, runda poprawek — PR A;
+> pełne uzasadnienie: `docs/analiza-poprawki-wizualne.md`, D-P1–D-P3):**
+>
+> 1. **D-OK3 (pkt 2 korekt wyżej) NIE OBOWIĄZUJE w części „nawigacja"**:
+>    tap w kafel KONKRETNEJ kategorii w karuzeli mobile /oferta/ już nie
+>    przenosi na /kategorie/ — otwiera kartę tej kategorii **W MIEJSCU**,
+>    na /oferta/ (`kat-sheets.ts` przechwytuje klik poniżej progu
+>    desktop). Href `/kategorie/#<slug>` zostaje w markupie jako
+>    fallback bez JS i jako kontrakt testu. Reguła Mateusza: tap
+>    w jakikolwiek kafel kategorii nie przekierowuje. Kafel „zobacz
+>    pełną ofertę" (to nie kafel kategorii) dalej nawiguje na
+>    /kategorie/ — cała lista 6 kategorii żyje tam bez zmian.
+> 2. **D-OK5 rozszerzone**: 6 pre-renderowanych sheetów `#kat-<slug>`
+>    przestało być własnością /kategorie/ — markup i style `.dt-*`
+>    mieszkają w `KategorieSheets.astro`, renderowanym przez TRZY strony
+>    (`/kategorie/`, `/`, `/oferta/`; komponent niesie własny import
+>    mechaniki). Kontrakty `overlay.ts`, domknięcie karty przy przejściu
+>    na ≥1024, redirect desktopowy i canonical `/kategorie/` — bez zmian.
+>    `kategorie.ts` → `kat-sheets.ts` (jeden moduł na trzy strony).
+> 3. **Kanoniczny deep-link kategorii to `/oferta/#<slug>`** (D-P1):
+>    desktop zaznacza zakładkę (bez animacji przełączenia — pierwszy
+>    render zostaje statyczny, D-OK2 w mocy), mobile otwiera kartę.
+>    `/kategorie/#<slug>` dalej działa jak dotąd.
+
 - **Karuzela oferty na dotyku**: snap kafli (`scroll-snap-stop:
   always` — kafel po kaflu), płynność paska postępu — do sprawdzenia
   na telefonie.

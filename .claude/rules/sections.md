@@ -45,6 +45,24 @@ wspólne odziedziczone z szablonu + gotchas sekcji, które przeżyły kopię
   (`[data-lightbox]`), w podglądzie tap = pauza↔play; wideo na zrzutach
   visual ZAWSZE przez maskę, odtwarzanie testuj funkcjonalnie w e2e.
 
+## Oferta (`of` / `kt-card` / `dt`) — kategorie
+
+- Karty kategorii to 6 pre-renderowanych bottom sheetów `#kat-<slug>`
+  w `KategorieSheets.astro` (D-OK5 + D-P2) — komponent WSPÓŁDZIELONY
+  przez `/kategorie/`, `/` i `/oferta/`, renderowany obok `<Footer />`
+  (nakładki są `position: fixed`, a scena oferty ma pod motion-gate
+  przodka z `transform`). Komponent niesie własny import `kat-sheets.ts`,
+  więc strona nie musi pamiętać o skrypcie.
+- **Tap w kafel kategorii poniżej progu desktop NIE nawiguje** — otwiera
+  kartę w miejscu (`a[data-kat-link]` + `preventDefault` w
+  `kat-sheets.ts`). `href` zostaje w markupie jako fallback bez JS —
+  nie zamieniaj kafli na `<button>`.
+- Kanoniczny deep-link kategorii: **`/oferta/#<slug>`** — desktop
+  zaznacza zakładkę (`oferta.ts`, BEZ klasy `.anim`: pierwszy render
+  zostaje statyczny), mobile otwiera kartę. `/kategorie/#<slug>` działa
+  jak dotąd. Hash niesie goły slug (id w dokumencie mają prefiksy
+  `of-tab-`/`of-panel-`/`kat-`), więc przeglądarka niczego nie scrolluje.
+
 ## Contact (`kt`) — /kontakt/ (Etap 5)
 
 - Sekcje: `ContactHero/ContactCards/ContactForm/ContactSoc.astro`;

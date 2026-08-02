@@ -337,6 +337,22 @@ zmian.
 >    cytatu); desktop bez zmian (lokalnie 1.6 s / 0.92). Zacieśnienie
 >    do baseline'u CI = domknięcie 4.5.
 
+> **KOREKTA po testach klienckich (2026-08-02, runda poprawek — PR A;
+> uzasadnienie: `docs/analiza-poprawki-wizualne.md`, D-P1/D-P2):**
+>
+> 1. **D-SG4 — kafle zajawki przestały linkować gołą `/oferta/`.** Każdy
+>    kafel niesie SLUG kategorii (dane wyjechały do
+>    `home-oferta-content.ts` pod unit test kontraktu): na desktopie
+>    linkuje `/oferta/#<slug>` i otwiera TĘ zakładkę (wcześniej zawsze
+>    lądowała pierwsza — „Kuchnie i sprzęt AGD"), poniżej progu desktop
+>    tap otwiera kartę kategorii `#kat-<slug>` W MIEJSCU, bez opuszczania
+>    strony głównej (współdzielony `KategorieSheets.astro` renderowany
+>    obok `<Footer />`). `categories.ts` i treści marketingowe kafli —
+>    bez zmian. CTA „Zobacz pełną ofertę" dalej nawiguje na `/oferta/`.
+>
+> (Korekta D-SG5 — desktopowe CTA procesu — wchodzi osobnym PR-em B tej
+> samej rundy.)
+
 - **LCP mobile** (hero pełnoekranowe): najpoważniejszy budżet —
   2563/3500 ms przed hero. Mitigacje D-SG3; wynik z CI raportuję przed
   domknięciem części.

@@ -2,7 +2,8 @@
 // tabs, panel 01 w SSR) + CTA realizacji i procesu; mobile — karuzela
 // 3 kafli + „zobacz pełną ofertę" → /kategorie/ z paskiem postępu
 // (gotchas karuzel: sections.md). Decyzje: docs/analiza-oferta-kategorie.md.
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
+import { HOME_KAFLE } from "../../src/components/sections/home/home-oferta-content";
 import {
   OFERTA_CATEGORIES,
   OFERTA_KAFLE_MOBILE,
@@ -14,7 +15,7 @@ import {
   WORK_INDEX_PATH,
 } from "../../src/lib/routes";
 import { collectPageIssues, usePreviewGuard } from "../helpers/guards";
-import { gotoReady, settle } from "../helpers/scroll";
+import { gotoReady, scrollPageTo, settle } from "../helpers/scroll";
 
 usePreviewGuard();
 
@@ -75,6 +76,32 @@ test.describe("oferta desktop (zakładki + panel)", () => {
     const last = OFERTA_CATEGORIES.length - 1;
     await expect(tabs.nth(last)).toHaveAttribute("aria-selected", "true");
     await expect(page.locator("[data-ofpanel]").nth(last)).toBeVisible();
+  });
+
+  test("deep-link /oferta/#<slug> zaznacza zakładkę tej kategorii (D-P1)", async ({
+    page,
+  }) => {
+    const idx = 2; // Wnętrza komercyjne
+    const cat = OFERTA_CATEGORIES[idx];
+    await gotoReady(page, `${OFERTA_PATH}#${cat.slug}`);
+    const tabs = page.locator("[data-oftab]");
+    await expect(tabs.nth(idx)).toHaveAttribute("aria-selected", "true");
+    await expect(tabs.first()).toHaveAttribute("aria-selected", "false");
+    const panel = page.locator("[data-ofpanel]").nth(idx);
+    await expect(panel).toBeVisible();
+    await expect(panel.locator(".of-ptitle")).toHaveText(cat.title);
+    // Hash niesie goły slug — nie ma takiego id w dokumencie, więc
+    // przeglądarka niczego nie scrolluje.
+    expect(await page.evaluate(() => window.scrollY)).toBeLessThan(50);
+  });
+
+  test("nieznany slug w hashu zostawia panel 01 z SSR", async ({ page }) => {
+    await gotoReady(page, `${OFERTA_PATH}#nie-ma-takiej`);
+    await expect(page.locator("[data-oftab]").first()).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+    await expect(page.locator("[data-ofpanel]").first()).toBeVisible();
   });
 
   test("karta CTA panelu prowadzi do realizacji z etykietą kategorii", async ({
@@ -189,17 +216,33 @@ test.describe("oferta mobile (karuzela)", () => {
     expect(after).toBeGreaterThan(100); // dojazd na koniec toru (n-1)*100%
   });
 
-  test("kafel kategorii otwiera jej kartę na /kategorie/ (deep-link)", async ({
+  test("kafel kategorii otwiera kartę W MIEJSCU, bez nawigacji (D-P3)", async ({
     page,
   }) => {
     await gotoReady(page, OFERTA_PATH);
-    const slug = OFERTA_CATEGORIES[1].slug; // Szafy i garderoby
+    const cat = OFERTA_CATEGORIES[1]; // Szafy i garderoby
     await page.locator(".of-card").nth(1).click();
-    await expect(page).toHaveURL(new RegExp(`${KATEGORIE_PATH}#${slug}$`));
-    const sheet = page.locator(`#kat-${slug}`);
+    // Korekta D-OK3 po testach klienckich: zostajemy na /oferta/.
+    await expect(page).toHaveURL(new RegExp(`${OFERTA_PATH}$`));
+    const sheet = page.locator(`#kat-${cat.slug}`);
     await expect(sheet).toBeVisible();
     await expect(sheet).toHaveClass(/is-open/);
-    await expect(sheet.locator("h2")).toHaveText(OFERTA_CATEGORIES[1].title);
+    await expect(sheet.locator("h2")).toHaveText(cat.title);
+    await page.keyboard.press("Escape");
+    await expect(sheet).toBeHidden();
+  });
+
+  test("deep-link /oferta/#<slug> otwiera kartę na wejściu", async ({
+    page,
+  }) => {
+    // Kanoniczny adres kategorii działa na obu progach (D-P1): tu sheet,
+    // na desktopie zakładka.
+    const cat = OFERTA_CATEGORIES[4]; // Zabudowy łazienkowe
+    await gotoReady(page, `${OFERTA_PATH}#${cat.slug}`);
+    const sheet = page.locator(`#kat-${cat.slug}`);
+    await expect(sheet).toBeVisible();
+    await expect(sheet).toHaveClass(/is-open/);
+    await expect(sheet.locator("h2")).toHaveText(cat.title);
   });
 
   test("kafel „zobacz pełną ofertę” nawiguje bez otwierania karty", async ({
@@ -221,5 +264,79 @@ test.describe("oferta mobile (karuzela)", () => {
     await settle(page, 300);
     await btn.click();
     await expect(page).toHaveURL(new RegExp(`${PROCESS_PATH}?$`));
+  });
+});
+
+// ── kafle zajawki na stronie głównej (D-P1/D-P2) ──
+// Desktop: kafel = deep-link zakładki na /oferta/. Mobile: tap otwiera
+// kartę kategorii W MIEJSCU, bez opuszczania strony głównej.
+test.describe("dojście ze strony głównej — kafle zajawki oferty", () => {
+  /** Dowozi scenę oferty w kadr (desktop: scena przypięta 300vh). */
+  async function revealOferta(page: Page) {
+    const top = await page.evaluate(
+      () => document.querySelector<HTMLElement>("[data-home-of]")!.offsetTop,
+    );
+    await scrollPageTo(page, top + 10);
+    await settle(page, 300);
+  }
+
+  test("każdy kafel linkuje /oferta/#<slug> swojej kategorii", async ({
+    page,
+  }) => {
+    await gotoReady(page);
+    const cards = page.locator("[data-home-of] .cat");
+    await expect(cards).toHaveCount(HOME_KAFLE.length);
+    const hrefs = await cards.evaluateAll((els) =>
+      els.map((el) => el.getAttribute("href")),
+    );
+    hrefs.forEach((href, i) => {
+      expect(href).toBe(`${OFERTA_PATH}#${HOME_KAFLE[i].slug}`);
+    });
+  });
+
+  test("desktop: klik w kafel otwiera /oferta/ na TEJ kategorii", async ({
+    page,
+    isMobile,
+  }) => {
+    test.skip(!!isMobile, "na mobile kafel otwiera kartę w miejscu");
+    await gotoReady(page);
+    await revealOferta(page);
+    const idx = 1; // Szafy i garderoby — inna niż domyślny panel 01
+    await page.locator("[data-home-of] .cat").nth(idx).click();
+    await expect(page).toHaveURL(
+      new RegExp(`${OFERTA_PATH}#${HOME_KAFLE[idx].slug}$`),
+    );
+    const tabs = page.locator("[data-oftab]");
+    await expect(tabs.nth(idx)).toHaveAttribute("aria-selected", "true");
+    await expect(page.locator("[data-ofpanel]").nth(idx)).toBeVisible();
+  });
+
+  test("mobile: tap w kafel otwiera kartę bez opuszczania strony", async ({
+    page,
+    isMobile,
+  }) => {
+    test.skip(!isMobile, "na desktopie kafel nawiguje (deep-link zakładki)");
+    await gotoReady(page);
+    await revealOferta(page);
+    const idx = 1; // Szafy i garderoby
+    const cat = OFERTA_CATEGORIES[idx];
+    await page.locator("[data-home-of] .cat").nth(idx).click();
+    await expect(page).toHaveURL(/\/$/);
+    const sheet = page.locator(`#kat-${cat.slug}`);
+    await expect(sheet).toBeVisible();
+    await expect(sheet).toHaveClass(/is-open/);
+    await expect(sheet.locator("h2")).toHaveText(cat.title);
+    await page.keyboard.press("Escape");
+    await expect(sheet).toBeHidden();
+  });
+
+  test("CTA „Zobacz pełną ofertę” dalej nawiguje na /oferta/", async ({
+    page,
+  }) => {
+    await gotoReady(page);
+    await revealOferta(page);
+    await page.locator("[data-home-of] .of-cta a").click();
+    await expect(page).toHaveURL(new RegExp(`${OFERTA_PATH}$`));
+    await expect(page.locator("main h1")).toBeVisible();
   });
 });
