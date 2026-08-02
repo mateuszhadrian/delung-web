@@ -269,6 +269,26 @@ treść/sekcje budowane od nowa wg `docs/design/`).
   842 768 B. Budżety LHCI zostają NIETKNIĘTE (script 80 000 B) — ich
   zacieśnienie do nowego baseline'u to osobna decyzja Mateusza i osobny
   commit (kandydat: Etap 6).
+- **Runda poprawek wizualnych (przed Etapem 6) — WYKONANA** (2026-08-02,
+  PR #20 kafle kategorii, PR #21 CTA i link opinii; decyzje D-P1–D-P6:
+  `docs/analiza-poprawki-wizualne.md` — czytać RAZEM z analizami widoków,
+  bo koryguje D-SG4, D-SG5 i D-OK3). PR A: kanoniczny deep-link kategorii
+  `/oferta/#<slug>` (desktop zaznacza zakładkę BEZ animacji przełączenia,
+  mobile otwiera kartę), karty kategorii wyjechały do współdzielonego
+  `KategorieSheets.astro` (renderują go `/kategorie/`, `/` i `/oferta/`
+  obok `<Footer />`; `kategorie.ts` → `kat-sheets.ts` obsługuje wszystkie
+  trzy) — **tap w kafel kategorii na mobile NIE nawiguje, otwiera kartę
+  w miejscu**; `href` zostaje fallbackiem bez JS; dane kafli zajawki
+  w `home-oferta-content.ts` pod unit testem kontraktu (slug musi mieć
+  zakładkę i kartę). Zmierzone: `/` +3,5 kB gz, `/oferta/` +2,1 kB gz,
+  bundle JS −416 B, zero nowych baseline'ów. PR B: hover czterech BIAŁYCH
+  pigułek leżących na zdjęciach przestał być półprzezroczysty (`#f2f2f2`
+  zamiast `rgba()`/`opacity` — szklane `hero-btn`/`cta-ghost` z designu
+  zostają), desktopowe CTA procesu na stronie głównej (korekta D-SG5;
+  navbar bez zmian — D-CH4), `OPINIE_GOOGLE_URL` → panel opinii firmy
+  w Google. Baseline'y PR B: 8 plików (`index-proces` × 3 profile desktop
+  - `index-opinie` × chromium-1366 — ten ostatni to przesunięcie o 1 px
+    z wyższej strony, treść identyczna; diff zaakceptowany).
 - Etapy 6–7 — przed nami (SEO/pomiar → przekazanie).
 
 ## Mapa projektu
