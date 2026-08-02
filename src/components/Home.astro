@@ -34,12 +34,6 @@ const DESCRIPTION =
 ---
 
 <BaseLayout description={DESCRIPTION}>
-  {
-    /* Nazwa serwisu + wydawca z logo dla wyników wyszukiwania (D-E6);
-       węzeł firmy z pełnym NAP-em siedzi na /kontakt/. */
-  }
-  <JsonLd slot="head" data={webSite(Astro.site!)} />
-
   <link
     slot="head"
     rel="preload"
@@ -48,6 +42,17 @@ const DESCRIPTION =
     imagesrcset={`${heroMobileSm.src} 1.8x, ${heroMobile.src} 3x`}
     fetchpriority="high"
   />
+
+  {
+    /* Nazwa serwisu + wydawca z logo dla wyników wyszukiwania (D-E6);
+       węzeł firmy z pełnym NAP-em siedzi na /kontakt/.
+       Kolejność w <head> celowa: preload zdjęcia hero (LCP) idzie PIERWSZY.
+       Pomiar A/B pokazał, że te 505 B nie ruszają LCP ani o milisekundę
+       (12 przebiegów LHCI, mediany 5035 vs 5035 ms), więc to higiena,
+       nie optymalizacja — ale zasób krytyczny ma stać przed martwym
+       tekstem, żeby nikt tego kiedyś nie musiał zgadywać. */
+  }
+  <JsonLd slot="head" data={webSite(Astro.site!)} />
 
   <script is:inline>
     // PRZED paintem: motion OK → html.js-motion (uzbraja stany startowe
