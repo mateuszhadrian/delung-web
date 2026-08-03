@@ -99,24 +99,44 @@ export function localBusiness(site: string | URL): Record<string, unknown> {
   };
 }
 
-/** Węzeł strony głównej: nazwa serwisu + wydawca z logo (D-E6).
+/** Strona główna: DWA węzły najwyższego poziomu w `@graph` — `WebSite`
+ *  i `Organization` (D-E6, korekta po Rich Results Test 2026-08-02).
+ *
+ *  Dlaczego `@graph`, a nie `Organization` zagnieżdżona w `publisher`:
+ *  przy zagnieżdżeniu narzędzie Google raportowało na „/" „nie wykryto
+ *  elementów", podczas gdy na /kontakt/ wypisywało „Organizacja" — a to
+ *  właśnie logo i nazwa wydawcy były celem tej decyzji. Dokumentacja
+ *  Google mówi wprost: dane organizacji z `logo` mają stać na stronie
+ *  głównej SAMODZIELNIE. `publisher` zostaje jako czysta referencja
+ *  `@id` — bez duplikowania danych; oba węzły i tak spina wspólny
+ *  identyfikator z węzłem firmy na /kontakt/.
+ *
  *  BEZ `SearchAction` — strona nie ma wyszukiwarki, a deklarowanie
  *  nieistniejącego endpointu to błąd walidacji. */
 export function webSite(site: string | URL): Record<string, unknown> {
+  const organizationId = abs(site, "/#firma");
   return {
     "@context": "https://schema.org",
-    "@type": "WebSite",
-    "@id": abs(site, "/#strona"),
-    url: abs(site, "/"),
-    name: BUSINESS.name,
-    inLanguage: "pl-PL",
-    publisher: {
-      "@type": "Organization",
-      "@id": abs(site, "/#firma"),
-      name: BUSINESS.name,
-      legalName: BUSINESS.legalName,
-      logo: { "@type": "ImageObject", url: abs(site, "/og-image.png") },
-      sameAs: [INSTAGRAM_URL, GOOGLE_LISTING_URL],
-    },
+    "@graph": [
+      {
+        "@type": "WebSite",
+        "@id": abs(site, "/#strona"),
+        url: abs(site, "/"),
+        name: BUSINESS.name,
+        inLanguage: "pl-PL",
+        publisher: { "@id": organizationId },
+      },
+      {
+        "@type": "Organization",
+        "@id": organizationId,
+        name: BUSINESS.name,
+        legalName: BUSINESS.legalName,
+        description: BUSINESS.description,
+        url: abs(site, "/"),
+        logo: { "@type": "ImageObject", url: abs(site, "/og-image.png") },
+        image: abs(site, "/og-image.png"),
+        sameAs: [INSTAGRAM_URL, GOOGLE_LISTING_URL],
+      },
+    ],
   };
 }
