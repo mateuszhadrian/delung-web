@@ -217,6 +217,66 @@ test.describe("szyna filtrów + deep-link (jeden profil)", () => {
   });
 });
 
+// D-Q4: szyna jest sticky od 4.4, ale jej blokiem zawierającym był
+// nagłówek kończący się 20 px niżej — kleiła się przez moment i znikała.
+// Po zmianie (`display: contents` na mobilnym `.re-head`) trzyma się pod
+// paskiem przez CAŁĄ listę kafli. Test pilnuje ZASIĘGU, nie samej
+// deklaracji `position: sticky`.
+test.describe("szyna filtrów: zasięg przyklejenia (mobile)", () => {
+  test.skip(
+    ({ isMobile }) => !isMobile,
+    "na desktopie szyna żyje w sticky kolumnie bocznej",
+  );
+
+  const hdrH = (page: Page) =>
+    page.evaluate(
+      () =>
+        parseFloat(
+          getComputedStyle(document.documentElement).getPropertyValue(
+            "--hdr-h",
+          ),
+        ) || 0,
+    );
+
+  test("na dnie listy kafli szyna dalej wisi pod paskiem i filtruje", async ({
+    page,
+  }) => {
+    await gotoReady(page, PATH);
+    const rail = page.locator("[data-rail]");
+
+    // Dno siatki kafli — miejsce, w którym przed poprawką szyny dawno
+    // nie było w kadrze.
+    const gridBottom = await page
+      .locator(".re-grid")
+      .evaluate((el) => el.getBoundingClientRect().bottom + window.scrollY);
+    await scrollPageTo(page, gridBottom - page.viewportSize()!.height);
+
+    await expect(rail).toBeVisible();
+    const box = await rail.boundingBox();
+    expect(box).not.toBeNull();
+    expect(Math.abs(box!.y - (await hdrH(page)))).toBeLessThanOrEqual(1);
+
+    // …i jest UŻYTECZNA z tej pozycji, nie tylko widoczna
+    const cat = CATS_WITH[0];
+    await page.locator(`[data-rail] button[data-f="${cat.slug}"]`).click();
+    await expect(page.locator(".re-grid [data-work-slug]:visible")).toHaveCount(
+      countOf(cat.slug),
+    );
+  });
+
+  test("na dnie strony szyna odjeżdża razem z listą", async ({ page }) => {
+    await gotoReady(page, PATH);
+    await scrollPageTo(
+      page,
+      await page.evaluate(() => document.documentElement.scrollHeight),
+    );
+    const box = await page.locator("[data-rail]").boundingBox();
+    // wyjechała nad viewport — sticky kończy się razem z blokiem listy,
+    // więc stopka i CTA nie mają paska filtrów nad sobą
+    expect(box === null || box.y < (await hdrH(page)) - 1).toBe(true);
+  });
+});
+
 test.describe("detal desktop: modal, galeria, projnav", () => {
   test.skip(({ isMobile }) => !!isMobile, "układ modala tylko na desktop");
 

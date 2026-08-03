@@ -5,6 +5,8 @@
 // wyłącznie dane. Kolory awatarów to warianty PRZYCIEMNIONE do AA z D-SG7
 // (#7d8a94→#59656f, #e8710a→#a34f07, #5f9a41→#457533) — nie surowe
 // z eksportu. Pole `more` (dopisek „…więcej" na karcie) używa tylko o-nas.
+import { GOOGLE_PLACE_ID } from "@/lib/jsonld";
+
 export const OPINIE = [
   {
     i: "P",
@@ -58,17 +60,19 @@ export const OPINIE = [
 
 export type Opinia = (typeof OPINIE)[number];
 
-/** Link „Zobacz więcej opinii w Google" (wspólny obu sekcjom) — panel
- *  lokalny firmy z otwartą zakładką opinii, nie gołe wyszukiwanie
- *  (D-P6). Adres obcięty do części niosącej znaczenie: `rldimm` = CID
- *  profilu Delung Meble, `tbm=lcl` = tryb lokalny, `#lkt=LocalPoiReviews`
- *  = zakładka opinii. Parametry sesyjne z paska adresu (sca_esv, sxsrf,
- *  ved, stick, biw/bih/dpr) świadomie wycięte — to kontekst tamtej sesji
- *  wyszukiwania, nie identyfikator firmy. Wariant zweryfikowany klikiem
- *  przez Mateusza. */
-export const OPINIE_GOOGLE_URL =
-  "https://www.google.com/search?q=Delung+Meble&tbm=lcl" +
-  "&rldimm=10496135886078434411&hl=pl#lkt=LocalPoiReviews";
+/** Link „Zobacz więcej opinii w Google" (wspólny obu sekcjom) — wejście
+ *  Google'a do opinii wizytówki, budowane z Place ID (D-Q3).
+ *
+ *  KOREKTA D-P6: poprzedni wariant (`tbm=lcl` + `rldimm` +
+ *  `#lkt=LocalPoiReviews`) był adresem DESKTOPOWEGO UI wyszukiwarki —
+ *  Google nie ma tego widoku na telefonie, więc mobile dostawało pustą
+ *  stronę. Lekcja: link sprawdzamy klikiem na OBU progach, nie na jednym.
+ *
+ *  Ten adres Google sam przekierowuje na formę właściwą dla urządzenia
+ *  (telefon: wizytówka z opiniami, desktop: panel lokalny z opiniami).
+ *  Gdyby endpoint kiedyś zniknął, fallbackiem jest `GOOGLE_LISTING_URL`
+ *  po CID — oba identyfikatory żyją obok siebie w src/lib/jsonld.ts. */
+export const OPINIE_GOOGLE_URL = `https://search.google.com/local/reviews?placeid=${GOOGLE_PLACE_ID}&hl=pl`;
 
 /** Gwiazdka ocen jako path SVG (znak ★ tekstem nie przechodzi ratchetu
  *  axe — D-SG7); rysowana inline w sekcjach z aria-hidden. */

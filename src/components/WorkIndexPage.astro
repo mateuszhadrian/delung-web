@@ -258,10 +258,18 @@ const pad = (n: number) => String(n).padStart(2, "0");
     max-width: var(--col);
     margin-inline: auto;
   }
+  /* display:contents — pudełko nagłówka znika z układu, więc blokiem
+     zawierającym sticky szyny filtrów staje się `.re-in`, obejmujące CAŁĄ
+     listę kafli (D-Q4; wcześniej szyna kleiła się przez ~20 px, bo tyle
+     zostawało jej rodzicowi). Padding nagłówka rozchodzi się na sąsiadów
+     co do piksela: 24 px w górę do `.re-kick`, 20 px w dół do `.re-grid`
+     — układ się nie rusza, zmienia się wyłącznie zasięg przyklejenia.
+     Desktop wraca do zwykłego bloku (tam nagłówek JEST sticky kolumną). */
   .re-head {
-    padding-block: 24px 20px;
+    display: contents;
   }
   .re-kick {
+    padding-top: 24px;
     font-family: var(--font-display), sans-serif;
     font-weight: 500;
     font-size: clamp(10px, 2.82vw, 12px);
@@ -313,6 +321,10 @@ const pad = (n: number) => String(n).padStart(2, "0");
     z-index: 3;
     background: #fff;
     margin-top: 18px;
+    /* 20 px przejęte po dolnym paddingu `.re-head` (D-Q4) — celowo tutaj,
+       a nie w `.re-grid`: zrzut wizualny siatki jest zrzutem ELEMENTU,
+       więc jej własny padding wszedłby w kadr i ruszył baseline. */
+    margin-bottom: 20px;
   }
   .re-rail::-webkit-scrollbar {
     display: none;
@@ -418,6 +430,8 @@ const pad = (n: number) => String(n).padStart(2, "0");
       padding-inline: var(--pad);
     }
     .re-head {
+      /* nagłówek wraca jako pudełko — na desktopie to ON jest sticky (D-Q4) */
+      display: block;
       position: sticky;
       top: var(--hdr-h, 80px);
       width: clamp(220px, 20vw, 288px);
@@ -431,6 +445,8 @@ const pad = (n: number) => String(n).padStart(2, "0");
       padding-inline: 0;
     }
     .re-kick {
+      /* padding-top nosi mobilny nagłówek bez pudełka (D-Q4) — tu zbędny */
+      padding-top: 0;
       font-size: clamp(10.5px, 0.83vw, 12px);
       letter-spacing: 0.22em;
       color: var(--accent-ink);
