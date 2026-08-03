@@ -1,5 +1,6 @@
-// Scroll w testach — mechanika 1:1 z verify-hero.mjs: Lenis (immediate,
-// force) + natywny window.scrollTo, settle = 2×rAF + timeout.
+// Scroll w testach: natywny window.scrollTo, settle = 2×rAF + timeout.
+// Gałąź Lenisa odeszła razem z biblioteką (D-Q1) — scroll w serwisie jest
+// natywny wszędzie, więc testy przewijają dokładnie tak jak użytkownik.
 import { type Page } from "@playwright/test";
 
 /** Czeka aż strona „usiądzie": 2×rAF (GSAP scrub dogania) + timeout. */
@@ -11,15 +12,9 @@ export async function settle(page: Page, ms = 350): Promise<void> {
   await page.waitForTimeout(ms);
 }
 
-/** Przewija stronę do pozycji y przez Lenisa i natywnie, potem settle. */
+/** Przewija stronę do pozycji y i czeka, aż usiądzie. */
 export async function scrollPageTo(page: Page, y: number): Promise<void> {
-  await page.evaluate((top) => {
-    const lenis = window.__lenis;
-    if (lenis && typeof lenis.scrollTo === "function") {
-      lenis.scrollTo(top, { immediate: true, force: true });
-    }
-    window.scrollTo(0, top);
-  }, Math.round(y));
+  await page.evaluate((top) => window.scrollTo(0, top), Math.round(y));
   await settle(page);
 }
 
@@ -38,7 +33,6 @@ async function scrollPageToSmooth(
 ): Promise<void> {
   await page.evaluate(
     async ({ top, ms }) => {
-      const lenis = window.__lenis;
       const from = window.scrollY;
       const delta = top - from;
       const t0 = performance.now();
@@ -47,7 +41,6 @@ async function scrollPageToSmooth(
           const t = Math.min((now - t0) / ms, 1);
           const eased = 1 - Math.pow(1 - t, 3);
           const pos = from + delta * eased;
-          if (lenis) lenis.scrollTo(pos, { immediate: true, force: true });
           window.scrollTo(0, pos);
           if (t < 1) requestAnimationFrame(tick);
           else done();

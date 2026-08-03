@@ -551,8 +551,7 @@ test.describe("detal mobile: bottom sheet, karuzela, gesty", () => {
     const detail = await openDetail(page, await revealFirstCard(page));
 
     const track = detail.locator("[data-track]");
-    // gotchas karuzel (sections.md): atrybut Lenisa + snap-stop
-    await expect(track).toHaveAttribute("data-lenis-prevent-horizontal", "");
+    // gotcha karuzel (sections.md): scroll-snap-stop: always
     await expect(track.locator("[data-slide]").first()).toHaveCSS(
       "scroll-snap-stop",
       "always",

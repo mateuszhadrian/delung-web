@@ -99,7 +99,8 @@ podpisy „Zabudowa + AGD" itd., mobile pokazuje 3 oznaczone `m:1`) —
 lokalna tablica w `HomeOferta.astro`, linki całych kafli i CTA →
 `/oferta/` (kotwice per kategoria to sprawa 4.3). `categories.ts`
 (D2, kontrakt CMS) **nietknięte**. Karuzela mobile: gotchas sections.md
-— `data-lenis-prevent-horizontal` + `scroll-snap-stop: always`.
+— `scroll-snap-stop: always` (atrybut `data-lenis-prevent-horizontal`
+odszedł z Lenisem — KOREKTA D-Q1).
 Desktop: sekcja przypięta (300vh) — mechanika w D-SG9; licznik
 „01 / 06" i CTA w pasie pod kaflami (port skryptu `fitCta` z eksportu).
 
@@ -278,7 +279,11 @@ zmian.
 >    natywny, Lenis tylko desktop** (delung — inaczej niż hadrianm — nie
 >    ma na mobile mechaniki wymagającej Lenisa). Gałąź touch + guardy
 >    pinch/zoom usunięte ze `smooth-scroll.ts`; reguły zaktualizowane
->    (`.claude/rules/scroll-lenis.md`). Konsumenci `window.__lenis` mają
+>    (`.claude/rules/scroll.md`). **KOREKTA D-Q1 (runda poprawek 2):**
+>    Lenis wyszedł z projektu w całości — scroll jest natywny także na
+>    desktopie. Powód: na tej stronie JS-owy scroll wymuszał przemalowanie
+>    warstwy hero w każdej klatce i Safari gubiło klatki (pomiar:
+>    `docs/analiza-poprawki-2.md`). Konsumenci `window.__lenis` mają
 >    fallbacki natywne — zero zmian kontraktów.
  > 2. Nagłówek hero mobile renderował się 16 px zamiast ~36 px: po
 >    zamianie na `<p class="hero-head">` (D-SG2/strict mode) selektor
