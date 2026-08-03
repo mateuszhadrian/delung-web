@@ -34,7 +34,10 @@ const c = {
     "Zasady przetwarzania danych osobowych przekazanych przez formularz kontaktowy na delung.pl — prostym językiem, zgodnie z RODO.",
   eyebrow: "OCHRONA DANYCH OSOBOWYCH",
   heading: "Polityka prywatności",
-  effective: "OBOWIĄZUJE OD 11 LIPCA 2026 R.",
+  // Data obowiązywania rośnie przy ISTOTNEJ zmianie treści — tak stanowi
+  // sekcja 09 tego dokumentu. 2 sierpnia 2026: dopisanie zbiorczej
+  // statystyki odwiedzin (Cloudflare Web Analytics włączone w Etapie 6).
+  effective: "OBOWIĄZUJE OD 2 SIERPNIA 2026 R.",
   intro:
     "Ta polityka opisuje, jak przetwarzamy dane osobowe przekazane przez formularz kontaktowy na stronie delung.pl. Piszemy prostym językiem — bez prawniczego szumu, ale z kompletem informacji wymaganych przez RODO.",
   tocHead: "W TYM DOKUMENCIE",
@@ -55,8 +58,9 @@ const c = {
       h: "Jakie dane przetwarzamy",
       pre: [
         "Z formularza kontaktowego: imię i nazwisko, numer telefonu, adres e-mail oraz treść wiadomości.",
-        "Automatycznie, w warstwie technicznej: adres IP i podstawowe informacje o przeglądarce — wykorzystywane przez infrastrukturę Cloudflare (hosting, zapora WAF, mechanizm antybotowy Turnstile) wyłącznie do ochrony strony przed spamem i nadużyciami.",
-        "Strona nie prowadzi analityki, nie wyświetla reklam i nie używa plików cookie do celów marketingowych.",
+        "Automatycznie, w warstwie technicznej: adres IP i podstawowe informacje o przeglądarce — wykorzystywane przez infrastrukturę Cloudflare (hosting, zapora WAF, mechanizm antybotowy Turnstile) do ochrony strony przed spamem i nadużyciami oraz do zbiorczej statystyki odwiedzin (Cloudflare Web Analytics).",
+        "Statystyka odwiedzin jest zbiorcza i nie identyfikuje osób: Cloudflare Web Analytics <strong>nie zapisuje plików cookie</strong> ani żadnych danych w Twojej przeglądarce, nie nadaje identyfikatorów użytkownikom i nie śledzi Cię na innych stronach. Zliczane są wyłącznie odsłony, adresy podstron, kraj oraz rodzaj urządzenia i przeglądarki.",
+        "Strona nie wyświetla reklam, nie profiluje użytkowników i nie używa plików cookie do celów marketingowych.",
       ],
     },
     {
@@ -64,6 +68,7 @@ const c = {
       list: [
         "<strong>Odpowiedź na Twoją wiadomość i dalsza korespondencja</strong> — art. 6 ust. 1 lit. f RODO (prawnie uzasadniony interes: komunikacja z osobą, która kieruje do nas zapytanie), a gdy wiadomość dotyczy wyceny lub realizacji mebli — art. 6 ust. 1 lit. b RODO (działania podjęte na Twoje żądanie przed zawarciem umowy).",
         "<strong>Ochrona strony przed spamem, botami i nadużyciami</strong> — art. 6 ust. 1 lit. f RODO (prawnie uzasadniony interes: bezpieczeństwo usługi).",
+        "<strong>Zbiorcza statystyka odwiedzin strony</strong> — art. 6 ust. 1 lit. f RODO (prawnie uzasadniony interes: utrzymanie i rozwój strony w oparciu o dane o ruchu, które nie identyfikują osób).",
       ],
     },
     {
@@ -72,7 +77,7 @@ const c = {
         "Korzystamy z usług podmiotów przetwarzających, które obsługują techniczną stronę komunikacji:",
       ],
       list: [
-        "<strong>Cloudflare</strong> — hosting strony, zapora sieciowa i ochrona antybotowa (Turnstile),",
+        "<strong>Cloudflare</strong> — hosting strony, zapora sieciowa, ochrona antybotowa (Turnstile) oraz zbiorcza statystyka odwiedzin (Web Analytics),",
         "<strong>Resend</strong> (resend.com) — wysyłka wiadomości e-mail z formularza (powiadomienie do nas i automatyczne potwierdzenie do Ciebie); infrastruktura wysyłkowa w regionie UE (Irlandia),",
         "<strong>OVH</strong> — skrzynka pocztowa, do której trafia i w której jest przechowywana korespondencja.",
       ],
@@ -110,7 +115,7 @@ const c = {
     {
       h: "Dobrowolność i decyzje automatyczne",
       pre: [
-        "Podanie danych jest dobrowolne, ale bez numeru telefonu lub adresu e-mail nie będziemy w stanie odpowiedzieć. Nie podejmujemy decyzji w sposób zautomatyzowany i nie profilujemy użytkowników — mechanizm antybotowy (Cloudflare Turnstile) ocenia wyłącznie, czy formularz wysyła człowiek.",
+        "Podanie danych jest dobrowolne, ale bez numeru telefonu lub adresu e-mail nie będziemy w stanie odpowiedzieć. Nie podejmujemy decyzji w sposób zautomatyzowany i nie profilujemy użytkowników — mechanizm antybotowy (Cloudflare Turnstile) ocenia wyłącznie, czy formularz wysyła człowiek, a statystyka odwiedzin liczona jest zbiorczo, bez łączenia danych z konkretną osobą.",
       ],
     },
     {
