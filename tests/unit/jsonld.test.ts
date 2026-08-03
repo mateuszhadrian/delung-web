@@ -8,6 +8,7 @@ import { describe, expect, it } from "vitest";
 import {
   BUSINESS,
   GOOGLE_LISTING_URL,
+  GOOGLE_PLACE_ID,
   INSTAGRAM_URL,
   localBusiness,
   webSite,
@@ -153,10 +154,35 @@ describe("spójność z resztą strony", () => {
     }
   });
 
-  it("wizytówka Google w sameAs wskazuje ten sam CID co link do opinii", () => {
+  // D-Q3: link do opinii buduje się z Place ID, a `sameAs` z CID-a — dwa
+  // zapisy tego samego identyfikatora Google. Place ID to base64url
+  // protobufa `0a <len> 09 <8B FID-hi LE> 11 <8B CID LE>`, więc równość
+  // da się SPRAWDZIĆ, a nie tylko zadeklarować w komentarzu: literówka
+  // w którejkolwiek ze stałych wywali ten test.
+  it("link do opinii i wizytówka w sameAs wskazują tę samą firmę", () => {
     const cid = GOOGLE_LISTING_URL.match(/cid=(\d+)/)?.[1];
     expect(cid).toBeTruthy();
-    expect(OPINIE_GOOGLE_URL).toContain(cid!);
+    expect(OPINIE_GOOGLE_URL).toContain(GOOGLE_PLACE_ID);
+
+    const raw = Buffer.from(
+      GOOGLE_PLACE_ID.replace(/-/g, "+").replace(/_/g, "/"),
+      "base64",
+    );
+    expect(raw.length).toBe(20);
+    expect(raw[0]).toBe(0x0a);
+    expect(raw[2]).toBe(0x09);
+    expect(raw[11]).toBe(0x11);
+    expect(raw.readBigUInt64LE(12).toString()).toBe(cid);
+  });
+
+  it("link do opinii NIE jest desktopowym UI wyszukiwarki (KOREKTA D-P6)", () => {
+    // Wariant z `tbm=lcl`/`#lkt=LocalPoiReviews` renderował pustą stronę
+    // na telefonie — do tego adresu nie wracamy.
+    expect(OPINIE_GOOGLE_URL).not.toContain("tbm=lcl");
+    expect(OPINIE_GOOGLE_URL).not.toContain("lkt=LocalPoiReviews");
+    expect(OPINIE_GOOGLE_URL.startsWith("https://search.google.com/")).toBe(
+      true,
+    );
   });
 
   it("adres z JSON-LD zgadza się z tym drukowanym w stopce", () => {

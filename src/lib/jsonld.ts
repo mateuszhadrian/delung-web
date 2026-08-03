@@ -19,11 +19,20 @@
  *  (spójności pilnuje kontrakt w tests/unit/jsonld.test.ts). */
 export const INSTAGRAM_URL = "https://www.instagram.com/delung_meble/";
 
-/** Kanoniczny odnośnik do wizytówki Google po CID (ten sam identyfikator
- *  co w OPINIE_GOOGLE_URL w src/lib/opinie.ts). Adres z CID jest stabilny —
- *  inaczej niż link wyszukiwarki, który niesie parametry sesji. */
+/** Kanoniczny odnośnik do wizytówki Google po CID — węzeł `sameAs` danych
+ *  strukturalnych. Adres z CID jest stabilny (inaczej niż link
+ *  wyszukiwarki, który niesie parametry sesji) i jest zarazem
+ *  udokumentowanym FALLBACKIEM linku do opinii (D-Q3), gdyby Google
+ *  wyłączył endpoint `search.google.com/local/reviews`. */
 export const GOOGLE_LISTING_URL =
   "https://maps.google.com/?cid=10496135886078434411";
+
+/** Identyfikator wizytówki w formacie Place ID (`ChIJ…`) — ta sama firma
+ *  co CID wyżej, inny zapis tego samego FID-a `0x427eafd1741faadb:
+ *  0x91a9c3fa3bef5c6b` (druga połówka = CID dziesiętnie). Potrzebny przez
+ *  endpoint opinii, który CID-a nie przyjmuje; oba identyfikatory trzymamy
+ *  obok siebie, żeby nikt ich w przyszłości nie rozjechał. */
+export const GOOGLE_PLACE_ID = "ChIJ26ofdNGvfkIRa1zvO_rDqZE";
 
 /** Dane firmy — wspólne dla wszystkich węzłów. */
 export const BUSINESS = {
