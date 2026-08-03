@@ -292,7 +292,39 @@ treść/sekcje budowane od nowa wg `docs/design/`).
   w Google. Baseline'y PR B: 8 plików (`index-proces` × 3 profile desktop
   - `index-opinie` × chromium-1366 — ten ostatni to przesunięcie o 1 px
     z wyższej strony, treść identyczna; diff zaakceptowany).
-- Etapy 6–7 — przed nami (SEO/pomiar → przekazanie).
+- **Etap 6 (SEO, pomiar, polish) — WYKONANY** (2026-08-03, PR #23 ikony,
+  #24 JSON-LD, #25 kolejność w `<head>`, #26 polityka, #27 `@graph`,
+  #28 budżety LHCI; decyzje D-E1–D-E12: `docs/analiza-etap-6.md` — czytać
+  PRZED pracą przy ikonach, danych strukturalnych i budżetach): komplet
+  ikon = SAM ZNACZEK na białym kwadracie (margines 6 %, przy 10 % szczeliny
+  gasły w 16 px), `favicon.svg` to prawdziwy wektor (786 B zamiast 43 kB
+  WebP w base64), odrys zweryfikowany pixel-diffem wobec oryginału (0,60 %
+  przy progu 2 %); komplet powstaje z wektora przez `scripts/make-icons.mjs`
+  (ikony BEZ alfy — iOS podkłada czerń); og-image = pełne logo na cream,
+  1200×630 (12 kB zamiast 145 kB) + `twitter:card` na `summary_large_image`.
+  Dane strukturalne: `src/lib/jsonld.ts` (JEDYNE źródło danych firmy dla
+  schema.org, celowo NIE zna telefonu ani maila — D-CH5) + `seo/JsonLd.astro`
+  w slocie `head`; `/kontakt/` = `FurnitureStore` (adres, geo, godziny
+  PRACOWNI Pn–Pt 07–17/Sb 07–14, NIP, `foundingDate` 2014, `sameAs` IG +
+  wizytówka po CID) BEZ `telephone`/`email`, `/` = `@graph` z `WebSite`
+  i SAMODZIELNĄ `Organization` (KOREKTA po Rich Results Test: zagnieżdżona
+  w `publisher` nie była wykrywana; RRT i tak nie raportuje `Organization`
+  na `/` — właściwe narzędzie to `validator.schema.org`). Cloudflare Web
+  Analytics = auto-injection (RUM w panelu strefy, nie w projekcie Pages);
+  beacon NIE istnieje w lokalnym `dist/`, więc nie liczy się do budżetu
+  skryptów — koszt zmierzony na produkcji: +359 B w dokumencie, 11,4 kB
+  transferu, LCP bez zmian, ~19 ms na main thread. Polityka prywatności
+  (D-E12) dociągnięta do stanu faktycznego — §02 twierdziła „strona nie
+  prowadzi analityki"; data obowiązywania → 2 sierpnia 2026. Budżety LHCI
+  (osobne commity): `script` 80 000 → **30 000** B i `total` mobile
+  1 200 000 → **900 000** B / desktop 1 800 000 → **1 650 000** B, ale
+  LCP mobile 4500 → **5000** ms i perf 0,85 → **0,80** — POLUZOWANIE
+  wymuszone szumem runnera (3918 vs 4592/4890 ms przy identycznych
+  bajtach; rozstrzyga FCP 421 vs 1750 ms). Search Console (property
+  domenowa + sitemapa) i UptimeRobot (HTTPS, 5 min) zrobione;
+  **wizytówka Google PRZENIESIONA DO ETAPU 7** (poprawki NAP razem
+  z klientem przy przekazaniu) — do tego czasu Google widzi niespójny NAP.
+- Etap 7 — przed nami (umowa → przekazanie).
 
 ## Mapa projektu
 
