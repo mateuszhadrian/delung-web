@@ -92,13 +92,7 @@ const MARQ2 = OPINIE.slice(3);
        przewijany region musi być osiągalny klawiaturą (axe
        scrollable-region-focusable — wzorzec op-car z HomeOpinie). */
   }
-  <div
-    class="rev-car"
-    data-lenis-prevent-horizontal
-    tabindex="0"
-    role="region"
-    aria-label="Opinie klientów"
-  >
+  <div class="rev-car" tabindex="0" role="region" aria-label="Opinie klientów">
     {
       OPINIE.map((r: Opinia) => (
         <article class="rc">

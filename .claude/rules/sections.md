@@ -16,7 +16,7 @@ wspólne odziedziczone z szablonu + gotchas sekcji, które przeżyły kopię
   przy `prefers-reduced-motion: no-preference`; bez JS / przy reduce sekcja
   renderuje pełną, statyczną treść.
 - **BEZ GSAP** — biblioteka wypadła z projektu w Etapie 5 (ostatnim
-  konsumentem był `smooth-scroll.ts`, dziś na własnym `requestAnimationFrame`).
+  konsumentem był `smooth-scroll.ts`, skasowany razem z Lenisem — D-Q1).
   Ruch sekcji to własne pętle rAF + `IntersectionObserver` (wzorce:
   `proces-motion.ts`, `onas-motion.ts`, `contact-motion.ts`) — kopiuj wzorzec
   z sąsiedniej sekcji, nie przywracaj GSAP-a ani helperów
@@ -30,9 +30,9 @@ wspólne odziedziczone z szablonu + gotchas sekcji, które przeżyły kopię
 
 ## Work (`wk` / `wix`) — realizacje
 
-- Track karuzeli mobile wymaga `data-lenis-prevent-horizontal` (NIE
-  `data-lenis-prevent` — zabija pionowy scroll na Androidzie) oraz
-  `scroll-snap-stop: always`.
+- Track karuzeli mobile wymaga `scroll-snap-stop: always` (bez tego szybki
+  swipe przeskakuje kilka kafli naraz). Atrybuty `data-lenis-prevent*`
+  odeszły razem z biblioteką (D-Q1, `.claude/rules/scroll.md`).
 - Detal realizacji (od 4.4): JEDEN overlay `#work-detail` na szkielecie
   `overlay.ts` (`WorkDetailOverlay.astro`) — wariant modal (≥1024) ↔
   bottom sheet (<1024) to czysty CSS przy `WORK_DESKTOP_MIN_PX`;

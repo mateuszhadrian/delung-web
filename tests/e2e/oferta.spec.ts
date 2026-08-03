@@ -132,28 +132,25 @@ test.describe("oferta desktop (zakładki + panel)", () => {
     await expect(page.locator("main h1")).toBeVisible();
   });
 
-  // Strażnik po wymianie silnika pętli w Etapie 5: Lenis jechał na
-  // gsap.ticker, dziś napędza go własny requestAnimationFrame. Bez tego
-  // testu zerwana pętla byłaby niewidoczna — strona dalej się przewija,
-  // tyle że skokowo (reguła .claude/rules/scroll-lenis.md).
-  test("Lenis: instancja żyje i wygładza scroll kółkiem (pętla rAF)", async ({
+  // Strażnik decyzji D-Q1: scroll w serwisie jest NATYWNY — żaden skrypt nie
+  // przejmuje kółka. Lenis wyszedł z projektu, bo przy JS-owym scrollu każda
+  // klatka wymuszała przemalowanie warstwy hero i Safari gubiło klatki
+  // (protokół pomiaru: docs/analiza-poprawki-2.md, D-Q1). Ten test pilnuje,
+  // żeby nikt nie wprowadził wygładzacza tylnymi drzwiami.
+  test("scroll jest natywny — bez biblioteki wygładzającej", async ({
     page,
   }) => {
     await gotoReady(page, OFERTA_PATH);
     await settle(page, 300);
-    expect(await page.evaluate(() => Boolean(window.__lenis))).toBe(true);
+    expect(await page.evaluate(() => "__lenis" in window)).toBe(false);
 
+    const before = await page.evaluate(() => Math.round(window.scrollY));
     await page.mouse.move(700, 500);
     await page.mouse.wheel(0, 600);
-    const samples: number[] = [];
-    for (let i = 0; i < 5; i++) {
-      samples.push(await page.evaluate(() => Math.round(window.scrollY)));
-      await page.waitForTimeout(60);
-    }
-    // Wygładzanie = scroll dojeżdża przez kilka RÓŻNYCH klatek, a nie
-    // jednym skokiem (przy zerwanej pętli wszystkie próbki są równe).
-    expect(new Set(samples).size).toBeGreaterThan(2);
-    expect(samples.at(-1)!).toBeGreaterThan(samples[0]);
+    await settle(page, 250);
+    expect(
+      await page.evaluate(() => Math.round(window.scrollY)),
+    ).toBeGreaterThan(before);
   });
 });
 
@@ -182,14 +179,11 @@ test.describe("oferta mobile (karuzela)", () => {
     await expect(page.locator("[data-oftab]").first()).toBeHidden();
   });
 
-  test("tor spełnia kontrakt karuzeli (lenis-horizontal + snap-stop)", async ({
-    page,
-  }) => {
-    // Gotchas sections.md: data-lenis-prevent-horizontal (NIE -prevent)
-    // + scroll-snap-stop: always na kaflach.
+  test("tor spełnia kontrakt karuzeli (snap-stop)", async ({ page }) => {
+    // Gotcha sections.md: scroll-snap-stop: always na kaflach — bez tego
+    // szybki swipe przeskakuje kilka kafli naraz.
     await gotoReady(page, OFERTA_PATH);
     const rail = page.locator("[data-rail]");
-    await expect(rail).toHaveAttribute("data-lenis-prevent-horizontal", "");
     expect(
       await rail
         .locator(".of-card")

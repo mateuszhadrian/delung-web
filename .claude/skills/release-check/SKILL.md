@@ -44,7 +44,7 @@ Mateusza o test na telefonie i wskaż, na co patrzeć:
 | iOS Low Power Mode                         | zmiany wideo (odtwarzanie na tap w detalu) |
 | Zwijany toolbar Safari (metryki viewportu) | zmiany sticky/sheetów/viewportu            |
 | Zimny cache + realne łącze komórkowe       | większe zmiany zasobów przed release       |
-| Dotyk fizyczny (snap karuzel, swipe-down)  | zmiany karuzel/sheetów/smooth-scroll.ts    |
+| Dotyk fizyczny (snap karuzel, swipe-down)  | zmiany karuzel/sheetów/scrolla             |
 
 ## 5. Raport
 

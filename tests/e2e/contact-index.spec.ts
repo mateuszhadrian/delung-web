@@ -56,17 +56,18 @@ for (const p of PAGES) {
       await expect(page.locator("footer.ft")).toBeAttached();
     });
 
-    test(`desktop: scroll natywny (bez Lenisa — jak /realizacje/)`, async ({
-      page,
-    }) => {
+    test(`desktop: scroll natywny`, async ({ page }) => {
+      // Dotąd ta trasa była wyjątkiem (D-K9: formularz lepiej czuje się bez
+      // pośrednika); od D-Q1 to reguła całego serwisu — Lenis wyszedł
+      // z projektu, więc nie ma już atrybutu przełączającego tryb scrolla.
       await gotoReady(page, p.path);
-      await expect(page.locator("body")).toHaveAttribute(
+      await expect(page.locator("body")).not.toHaveAttribute(
         "data-smooth-scroll",
-        "off",
+        /.*/,
       );
       // Chwila na ewentualny (błędny) dynamiczny import — potem asercja.
       await page.waitForTimeout(500);
-      expect(await page.evaluate(() => Boolean(window.__lenis))).toBe(false);
+      expect(await page.evaluate(() => "__lenis" in window)).toBe(false);
     });
 
     test(`navbar podstrony: Oferta → podstrona, Kontakt = bieżąca`, async ({

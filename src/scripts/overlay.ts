@@ -9,7 +9,6 @@
 // Reużywalny: Modal.astro i BottomSheet.astro importują ten moduł (bundlowany
 // raz). Treść jest wstrzykiwana przez konsumenta (np. sekcja Work).
 
-// `window.__lenis` jest deklarowany w scripts/smooth-scroll.ts (typ Lenis).
 declare global {
   interface Window {
     overlay?: OverlayApi;
@@ -66,7 +65,6 @@ function panelOf(el: HTMLElement): HTMLElement {
 
 function lockScroll() {
   savedScroll = window.scrollY;
-  window.__lenis?.stop();
   const b = document.body.style;
   b.position = "fixed";
   b.top = `-${savedScroll}px`;
@@ -80,15 +78,7 @@ function unlockScroll() {
   b.top = "";
   b.left = "";
   b.right = "";
-  // resize() przed scrollTo: odświeża limit Lenisa po zdjęciu body:fixed,
-  // inaczej scrollTo przycięłoby savedScroll do 0 (skok na górę).
-  if (window.__lenis) {
-    window.__lenis.start();
-    window.__lenis.resize();
-    window.__lenis.scrollTo(savedScroll, { immediate: true, force: true });
-  } else {
-    window.scrollTo(0, savedScroll);
-  }
+  window.scrollTo(0, savedScroll);
 }
 
 function open(id: string, opts: OpenOpts = {}) {

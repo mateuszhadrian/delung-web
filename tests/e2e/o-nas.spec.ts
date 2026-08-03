@@ -61,7 +61,6 @@ test.describe("o-nas mobile (karta hero + zespół + karuzela opinii)", () => {
     await gotoReady(page, ABOUT_PATH);
     const car = page.locator(".rev-car");
     await expect(car.locator(".rc")).toHaveCount(OPINIE.length);
-    await expect(car).toHaveAttribute("data-lenis-prevent-horizontal", "");
     await expect(car.locator(".rc").first()).toHaveCSS(
       "scroll-snap-stop",
       "always",

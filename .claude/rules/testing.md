@@ -55,5 +55,5 @@ liczby szablonu nie obowiązują.
 Limit warstwy GPU Androida (karuzele/sheety); iOS Low Power Mode (wideo
 na tap ma działać); zwijany toolbar Safari (metryki viewportu / późny
 refresh); zimny cache + realne łącze; dotyk fizyczny (snap karuzel,
-swipe-down sheetów, Lenis syncTouch feel). Przy zmianach w tych obszarach
+swipe-down sheetów, feel natywnego scrolla). Przy zmianach w tych obszarach
 poproś Mateusza o test na telefonie i wskaż, na co patrzeć.

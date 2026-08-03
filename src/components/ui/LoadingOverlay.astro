@@ -224,7 +224,7 @@ import logo from "@/assets/logo/delung-logo.webp";
 
     // Powrót przez bfcache przywraca DOM w stanie sprzed wyjścia — bez tego
     // użytkownik wróciłby „wstecz" na zamrożoną nakładkę (ten sam gotcha co
-    // handler pageshow w regule scroll-lenis.md).
+    // handler pageshow opisany w regule scroll.md).
     addEventListener("pageshow", () => {
       clearTimeout(timer);
       el.classList.remove("is-in");

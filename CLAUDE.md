@@ -123,8 +123,8 @@ treść/sekcje budowane od nowa wg `docs/design/`).
   paintem; bez JS/reduce strona w pełni statyczna); zajawka realizacji →
   Modal/BottomSheet przez współdzielony `open-detail` (próg 760
   świadomie do wyrównania w 4.4); tel/mail bannera wg D-CH5 (wariant
-  `[data-slot]` w `fillContactSlots`); **Lenis TYLKO desktop — dotyk
-  natywny** (decyzja po klatkowaniu; reguły scroll-lenis.md); hero
+  `[data-slot]` w `fillContactSlots`); Lenis wtedy TYLKO desktop — dziś
+  scroll natywny wszędzie (D-Q1, `.claude/rules/scroll.md`); hero
   mobile: `100svh` + parallax ze stałej wysokości (sonda svh — pasek URL
   nie szarpie), kadr SKALIBROWANY parametrami `--hero-zoom/x/up`
   w `HomeHero.astro` (zmiana = przelicz krop na pełnym źródle, komenda
@@ -153,8 +153,7 @@ treść/sekcje budowane od nowa wg `docs/design/`).
   karty `--side`/`--wide` w DOM), spece pełną szerokością pod spodem,
   wiersz zdjęcia ugina się (`1fr auto`) do min. 180 px; karta CTA
   `fit-content` + nowrap (dłuższa etykieta rozpycha w prawo). Mobile:
-  karuzela 3 kafli (gotchas: `data-lenis-prevent-horizontal` +
-  `scroll-snap-stop: always`) + pasek postępu; kafel kategorii →
+  karuzela 3 kafli (gotcha: `scroll-snap-stop: always`) + pasek postępu; kafel kategorii →
   **deep-link `/kategorie/#<slug>`** (otwiera tam kartę; korekta po
   testach), „zobacz pełną ofertę" → goła lista. `/kategorie/`: lista
   6 kafli-przycisków + karta kategorii = 6 PRE-RENDEROWANYCH bottom
@@ -192,7 +191,7 @@ treść/sekcje budowane od nowa wg `docs/design/`).
   własnego play**: ikonka kamery `[data-cam]`, tap w kadr startuje film
   i otwiera podgląd z grającym klipem, w podglądzie tap = pauza↔play
   (reguła w sections.md zaktualizowana); `legacy-dark.css` usunięty
-  z widoku, Lenis włączony (jak /oferta/), sticky szyna/head pod
+  z widoku, sticky szyna/head pod
   `--hdr-h` (fix top:0 makiety), `re-phone` przez antyscraping D-CH5.
   Nowe specy: e2e filtry/deep-link/detal/podgląd/wideo-funkcjonalnie
   (`play()` bez sieci — `paused===false`), visual top/grid/cta/detal/
@@ -266,7 +265,8 @@ treść/sekcje budowane od nowa wg `docs/design/`).
   PR B (porządki): kasacja `ui/toast/**` + `<Toast />` z `BaseLayout`,
   martwych `ui/{AnimatedCta,SplitCta,OfertaButtons,SolidButton}`,
   `scripts/{section-helpers,bg-crossfade,anchors}.ts` oraz **WYJŚCIE
-  GSAP-a Z PROJEKTU** (Lenis na własnym `requestAnimationFrame`).
+  GSAP-a Z PROJEKTU** (Lenis przeszedł wtedy na własny
+  `requestAnimationFrame`; sam Lenis wyszedł w rundzie poprawek 2 — D-Q1).
   Zmierzone na `/`: skrypty **67 978 B → 19 053 B**, total 892 752 B →
   842 768 B. Budżety LHCI zostają NIETKNIĘTE (script 80 000 B) — ich
   zacieśnienie do nowego baseline'u to osobna decyzja Mateusza i osobny
@@ -378,12 +378,13 @@ treść/sekcje budowane od nowa wg `docs/design/`).
   `contact-motion.ts` (ruch za bramką). Backend: Pages Function
   `functions/api/kontakt.ts` + `src/lib/contact-form.ts` (Resend
   z `send.delung.pl` + Turnstile + antyspam + KV quota). Strona przez
-  `ContactPage.astro` (navbar `over`, scroll NATYWNY — D-K9).
-- `src/scripts/` — TRZY moduły (reszta skasowana w Etapie 5):
-  `overlay.ts` (generyczne nakładki modal/sheet — focus-trap, Esc,
-  swipe-down), `smooth-scroll.ts` (Lenis TYLKO desktop na własnej pętli
-  rAF; dotyk = scroll natywny — decyzja 4.2, `.claude/rules/scroll-lenis.md`),
+  `ContactPage.astro` (navbar `over`; scroll natywny — D-K9, od D-Q1
+  reguła całego serwisu).
+- `src/scripts/` — DWA moduły (`smooth-scroll.ts` skasowany razem z Lenisem
+  w rundzie poprawek 2): `overlay.ts` (generyczne nakładki modal/sheet —
+  focus-trap, Esc, swipe-down, blokada scrolla natywnie),
   `back-link.ts` (delegacja `a[data-back]` z `BaseLayout` — uśpiona, D-CH8).
+  **Scroll w całym serwisie jest natywny** — `.claude/rules/scroll.md`.
 - `src/components/ui/` — po czystce Etapu 5 zostały `LoadingOverlay.astro`
   (bramka mikro-fade w `BaseLayout`) i `BackButton.astro` (nieużywany,
   świadomie zachowany — D-CH8). Toast, AnimatedCta, SplitCta,

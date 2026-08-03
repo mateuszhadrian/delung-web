@@ -6,9 +6,9 @@
 // (desktop). Eksport przestawia sekcje CSS-owym `order`; my renderujemy
 // duplikat pigułki social per breakpoint (D-K3), żeby kolejność tabulacji
 // zgadzała się z wizualną na obu progach.
-// Scroll NATYWNY (smoothScroll={false}, D-K9): formularz najlepiej czuje
-// się bez pośrednika (fokus pól, dojazd do błędnego pola, klawiatura
-// ekranowa), a widok jest krótki — Lenis nie ma tu czego wygładzać.
+// Scroll NATYWNY (D-K9): formularz najlepiej czuje się bez pośrednika
+// (fokus pól, dojazd do błędnego pola, klawiatura ekranowa). Od D-Q1 to
+// zachowanie CAŁEGO serwisu — Lenis wyszedł z projektu.
 import BaseLayout from "@/layouts/BaseLayout.astro";
 import Navbar from "@/components/navbar/Navbar.astro";
 import Footer from "@/components/Footer.astro";
@@ -26,7 +26,6 @@ const t = useTranslations("pl");
 <BaseLayout
   title={t("contactPage.title")}
   description={t("contactPage.description")}
-  smoothScroll={false}
 >
   {
     /* Dane strukturalne firmy (D-E4): adres, geo, godziny pracowni, IG
