@@ -232,19 +232,54 @@ testów, które istnienia Lenisa pilnowały.
 
 ### D-Q2. Wysokość hero mobile przypięta raz — niezależna od paska przeglądarki
 
-Hero przestaje pytać przeglądarkę o wysokość viewportu w trakcie scrolla:
+Hero przestaje pytać przeglądarkę o wysokość viewportu w trakcie scrolla —
+ale **dopiero wtedy, gdy ta zacznie kłamać**:
 
-- inline'owy skrypt **przed paintem** w `Home.astro` (obok istniejącej
-  bramki `js-motion`) mierzy „mały" viewport raz — sondą `100svh`,
-  z awaryjnym `window.innerHeight` — i zapisuje wynik jako `--vph`
-  na `<html>` oraz `window.__vph`;
-- `.hero` używa `height: calc(var(--vph, 100svh) - var(--hdr-h, 74px))`;
-  dotychczasowa kaskada `100vh` → `100svh` zostaje jako degradacja bez JS;
-- wartość przeliczamy **wyłącznie przy zmianie `innerWidth`** (obrót
-  ekranu, zmiana okna). Zmiana samej wysokości = pasek przeglądarki albo
-  klawiatura — świadomie ignorowana;
-- `home-scroll.ts` bierze `vpH()` z `window.__vph` (sonda `100svh` zostaje
-  fallbackiem), więc razem z boksem przestaje drgać parallax.
+- skrypt hero (`HomeHero.astro`, ładowany zawsze) trzyma sondę `100svh`
+  i zapamiętuje dwie rzeczy: wartość svh oraz zmierzoną wysokość pudełka
+  hero **sprzed** jakiegokolwiek drgnięcia;
+- **dopóki svh przy stałej szerokości się nie rusza — nie robimy NIC.**
+  Hero liczy się formułą `calc(100svh - var(--hdr-h))` jak dotąd, więc
+  w Safari, Chrome iOS, na desktopie i w testach nie zmienia się ani jeden
+  piksel renderowania;
+- gdy `resize` przyjdzie przy **niezmienionej szerokości**, a sonda pokaże
+  inne svh (czyli pasek przeglądarki rusza całym webview), zamrażamy
+  zapamiętaną wysokość w `--hero-h` i hero trzyma się jej do końca;
+- zmiana **szerokości** (obrót ekranu, zmiana okna) zwalnia przypięcie
+  i mierzy od nowa — mechanizm jest odporny na pasek, ale nie zamrożony
+  na stałe;
+- obserwator rozmiaru na `.hdr` odświeża zapamiętany pomiar, gdy podmiana
+  fontu ruszy wysokość navbara (hero liczy się z `--hdr-h`);
+- `home-scroll.ts` bierze `window.__vph`, którą skrypt hero ustawia
+  **wyłącznie w momencie zamrożenia** — poza tym zostaje dotychczasowy
+  odczyt sondy, więc parallax też jest bit w bit jak dotąd.
+
+**KOREKTA planu tej rundy — dlaczego nie przypinamy profilaktycznie.**
+Pierwsze dwie implementacje przypinały wysokość zawsze: najpierw jako
+`--vph` mierzone sondą przed paintem, potem jako zmierzone pudełko hero.
+Obie wywróciły testy wizualne, za każdym razem o ułamek piksela:
+
+1. `--vph` z sondy — `index-kontakt` na webkit-iphone-se (2,3 % pikseli).
+   WebKit **snapuje samo `height: 100svh` do pełnych pikseli (568), ale
+   `calc(100svh - 86px)` liczy w swoich 1/64 px** (481,984375), więc
+   zaokrąglona sonda robiła hero o 0,016 px wyższe i przesuwała całą
+   stronę o ułamek piksela.
+2. Zmierzone pudełko hero — lokalnie czysto, ale **CI na Linuksie**
+   wywalił `index-o-nas` na chromium-pixel-5 (DPR 2,75): 214 px różnicy
+   przy progu 0,05 %, na glifach cytatu, **deterministycznie w dwóch
+   niezależnych przebiegach**. Geometria była identyczna co do 1/16 px
+   (sprawdzone A/B na tym samym silniku: wysokość dokumentu, pozycja
+   sekcji i transform parallaxu bez zmian), więc winna była sama obecność
+   wpisanej z JS wartości, a nie przesunięcie układu.
+
+Wniosek, który wart jest zapamiętania na przyszłość: **wartość długości
+wpisana z JS nigdy nie jest bit w bit tym samym, co przeglądarka wyliczyła
+sama** — zaokrągla się inaczej przy zapisie i odczycie, a przy niecałkowitym
+DPR widać to na antyaliasingu glifów. Dlatego wpisujemy ją **tylko tam, gdzie
+naprawdę trzeba**: w przeglądarkach, w których svh realnie drga. Wszędzie
+indziej mechanizm jest nieaktywny i renderowanie jest identyczne z tym sprzed
+rundy — co pilnuje osobna asercja („bez drgania viewportu hero NIE jest
+przypięte").
 
 **ROZSZERZENIE decyzji 4.2 (`dvh` → `svh`)**: `svh` zostaje w kodzie jako
 wartość startowa i fallback, ale nie jest już jedyną obroną. Konsekwencja
@@ -308,6 +343,97 @@ zostaje pusta).
 **KOREKTA D-R7**: „szyna sticky pod `--hdr-h`" dostaje zdefiniowany
 **zasięg** — cała lista kafli, nie nagłówek. Sama wartość `top` bez zmian.
 
+### D-Q5. Scena realizacji na stronie głównej: elastyczna kolumna zamiast sztywnych odstępów
+
+**Zgłoszenie (Windows, niski ekran):** przy malejącej wysokości okna
+opis realizacji z linkiem „Więcej" chowa się pod przyciskiem „Przeglądaj
+nasze realizacje". Oczekiwane zachowanie: najpierw przycisk „dopycha"
+blok opisu w stronę nagłówka „Nasze realizacje", a gdy ten dojedzie do
+nagłówka — zaczyna się zmniejszać tytuł realizacji. Nigdy, w żadnym
+kroku, przycisk nie może niczego zasłaniać.
+
+**Stan zastany (pomiar, nie oko).** Lewa kolumna sceny przypiętej składa
+się z samych sztywnych, poziomo skalowanych wielkości: `padding-top`
+`clamp(84px, 8.33vw, 120px)`, `h2 { margin-bottom: clamp(40px, 5vw, 72px) }`,
+`.re-txts { height: clamp(240px, 20.1vw, 290px) }`. Przycisk
+(`.re-cta`) i pasek postępu (`.re-bar`) są `position: absolute`,
+zakotwiczone do DOŁU sceny (`bottom: clamp(80px, 7.36vw, 106px)` i
+`clamp(54px, 5vw, 72px)`). Żadna z tych wielkości nie wie nic
+o wysokości okna, więc treść i przycisk jadą ku sobie liniowo. Zmierzony
+luz między dolną krawędzią „Więcej" a górną krawędzią przycisku:
+
+| Wysokość okna | 1440 px szer. | 1366 px szer. |
+| ------------- | ------------- | ------------- |
+| 1080 | +346 px | +375 px |
+| 768 (profil testowy) | — | **+55 px** |
+| 760 | +26 px | — |
+| 720 | **−14 px** | +15 px |
+| 680 | −54 px | **−25 px** |
+| 600 | −134 px | −105 px |
+
+Kolizja startuje przy ~730 px (1440) i ~735 px (1366). Laptop 1366×768
+z paskami przeglądarki daje okno ~650 px — dokładnie środek strefy
+kolizji.
+
+**Decyzja: lewa kolumna staje się kolumną flex z priorytetami kurczenia.**
+Zamiast dokładać progi `@media (max-height: …)` (skok zamiast płynności)
+albo doklejać rampy `vh` do pięciu osobnych wielkości (pięć magicznych
+stałych i zero gwarancji), układ dostaje strukturę, która **sama** wie,
+ile ma miejsca:
+
+1. `.re-in` na desktopie: `display: flex; flex-direction: column`.
+   Przycisk `.re-cta` wraca z pozycjonowania absolutnego do **potoku**
+   jako ostatni element z `margin-top: auto` — dzięki temu flexbox zna
+   jego prawdziwą wysokość i nikt nie musi jej hardkodować. Jego
+   dotychczasowe `bottom` staje się `margin-bottom` o tej samej wartości,
+   więc przy pełnej wysokości okna geometria jest **identyczna co do
+   piksela**. Pasek `.re-bar` zostaje absolutny (jest przyklejony do dna
+   sceny i niczego nie rozpycha).
+2. Odstęp `h2 → opis` przestaje być marginesem (marginesy się nie
+   kurczą), a staje się **rozpórką** `flex: 0 1 clamp(40px, 5vw, 72px)`
+   z podłogą `min-height: 12px` i **wysokim współczynnikiem kurczenia**.
+3. `.re-txts` dostaje `flex: 0 1 auto` z tą samą wysokością bazową co
+   dziś, podłogą `min-height` i **niskim współczynnikiem kurczenia**.
+
+Flexbox rozdziela brakujące piksele proporcjonalnie do `shrink × basis`,
+więc przy `shrink` 100 vs 1 rozpórka oddaje ~96 % pierwszego etapu —
+czyli **opis realnie jedzie w stronę nagłówka**, dokładnie jak w
+zgłoszeniu. Dopiero gdy rozpórka usiądzie na swojej podłodze, kurczyć
+zaczyna się blok tekstu. Kolejność jest więc zadeklarowana w CSS, a nie
+wyliczona z progów.
+
+4. **Tytuł kurczy się razem z blokiem**: `.re-txts` zostaje kontenerem
+   zapytań (`container-type: size`), a `h3` dostaje
+   `font-size: min(clamp(28px, 2.78vw, 40px), 14cqh)` — przy pełnej
+   wysokości człon `cqh` jest większy od dzisiejszej wartości, więc `min()`
+   wybiera stan obecny (zero zmian), a przy skurczonym bloku przejmuje
+   prowadzenie i skaluje nagłówek. Analogicznie opis, z twardą podłogą
+   czytelności 13 px. Bez wsparcia dla kontenerów cała deklaracja jest
+   nieprawidłowa i przeglądarka zostaje przy `clamp()` sprzed rundy —
+   degradacja do stanu dzisiejszego, nie do rozsypanego układu.
+
+5. **Trzeci zapas — dolny pas.** Gdy blok tekstu dojedzie do swojej
+   podłogi, oddają jeszcze odstępy przycisku i paska od dna:
+   `min(clamp(80px, 7.36vw, 106px), max(48px, 14vh))` oraz
+   `min(clamp(54px, 5vw, 72px), max(28px, 9.5vh))`. Stałe `vh` są
+   **skalibrowane tak, by przy 768 px i 1080 px wygrywał człon dzisiejszy**
+   (14vh przy 768 to 107 px wobec 100 px z clamp), więc profile testowe
+   nie widzą żadnej zmiany.
+
+**Dlaczego to nie ruszy baseline'ów.** Kolumna flex kurczy się wyłącznie
+wtedy, gdy treść NIE MIEŚCI się w dostępnej wysokości. Przy 1920×1080
+i 1366×768 mieści się z zapasem (+55 px luzu przy 768), więc żaden
+element nie oddaje ani piksela, a wszystkie człony `vh`/`cqh` przegrywają
+w `min()` z wartościami dzisiejszymi. Weryfikuję to przebiegiem
+`test:visual`, nie deklaracją.
+
+**Ryzyko, o którym trzeba wiedzieć:** opisy realizacji pochodzą z CMS-a
+i mają zmienną długość — blok tekstu ma sztywną wysokość, bo jego dzieci
+są ułożone jedno na drugim (`position: absolute; inset: 0`). Długi opis
+w nowym wpisie może przy niskim oknie wyjść poza blok. Dlatego test
+sprawdza luz dla **każdego z trzech wpisów zajawki**, a nie tylko
+pierwszego, i robi to na całej rampie wysokości.
+
 ---
 
 ## 4. Implementacja — pliki
@@ -325,9 +451,9 @@ zostaje pusta).
 
 | Plik | Zmiana |
 | ---- | ------ |
-| `src/components/Home.astro` | inline'owy skrypt przed paintem: pomiar `--vph` + `window.__vph`, przeliczenie tylko przy zmianie szerokości |
-| `src/components/sections/home/HomeHero.astro` | `.hero` na `calc(var(--vph, 100svh) - var(--hdr-h))` + komentarz decyzji |
-| `src/components/sections/home/home-scroll.ts` | `vpH()` z `window.__vph`, sonda `100svh` jako fallback |
+| `src/components/sections/home/HomeHero.astro` | `.hero` na `var(--hero-h, …)` + skrypt przypinający zmierzone pudełko (obserwator `.hdr`, przeliczenie przy zmianie szerokości) |
+| `src/components/sections/home/home-scroll.ts` | sonda `100svh` zamrażana poniżej progu desktop, odmrażana przy zmianie szerokości |
+| `tests/e2e/index.spec.ts` | **nowy** — spec strony głównej (kontrakt zakotwiczenia hero) |
 | `docs/analiza-strona-glowna.md` | dopisek ROZSZERZENIE (svh niewystarczające w przeglądarkach iOS spoza Safari/Chrome) |
 
 **PR C (wyjście Lenisa) — D-Q1**
@@ -346,6 +472,14 @@ zostaje pusta).
 | `.claude/rules/scroll-lenis.md` | przepisana na „scroll natywny wszędzie" (z historią decyzji) |
 | `CLAUDE.md` | wzmianki o Lenisie w stanie projektu i mapie |
 | `docs/analiza-strona-glowna.md` | dopisek KOREKTA (Lenis wychodzi; hero bez zmian) |
+
+**PR D (scena realizacji na niskim ekranie) — D-Q5**
+
+| Plik | Zmiana |
+| ---- | ------ |
+| `src/components/sections/home/HomeRealizacje.astro` | kolumna flex lewej strony sceny, rozpórka odstępu, `.re-cta` z potoku, kontener zapytań na `.re-txts`, rampy `vh` dolnego pasa |
+| `tests/e2e/index.spec.ts` (z PR-a B) | sweep wysokości: luz „Więcej" → CTA nigdy ujemny |
+| `docs/analiza-strona-glowna.md` | dopisek KOREKTA (scena realizacji przestaje mieć sztywne odstępy) |
 
 ## 5. Testy
 
@@ -394,6 +528,20 @@ zostaje pusta).
   gałąź Lenisa, więc każdy spec przewijający stronę jest tu regresją.
 - `build` + `test:visual`: bez różnic (Lenis nie maluje nic własnego).
 
+**PR D**
+
+- `tests/e2e/index.spec.ts` (profile desktop): rampa wysokości okna od
+  1080 do 520 px przy stałej szerokości; dla **każdego z trzech wpisów**
+  zajawki luz między dolną krawędzią „Więcej" a górną krawędzią przycisku
+  „Przeglądaj nasze realizacje" musi być **≥ 0**. To jest dokładnie ta
+  regresja, którą Mateusz zgłosił — test ma ją łapać automatycznie, na
+  obu szerokościach testowych.
+- Druga asercja (kolejność kurczenia): przy 620 px odstęp `h2 → opis`
+  jest MNIEJSZY niż przy 1080 px, a wysokość bloku tekstu — jeszcze
+  nietknięta. To pilnuje priorytetu z D-Q5, nie tylko braku kolizji.
+- `build` + `test:visual`: zero różnic na profilach desktopowych (dowód,
+  że mechanizm śpi przy 1080 i 768).
+
 ## 6. Rachunek baseline'ów
 
 | PR  | Co zmienia się wizualnie | Pliki do regeneracji |
@@ -401,6 +549,7 @@ zostaje pusta).
 | A   | nic — `display: contents` z kompensacją odstępów, link to atrybut `href` | **0** (cel; gdyby kompensacja rozjechała się o piksel: `work-index-top` × 3 profile mobile × 2 platformy = 6) |
 | B   | nic — pierwszy paint ma tę samą geometrię, zmienia się tylko odporność na późniejsze zmiany viewportu | **0** |
 | C   | nic — Lenis nie maluje własnych pikseli, hero zostaje nietknięte | **0** |
+| D   | nic przy 1920×1080 i 1366×768 — mechanizm budzi się dopiero poniżej ~730 px wysokości, a takiego profilu nie mamy | **0** |
 
 Każdy diff pokazuję **obrazkiem** (`open test-results/*/…-diff.png`) przed
 jakąkolwiek regeneracją. Święta kolejność bez zmian: kod → workflow
@@ -423,6 +572,11 @@ jakąkolwiek regeneracją. Święta kolejność bez zmian: kod → workflow
    + wygładzenie paska. Największy PR rundy (kasacja zależności, prop
    `smoothScroll`, sprzątanie testów i reguły). Wchodzi **po** B, bo
    dotyka `BaseLayout` i helperów testów, na których stoi spec z PR-a B.
+
+5. **PR D — `fix/home-realizacje-niski-ekran`** (D-Q5): elastyczna
+   kolumna sceny realizacji. Wchodzi **po** C, bo obie zmiany dotykają
+   strony głównej, a C usuwa Lenisa (czyli zmienia sposób, w jaki scena
+   jest przewijana podczas ręcznych testów).
 
 `CLAUDE.md` (wpis o rundzie + numery PR-ów) i status tego dokumentu
 aktualizuję **na końcu rundy**, jednym wpisem.

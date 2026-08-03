@@ -50,12 +50,19 @@ qa("[data-rev]").forEach((el) => {
    innerHeight na mobile skacze przy chowaniu/pokazywaniu paska URL —
    parallax liczony z niego szarpał obrazem pod tekstem hero dokładnie
    w momencie zwijania paska. svh = wysokość „małego" viewportu (pasek
-   widoczny), stała w trakcie scrolla; na desktopie równa innerHeight. */
+   widoczny), stała w trakcie scrolla; na desktopie równa innerHeight.
+
+   window.__vph (D-Q2) pojawia się WYŁĄCZNIE w przeglądarkach, w których
+   svh mimo wszystko drga — bo chowany pasek zmienia rozmiar webview
+   (DuckDuckGo, Firefox, Opera, Edge na iOS). Tam sonda kłamie w trakcie
+   scrolla, więc bierzemy zamrożoną wartość sprzed drgnięcia; wszędzie
+   indziej (Safari, Chrome, desktop, testy) zmiennej nie ma i zostaje
+   dotychczasowy odczyt sondy — co do piksela. Ustawia ją skrypt hero. */
 const svhProbe = document.createElement("div");
 svhProbe.style.cssText =
   "position:fixed;top:0;left:0;width:0;height:100svh;visibility:hidden;pointer-events:none";
 document.body.appendChild(svhProbe);
-const vpH = () => svhProbe.offsetHeight || window.innerHeight;
+const vpH = () => window.__vph || svhProbe.offsetHeight || window.innerHeight;
 
 /* ── parallax [data-par] (zapas w wymiarach obrazów — komponenty) ── */
 const pars = qa("[data-par]");

@@ -250,13 +250,22 @@ const SVG_TEXT_STYLE =
     position: relative;
     overflow: hidden;
     background: #e5e1da;
-    /* svh, NIE dvh (eksport miał dvh): dvh żyje z chowanym paskiem URL —
-       hero zmieniało wysokość W TRAKCIE scrolla, a tekst (kotwiczony do
-       dołu sekcji) skakał po zdjęciu. svh = stała wysokość „małego"
-       viewportu (pasek widoczny); po schowaniu paska pod hero wcześniej
-       wjeżdża pasek zaufania — akceptowalny standard. */
+    /* Wysokość pierwszego ekranu — trzy szczeble degradacji (D-Q2):
+       1. --hero-h: PRZYPIĘTY pomiar tego pudełka (skrypt na dole pliku),
+          przeliczany tylko przy zmianie szerokości i wysokości paska.
+          Jedyna wartość odporna na przeglądarki iOS, które przy chowaniu
+          własnego paska zmieniają rozmiar webview (DuckDuckGo, Firefox,
+          Opera, Edge) — tam nawet svh nie jest stałe, a `cover` zmienia
+          wtedy KADR i napisy siedzą w innym miejscu zdjęcia.
+       2. 100svh — bez JS: stała wysokość „małego" viewportu w Safari
+          i Chrome iOS (korekta 4.2, która wyparła dvh); ta sama formuła
+          jest źródłem pomiaru dla szczebla 1.
+       3. 100vh — silniki bez svh.
+       Po schowaniu paska pod hero wcześniej wjeżdża pasek zaufania —
+       to zaakceptowany standard z 4.2, teraz identyczny wszędzie. */
     height: calc(100vh - var(--hdr-h, 74px));
     height: calc(100svh - var(--hdr-h, 74px));
+    height: var(--hero-h, calc(100svh - var(--hdr-h, 74px)));
     min-height: 400px;
   }
   .hero-img {
@@ -617,6 +626,15 @@ const SVG_TEXT_STYLE =
   // pokazuje tekst z ciemnym wypełnieniem + glow (czytelna degradacja).
   import { HOME_DESKTOP_MIN_PX } from "./home-config";
 
+  declare global {
+    interface Window {
+      /** Wysokość „małego" viewportu sprzed drgnięcia paska przeglądarki —
+       *  ustawiana TYLKO wtedy, gdy sonda wykryje ruchome svh (D-Q2).
+       *  Konsument: vpH() w home-scroll.ts (parallax). */
+      __vph?: number;
+    }
+  }
+
   const mq = matchMedia(`(min-width:${HOME_DESKTOP_MIN_PX}px)`);
   const fillSvgFrames = () => {
     document
@@ -633,4 +651,79 @@ const SVG_TEXT_STYLE =
       once: true,
     });
   }
+
+  // ── Wysokość hero: przypinana DOPIERO, gdy viewport zaczyna drgać (D-Q2) ──
+  // Problem: przeglądarki iOS, które przy chowaniu własnego paska ZMIENIAJĄ
+  // ROZMIAR webview (DuckDuckGo, Firefox, Opera, Edge — Safari i Chrome iOS
+  // nie), przeliczają wtedy `100svh`. Zdjęcie jest `object-fit: cover`, więc
+  // inna wysokość boksu to inny KADR: napisy „przeskakiwały" po zdjęciu przy
+  // każdym schowaniu i pokazaniu paska.
+  //
+  // Mechanika: NIE przypinamy nic z góry. Dopóki `100svh` przy STAŁEJ
+  // szerokości się nie rusza, hero liczy się formułą CSS jak dotąd — czyli
+  // w Safari, Chrome iOS, na desktopie i w testach nie zmienia się ani
+  // jeden piksel. Dopiero gdy sonda wykryje, że svh drgnęło bez zmiany
+  // szerokości (czyli pasek przeglądarki rusza webview), zamrażamy wysokość
+  // zmierzoną PRZED drgnięciem i od tej pory hero jej się trzyma.
+  //
+  // Dlaczego nie przypinamy od razu: pierwsza wersja wpisywała zmierzoną
+  // wysokość zawsze i zmieniała rasteryzację o ułamek piksela — najpierw
+  // tło bannera kontaktu na webkit-iphone-se (WebKit snapuje samo
+  // `height: 100svh` do pełnych pikseli, ale `calc(100svh - X)` liczy
+  // w 1/64 px), potem glify cytatu „o nas" na chromium-pixel-5 w CI
+  // (DPR 2,75). Wniosek: wartość wpisana z JS nigdy nie jest bit w bit tym
+  // samym, co wyliczyła przeglądarka — więc wpisujmy ją tylko tam, gdzie
+  // naprawdę trzeba, a nie „profilaktycznie".
+  const root = document.documentElement;
+  const hero = document.querySelector<HTMLElement>(".hero");
+
+  // sonda 100svh — ta sama technika co w home-scroll.ts
+  const probe = document.createElement("div");
+  probe.style.cssText =
+    "position:fixed;top:0;left:0;width:0;height:100svh;" +
+    "visibility:hidden;pointer-events:none";
+  document.body.appendChild(probe);
+  const svh = () => probe.offsetHeight || window.innerHeight;
+
+  let pinned = false;
+  let baseSvh = 0;
+  let lastGood = 0;
+  let lastWidth = window.innerWidth;
+
+  /** Odświeża zapamiętany stan „sprzed drgnięcia" (tylko gdy nie przypięte). */
+  function remember() {
+    if (pinned || !hero) return;
+    baseSvh = svh();
+    lastGood = hero.getBoundingClientRect().height;
+  }
+
+  function unpin() {
+    pinned = false;
+    root.style.removeProperty("--hero-h");
+    delete window.__vph;
+    remember();
+  }
+
+  remember();
+  // Pasek nawigacji zmienia wysokość po podmianie fontu (--hdr-h), a hero
+  // liczy się z niej — trzeba odświeżyć zapamiętany pomiar. Ten obserwator
+  // NIE reaguje na chowany pasek przeglądarki: pudełko navbara wtedy nie drga.
+  const hdrEl = document.querySelector(".hdr");
+  if (hdrEl) new ResizeObserver(remember).observe(hdrEl);
+
+  addEventListener("resize", () => {
+    if (!hero) return;
+    if (window.innerWidth !== lastWidth) {
+      // realna zmiana viewportu (obrót ekranu, zmiana okna) — zaczynamy od nowa
+      lastWidth = window.innerWidth;
+      unpin();
+      return;
+    }
+    if (pinned || !lastGood) return;
+    if (svh() === baseSvh) return; // svh stabilne — nie ma czego naprawiać
+    pinned = true;
+    root.style.setProperty("--hero-h", `${lastGood}px`);
+    // home-scroll liczy z tego parallax — patrz vpH() tamże
+    window.__vph = baseSvh;
+  });
 </script>
