@@ -62,12 +62,19 @@ module.exports = {
         // Baseline 0 — 0.02 zostawia miejsce na fonty/obrazy sekcji,
         // wciąż daleko od progu „needs improvement" (0.1).
         "cumulative-layout-shift": ["error", { maxNumericValue: 0.02 }],
-        // 100 000 → 80 000 (4.5): pełny bundle wyszedł 67 978 B — poniżej
-        // szacunku hadrianm (~87 KB). 80 KB = +18 % zapasu.
-        "resource-summary:script:size": ["error", { maxNumericValue: 80000 }],
-        // 2 000 000 → 1 200 000 (4.5): pełna strona mobile waży 892 752 B
-        // (obrazy 600 KB, fonty 154 KB). 1,2 MB = +34 % zapasu.
-        "resource-summary:total:size": ["error", { maxNumericValue: 1200000 }],
+        // 80 000 → 30 000 (Etap 6): próg pamiętał czasy GSAP-a. Po jego
+        // wyjściu (Etap 5) bundle to 19 053 B i tyle samo pokazuje KAŻDY
+        // przebieg CI — bajty są deterministyczne, więc ten próg jest
+        // czystym sygnałem regresji, bez udziału szumu maszyny.
+        // 30 000 = +57 % zapasu na przyrost funkcji.
+        // UWAGA: beacon Cloudflare Web Analytics (11,4 kB) NIE liczy się do
+        // tego budżetu — Cloudflare wstrzykuje go na krawędzi, a LHCI mierzy
+        // lokalny dist/. Koszt beaconu zmierzony osobno na produkcji
+        // (docs/analiza-etap-6.md §6): +359 B w dokumencie, LCP bez zmian.
+        "resource-summary:script:size": ["error", { maxNumericValue: 30000 }],
+        // 1 200 000 → 900 000 (Etap 6): zmierzone w CI 816 437–816 496 B
+        // (rozrzut 59 B). 900 kB = +10 % nad najgorszą próbką.
+        "resource-summary:total:size": ["error", { maxNumericValue: 900000 }],
         // 5 → 6 (4.2): doszły subsety italic Cormoranta (cytat o-nas).
         "resource-summary:font:count": ["warn", { maxNumericValue: 6 }],
       },

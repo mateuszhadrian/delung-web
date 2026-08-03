@@ -41,11 +41,14 @@ module.exports = {
         // 0.02 → 0.01 (4.5): desktop mierzy 0.0042 (mobile 0.0117 — tam
         // 0.02 zostaje). Wciąż daleko od „needs improvement" (0.1).
         "cumulative-layout-shift": ["error", { maxNumericValue: 0.01 }],
-        // Wspólny bundle z profilem mobile — ten sam próg skryptu (67 978 B).
-        "resource-summary:script:size": ["error", { maxNumericValue: 80000 }],
-        // 2 000 000 → 1 800 000 (4.5): desktop waży 1 595 814 B (obrazy
-        // 1,3 MB — kadry hero w gęstości DPR≥2). 1,8 MB = +13 % zapasu.
-        "resource-summary:total:size": ["error", { maxNumericValue: 1800000 }],
+        // Wspólny bundle z profilem mobile — ten sam próg skryptu
+        // (80 000 → 30 000 w Etapie 6; zmierzone 19 053 B, uzasadnienie
+        // w lighthouserc.cjs).
+        "resource-summary:script:size": ["error", { maxNumericValue: 30000 }],
+        // 1 800 000 → 1 650 000 (Etap 6): zmierzone w CI 1 519 558 B.
+        // Zapas mniejszy niż na mobile (+8,6 %), bo tu masę robią kadry hero
+        // w gęstości DPR≥2 — pozycja stała, nieczuła na szum runnera.
+        "resource-summary:total:size": ["error", { maxNumericValue: 1650000 }],
         // 5 → 6 (4.5): wyrównanie z profilem mobile — szósty font to subset
         // italic Cormoranta z 4.2. Próg 5 spamował warnem każdy run.
         "resource-summary:font:count": ["warn", { maxNumericValue: 6 }],
