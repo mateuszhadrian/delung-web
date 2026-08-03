@@ -40,7 +40,13 @@ const projects = entries
       <div class="re-txts" data-retxts>
         {
           projects.map((p, i) => (
-            <div class="re-tx" data-retx style={i ? "opacity:0" : undefined}>
+            <div
+              class="re-tx"
+              data-retx
+              data-tx-slug={p.slug}
+              data-tx-name={p.title}
+              style={i ? "opacity:0" : undefined}
+            >
               <p class="re-meta">{p.categoryLabel.toUpperCase()}</p>
               <h3>{p.title}</h3>
               <p>{p.description}</p>
@@ -157,6 +163,25 @@ const projects = entries
     if (!card?.dataset.workSlug) return;
     openWorkDetail(card.dataset.workSlug, card.dataset.workName ?? "");
   });
+
+  // „Więcej" w karcie opisu = to samo co klik w zdjęcie obok, czyli detal
+  // TEJ realizacji (D-Q6). Dotąd link szedł na /realizacje/, więc dawał
+  // efekt nieodróżnialny od CTA „Przeglądaj nasze realizacje" tuż niżej.
+  // Karta opisu żyje TYLKO na desktopie w scenie przypiętej (poniżej progu
+  // `.re-txts` jest `display: none`), więc nie ma tu bramki progowej.
+  // `href` zostaje fallbackiem bez JS — wzorzec kafli kategorii (D-P2).
+  document
+    .querySelector<HTMLElement>("[data-retxts]")
+    ?.addEventListener("click", (e) => {
+      const link = (e.target as HTMLElement).closest<HTMLElement>(
+        "a[data-work-more]",
+      );
+      if (!link) return;
+      const tx = link.closest<HTMLElement>("[data-tx-slug]");
+      if (!tx?.dataset.txSlug) return;
+      e.preventDefault();
+      openWorkDetail(tx.dataset.txSlug, tx.dataset.txName ?? "");
+    });
 </script>
 
 <style>
@@ -393,11 +418,20 @@ const projects = entries
        — przy najniższych oknach użytkownik traci ogon opisu, a nie
        nagłówek albo wyjście do realizacji. Opisy idą z CMS-a i bywają
        różnej długości, więc gwarancja musi być strukturalna, nie liczbowa. */
+    .re-tx:first-child {
+      pointer-events: auto;
+    }
     .re-tx {
       position: absolute;
       inset: 0;
       display: flex;
       flex-direction: column;
+      /* Trzy karty leżą JEDNA NA DRUGIEJ. Bez tego ostatnia w DOM-ie łapie
+         kliknięcia także przy `opacity: 0` i zasłania link „Więcej"
+         widocznej karty — stąd zgłoszony brak kursora i brak reakcji
+         (D-Q6). Aktywną kartę odblokowuje home-scroll.ts; pierwsza jest
+         aktywna w SSR, więc dostaje to samo regułą CSS. */
+      pointer-events: none;
       transition:
         opacity 0.45s ease,
         transform 0.55s cubic-bezier(0.16, 1, 0.3, 1);
