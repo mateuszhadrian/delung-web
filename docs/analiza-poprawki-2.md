@@ -375,57 +375,53 @@ Kolizja startuje przy ~730 px (1440) i ~735 px (1366). Laptop 1366×768
 z paskami przeglądarki daje okno ~650 px — dokładnie środek strefy
 kolizji.
 
-**Decyzja: lewa kolumna staje się kolumną flex z priorytetami kurczenia.**
-Zamiast dokładać progi `@media (max-height: …)` (skok zamiast płynności)
-albo doklejać rampy `vh` do pięciu osobnych wielkości (pięć magicznych
-stałych i zero gwarancji), układ dostaje strukturę, która **sama** wie,
-ile ma miejsca:
+**Decyzja: scena staje się siatką, a lewa kolumna — kolumną flex
+z priorytetami kurczenia.** Zamiast dokładać progi `@media (max-height: …)`
+(skok zamiast płynności) albo rampy `vh` doklejone do pięciu osobnych
+wielkości (pięć magicznych stałych i zero gwarancji), układ dostaje
+strukturę, która **sama** wie, ile ma miejsca:
 
-1. `.re-in` na desktopie: `display: flex; flex-direction: column`.
-   Przycisk `.re-cta` wraca z pozycjonowania absolutnego do **potoku**
-   jako ostatni element z `margin-top: auto` — dzięki temu flexbox zna
-   jego prawdziwą wysokość i nikt nie musi jej hardkodować. Jego
-   dotychczasowe `bottom` staje się `margin-bottom` o tej samej wartości,
-   więc przy pełnej wysokości okna geometria jest **identyczna co do
-   piksela**. Pasek `.re-bar` zostaje absolutny (jest przyklejony do dna
-   sceny i niczego nie rozpycha).
-2. Odstęp `h2 → opis` przestaje być marginesem (marginesy się nie
-   kurczą), a staje się **rozpórką** `flex: 0 1 clamp(40px, 5vw, 72px)`
-   z podłogą `min-height: 12px` i **wysokim współczynnikiem kurczenia**.
-3. `.re-txts` dostaje `flex: 0 1 auto` z tą samą wysokością bazową co
-   dziś, podłogą `min-height` i **niskim współczynnikiem kurczenia**.
+1. `.re-pin` z rzędu flex staje się **siatką** `46% | 1fr` × `1fr | auto`.
+   Przycisk przestaje być pozycjonowany absolutnie i dostaje WŁASNY wiersz
+   pod lewą kolumną. Dzięki temu wysokość dostępna dla treści to dokładnie
+   tyle, ile zostaje po odjęciu pasa przycisku — **treść nie ma jak pod
+   niego wjechać**. To jest twarda gwarancja z tej decyzji, nie strojenie
+   liczbowe. Pasek postępu zostaje absolutny, ale kotwiczy się teraz do
+   sceny (nie do kolumny, która kończy się nad wierszem przycisku).
+2. Odstęp `nagłówek → opis` przestaje być marginesem (marginesy się nie
+   kurczą) i staje się **rozpórką** `flex: 0 100 clamp(40px, 5vw, 72px)`
+   z podłogą 12 px, a blok opisu dostaje `flex: 0 1 …` ze **sto razy
+   mniejszym** współczynnikiem. Flexbox rozdziela brakujące piksele
+   proporcjonalnie do `shrink × basis`, więc rozpórka oddaje ~96 %
+   pierwszego etapu — opis realnie jedzie w stronę nagłówka. Kolejność
+   jest zadeklarowana w CSS, nie wyliczona z progów.
+3. **Karta opisu staje się kolumną flex** wypełniającą swoje pudełko:
+   jedynym elementem, który wolno ścisnąć, jest akapit opisu (`min-height: 0`
+   - `overflow: hidden`). Kicker, tytuł i „Więcej" są nietykalne. To druga
+     gwarancja strukturalna: treść nie wychodzi poza własny boks, więc przy
+     skrajnych rozmiarach użytkownik traci ogon opisu, a nie wyjście do
+     realizacji. Opisy idą z CMS-a i mają zmienną długość — dlatego
+     gwarancja musi być strukturalna, nie liczbowa.
+4. **Tytuł i cała treść karty skalują się wysokością kontenera**
+   (`container-type: size` + jednostki `cqh`), a nagłówek sekcji, górne
+   powietrze kolumny i dolny pas przycisku mają rampy `vh` jako etapy 3–5.
+   Każdy współczynnik jest dobrany tak, żeby przy KAŻDYM rozmiarze
+   referencyjnym przegrywał w `min()` z wartością dotychczasową.
 
-Flexbox rozdziela brakujące piksele proporcjonalnie do `shrink × basis`,
-więc przy `shrink` 100 vs 1 rozpórka oddaje ~96 % pierwszego etapu —
-czyli **opis realnie jedzie w stronę nagłówka**, dokładnie jak w
-zgłoszeniu. Dopiero gdy rozpórka usiądzie na swojej podłodze, kurczyć
-zaczyna się blok tekstu. Kolejność jest więc zadeklarowana w CSS, a nie
-wyliczona z progów.
+**Pomiar końcowy** (6 szerokości × 11 wysokości × 3 wpisy zajawki,
+z wyłączonymi przejściami):
 
-4. **Tytuł kurczy się razem z blokiem**: `.re-txts` zostaje kontenerem
-   zapytań (`container-type: size`), a `h3` dostaje
-   `font-size: min(clamp(28px, 2.78vw, 40px), 14cqh)` — przy pełnej
-   wysokości człon `cqh` jest większy od dzisiejszej wartości, więc `min()`
-   wybiera stan obecny (zero zmian), a przy skurczonym bloku przejmuje
-   prowadzenie i skaluje nagłówek. Analogicznie opis, z twardą podłogą
-   czytelności 13 px. Bez wsparcia dla kontenerów cała deklaracja jest
-   nieprawidłowa i przeglądarka zostaje przy `clamp()` sprzed rundy —
-   degradacja do stanu dzisiejszego, nie do rozsypanego układu.
+| | przed | po |
+| --- | --- | --- |
+| nakładanie przycisku na treść | od ~730 px w dół, do −214 px przy 520 | **nigdy** (najgorszy przypadek: styk, 0 px) |
+| pełna widoczność linku „Więcej" | do ~730 px | **do 480 px włącznie** na każdej szerokości |
 
-5. **Trzeci zapas — dolny pas.** Gdy blok tekstu dojedzie do swojej
-   podłogi, oddają jeszcze odstępy przycisku i paska od dna:
-   `min(clamp(80px, 7.36vw, 106px), max(48px, 14vh))` oraz
-   `min(clamp(54px, 5vw, 72px), max(28px, 9.5vh))`. Stałe `vh` są
-   **skalibrowane tak, by przy 768 px i 1080 px wygrywał człon dzisiejszy**
-   (14vh przy 768 to 107 px wobec 100 px z clamp), więc profile testowe
-   nie widzą żadnej zmiany.
-
-**Dlaczego to nie ruszy baseline'ów.** Kolumna flex kurczy się wyłącznie
-wtedy, gdy treść NIE MIEŚCI się w dostępnej wysokości. Przy 1920×1080
-i 1366×768 mieści się z zapasem (+55 px luzu przy 768), więc żaden
-element nie oddaje ani piksela, a wszystkie człony `vh`/`cqh` przegrywają
-w `min()` z wartościami dzisiejszymi. Weryfikuję to przebiegiem
-`test:visual`, nie deklaracją.
+**Pułapka pomiarowa, warta zapamiętania:** przełączanie wpisów daje
+nieaktywnym `translateY(14px)` z przejściem 0,55 s. Odczyt geometrii tuż
+po ustawieniu `transform: none` pokazuje jeszcze STARĄ wartość, co dawało
+fałszywe kolizje rzędu 13 px i kazało mi gonić nieistniejący problem przez
+kilka iteracji. Pomiar sceny robi się z wyłączonymi przejściami — tak też
+robi to spec e2e.
 
 **Ryzyko, o którym trzeba wiedzieć:** opisy realizacji pochodzą z CMS-a
 i mają zmienną długość — blok tekstu ma sztywną wysokość, bo jego dzieci
