@@ -232,39 +232,54 @@ testów, które istnienia Lenisa pilnowały.
 
 ### D-Q2. Wysokość hero mobile przypięta raz — niezależna od paska przeglądarki
 
-Hero przestaje pytać przeglądarkę o wysokość viewportu w trakcie scrolla:
+Hero przestaje pytać przeglądarkę o wysokość viewportu w trakcie scrolla —
+ale **dopiero wtedy, gdy ta zacznie kłamać**:
 
-- skrypt hero (`HomeHero.astro`, ładowany zawsze) **mierzy własne pudełko
-  sekcji** po pierwszym layoucie i zapisuje wynik jako `--hero-h`;
-- `.hero` używa `height: var(--hero-h, calc(100svh - var(--hdr-h, 74px)))`
-  — dotychczasowa kaskada `100vh` → `100svh` zostaje jako degradacja bez JS
-  i jest zarazem źródłem pierwszego pomiaru;
-- przeliczamy **przy zmianie szerokości** (obrót ekranu, zmiana okna) oraz
-  przy zmianie wysokości paska nawigacji (obserwator rozmiaru na `.hdr` —
-  podmiana fontu potrafi ruszyć navbar po pierwszym paincie). Zmiana samej
-  wysokości viewportu = pasek przeglądarki albo klawiatura — ignorowana;
-- `home-scroll.ts` **zamraża** swoją sondę `100svh` poniżej progu desktop
-  (odmrożenie przy zmianie szerokości), więc razem z boksem przestaje
-  drgać parallax. Na desktopie sonda zostaje żywa — tam wysokość okna
-  zmienia użytkownik i sceny przypięte mają za tym nadążać.
+- skrypt hero (`HomeHero.astro`, ładowany zawsze) trzyma sondę `100svh`
+  i zapamiętuje dwie rzeczy: wartość svh oraz zmierzoną wysokość pudełka
+  hero **sprzed** jakiegokolwiek drgnięcia;
+- **dopóki svh przy stałej szerokości się nie rusza — nie robimy NIC.**
+  Hero liczy się formułą `calc(100svh - var(--hdr-h))` jak dotąd, więc
+  w Safari, Chrome iOS, na desktopie i w testach nie zmienia się ani jeden
+  piksel renderowania;
+- gdy `resize` przyjdzie przy **niezmienionej szerokości**, a sonda pokaże
+  inne svh (czyli pasek przeglądarki rusza całym webview), zamrażamy
+  zapamiętaną wysokość w `--hero-h` i hero trzyma się jej do końca;
+- zmiana **szerokości** (obrót ekranu, zmiana okna) zwalnia przypięcie
+  i mierzy od nowa — mechanizm jest odporny na pasek, ale nie zamrożony
+  na stałe;
+- obserwator rozmiaru na `.hdr` odświeża zapamiętany pomiar, gdy podmiana
+  fontu ruszy wysokość navbara (hero liczy się z `--hdr-h`);
+- `home-scroll.ts` bierze `window.__vph`, którą skrypt hero ustawia
+  **wyłącznie w momencie zamrożenia** — poza tym zostaje dotychczasowy
+  odczyt sondy, więc parallax też jest bit w bit jak dotąd.
 
-**KOREKTA planu tej rundy — dlaczego nie `--vph` mierzone przed paintem.**
-Pierwsza implementacja szła po linii najmniejszego oporu: sonda `100svh`
-przed paintem, wynik do `--vph`, hero liczone jako `calc(var(--vph) -
-var(--hdr-h))`. Test wizualny wywalił na tym `index-kontakt`
-(webkit-iphone-se, 2,3 % pikseli). Sekcja pomiarów: **WebKit snapuje samo
-`height: 100svh` do pełnych pikseli (568), ale `calc(100svh - 86px)` liczy
-w swoich 1/64 px i daje 481,984375** — czyli wewnętrznie svh to 567,984375.
-Wpisanie zaokrąglonej sondy robiło hero o 0,016 px wyższe, przesuwało całą
-stronę o ułamek piksela i zmieniało rasteryzację rozmytego tła bannera
-kontaktu. Prób obejścia (`getBoundingClientRect` zamiast `offsetHeight`,
-`calc(100svh - 0px)`, `calc(100svh - 1px)`) nie da się uogólnić — WebKit
-zaokrągla różnie zależnie od odjemnika. Dlatego mierzymy **pudełko hero**,
-a nie viewport: odczyt własnej geometrii jest dokładny z definicji, w każdym
-silniku, i z założenia równy temu, co CSS już policzył (zero CLS, zero
-różnicy pikseli). Ceną jest pomiar PO layoucie zamiast przed paintem —
-akceptowalna, bo wartość, którą przypinamy, jest identyczna z tą, którą
-przeglądarka i tak wyrenderowała.
+**KOREKTA planu tej rundy — dlaczego nie przypinamy profilaktycznie.**
+Pierwsze dwie implementacje przypinały wysokość zawsze: najpierw jako
+`--vph` mierzone sondą przed paintem, potem jako zmierzone pudełko hero.
+Obie wywróciły testy wizualne, za każdym razem o ułamek piksela:
+
+1. `--vph` z sondy — `index-kontakt` na webkit-iphone-se (2,3 % pikseli).
+   WebKit **snapuje samo `height: 100svh` do pełnych pikseli (568), ale
+   `calc(100svh - 86px)` liczy w swoich 1/64 px** (481,984375), więc
+   zaokrąglona sonda robiła hero o 0,016 px wyższe i przesuwała całą
+   stronę o ułamek piksela.
+2. Zmierzone pudełko hero — lokalnie czysto, ale **CI na Linuksie**
+   wywalił `index-o-nas` na chromium-pixel-5 (DPR 2,75): 214 px różnicy
+   przy progu 0,05 %, na glifach cytatu, **deterministycznie w dwóch
+   niezależnych przebiegach**. Geometria była identyczna co do 1/16 px
+   (sprawdzone A/B na tym samym silniku: wysokość dokumentu, pozycja
+   sekcji i transform parallaxu bez zmian), więc winna była sama obecność
+   wpisanej z JS wartości, a nie przesunięcie układu.
+
+Wniosek, który wart jest zapamiętania na przyszłość: **wartość długości
+wpisana z JS nigdy nie jest bit w bit tym samym, co przeglądarka wyliczyła
+sama** — zaokrągla się inaczej przy zapisie i odczycie, a przy niecałkowitym
+DPR widać to na antyaliasingu glifów. Dlatego wpisujemy ją **tylko tam, gdzie
+naprawdę trzeba**: w przeglądarkach, w których svh realnie drga. Wszędzie
+indziej mechanizm jest nieaktywny i renderowanie jest identyczne z tym sprzed
+rundy — co pilnuje osobna asercja („bez drgania viewportu hero NIE jest
+przypięte").
 
 **ROZSZERZENIE decyzji 4.2 (`dvh` → `svh`)**: `svh` zostaje w kodzie jako
 wartość startowa i fallback, ale nie jest już jedyną obroną. Konsekwencja

@@ -626,6 +626,15 @@ const SVG_TEXT_STYLE =
   // pokazuje tekst z ciemnym wypełnieniem + glow (czytelna degradacja).
   import { HOME_DESKTOP_MIN_PX } from "./home-config";
 
+  declare global {
+    interface Window {
+      /** Wysokość „małego" viewportu sprzed drgnięcia paska przeglądarki —
+       *  ustawiana TYLKO wtedy, gdy sonda wykryje ruchome svh (D-Q2).
+       *  Konsument: vpH() w home-scroll.ts (parallax). */
+      __vph?: number;
+    }
+  }
+
   const mq = matchMedia(`(min-width:${HOME_DESKTOP_MIN_PX}px)`);
   const fillSvgFrames = () => {
     document
@@ -643,48 +652,78 @@ const SVG_TEXT_STYLE =
     });
   }
 
-  // ── Wysokość hero PRZYPIĘTA do pierwszego pomiaru (D-Q2) ──────────────
+  // ── Wysokość hero: przypinana DOPIERO, gdy viewport zaczyna drgać (D-Q2) ──
   // Problem: przeglądarki iOS, które przy chowaniu własnego paska ZMIENIAJĄ
-  // ROZMIAR webview (DuckDuckGo, Firefox, Opera, Edge — Safari i Chrome nie),
-  // przeliczają wtedy `100svh`. Zdjęcie jest `object-fit: cover`, więc inna
-  // wysokość boksu to inny KADR: napisy „przeskakiwały" po zdjęciu przy
+  // ROZMIAR webview (DuckDuckGo, Firefox, Opera, Edge — Safari i Chrome iOS
+  // nie), przeliczają wtedy `100svh`. Zdjęcie jest `object-fit: cover`, więc
+  // inna wysokość boksu to inny KADR: napisy „przeskakiwały" po zdjęciu przy
   // każdym schowaniu i pokazaniu paska.
   //
-  // Dlaczego mierzymy PUDEŁKO HERO, a nie wysokość viewportu: `100svh`
-  // odczytane sondą nie równa się temu, co przeglądarka wylicza w formule
-  // hero — WebKit snapuje samo `height: 100svh` do pełnych pikseli, a
-  // `calc(100svh - X)` liczy w swoich 1/64 px (iPhone SE: 568 vs 567,984375).
-  // Wpisanie zaokrąglonej wartości robiło hero o 0,016 px wyższe, co
-  // przesuwało całą stronę o ułamek piksela i zmieniało rasteryzację
-  // rozmytego tła bannera kontaktu (złapał to test wizualny). Odczyt
-  // własnego pudełka jest z definicji dokładny w każdym silniku.
+  // Mechanika: NIE przypinamy nic z góry. Dopóki `100svh` przy STAŁEJ
+  // szerokości się nie rusza, hero liczy się formułą CSS jak dotąd — czyli
+  // w Safari, Chrome iOS, na desktopie i w testach nie zmienia się ani
+  // jeden piksel. Dopiero gdy sonda wykryje, że svh drgnęło bez zmiany
+  // szerokości (czyli pasek przeglądarki rusza webview), zamrażamy wysokość
+  // zmierzoną PRZED drgnięciem i od tej pory hero jej się trzyma.
   //
-  // Kiedy przeliczamy: przy zmianie SZEROKOŚCI (obrót ekranu, zmiana okna)
-  // i przy zmianie wysokości paska nawigacji (podmiana fontu — obserwator
-  // rozmiaru na `.hdr`). Zmiana samej wysokości viewportu to pasek
-  // przeglądarki albo klawiatura — świadomie ignorowana.
+  // Dlaczego nie przypinamy od razu: pierwsza wersja wpisywała zmierzoną
+  // wysokość zawsze i zmieniała rasteryzację o ułamek piksela — najpierw
+  // tło bannera kontaktu na webkit-iphone-se (WebKit snapuje samo
+  // `height: 100svh` do pełnych pikseli, ale `calc(100svh - X)` liczy
+  // w 1/64 px), potem glify cytatu „o nas" na chromium-pixel-5 w CI
+  // (DPR 2,75). Wniosek: wartość wpisana z JS nigdy nie jest bit w bit tym
+  // samym, co wyliczyła przeglądarka — więc wpisujmy ją tylko tam, gdzie
+  // naprawdę trzeba, a nie „profilaktycznie".
   const root = document.documentElement;
   const hero = document.querySelector<HTMLElement>(".hero");
+
+  // sonda 100svh — ta sama technika co w home-scroll.ts
+  const probe = document.createElement("div");
+  probe.style.cssText =
+    "position:fixed;top:0;left:0;width:0;height:100svh;" +
+    "visibility:hidden;pointer-events:none";
+  document.body.appendChild(probe);
+  const svh = () => probe.offsetHeight || window.innerHeight;
+
+  let pinned = false;
+  let baseSvh = 0;
+  let lastGood = 0;
   let lastWidth = window.innerWidth;
 
-  function pinHero() {
-    if (!hero) return;
-    // zdjąć przypięcie → CSS liczy formułę od nowa → zmierzyć → przypiąć
-    root.style.removeProperty("--hero-h");
-    const h = hero.getBoundingClientRect().height;
-    // powyżej progu desktop hero mobile jest `display: none` (wysokość 0) —
-    // nie ma czego przypinać, a zerowa wartość zepsułaby powrót pod próg
-    if (h > 0) root.style.setProperty("--hero-h", `${h}px`);
+  /** Odświeża zapamiętany stan „sprzed drgnięcia" (tylko gdy nie przypięte). */
+  function remember() {
+    if (pinned || !hero) return;
+    baseSvh = svh();
+    lastGood = hero.getBoundingClientRect().height;
   }
 
-  pinHero();
+  function unpin() {
+    pinned = false;
+    root.style.removeProperty("--hero-h");
+    delete window.__vph;
+    remember();
+  }
+
+  remember();
+  // Pasek nawigacji zmienia wysokość po podmianie fontu (--hdr-h), a hero
+  // liczy się z niej — trzeba odświeżyć zapamiętany pomiar. Ten obserwator
+  // NIE reaguje na chowany pasek przeglądarki: pudełko navbara wtedy nie drga.
   const hdrEl = document.querySelector(".hdr");
-  // Pasek zmienia wysokość po podmianie fontu; jego obserwator NIE reaguje
-  // na chowany pasek przeglądarki (pudełko navbara wtedy nie drga).
-  if (hdrEl) new ResizeObserver(pinHero).observe(hdrEl);
+  if (hdrEl) new ResizeObserver(remember).observe(hdrEl);
+
   addEventListener("resize", () => {
-    if (window.innerWidth === lastWidth) return;
-    lastWidth = window.innerWidth;
-    pinHero();
+    if (!hero) return;
+    if (window.innerWidth !== lastWidth) {
+      // realna zmiana viewportu (obrót ekranu, zmiana okna) — zaczynamy od nowa
+      lastWidth = window.innerWidth;
+      unpin();
+      return;
+    }
+    if (pinned || !lastGood) return;
+    if (svh() === baseSvh) return; // svh stabilne — nie ma czego naprawiać
+    pinned = true;
+    root.style.setProperty("--hero-h", `${lastGood}px`);
+    // home-scroll liczy z tego parallax — patrz vpH() tamże
+    window.__vph = baseSvh;
   });
 </script>

@@ -61,25 +61,43 @@ test.describe("hero mobile: zakotwiczenie w wysokości viewportu (D-Q2)", () => 
     expect(shrunk.imgH).toBe(before.imgH);
   });
 
-  test("obrót ekranu (zmiana szerokości) przelicza wysokość hero", async ({
+  const pin = (page: Page) =>
+    page.evaluate(() =>
+      document.documentElement.style.getPropertyValue("--hero-h"),
+    );
+
+  test("bez drgania viewportu hero NIE jest przypięte (zero zmian w renderowaniu)", async ({
+    page,
+  }) => {
+    await gotoReady(page, PATH);
+    await settle(page, 300);
+    // Kontrakt kluczowy dla baseline'ów: dopóki svh się nie rusza, wysokość
+    // liczy formuła CSS i JS nie wpisuje NICZEGO. Wpisana z JS wartość nigdy
+    // nie jest bit w bit tym samym, co wyliczyła przeglądarka — profilaktyczne
+    // przypinanie zmieniało rasteryzację o ułamek piksela (D-Q2).
+    expect(await pin(page)).toBe("");
+  });
+
+  test("obrót ekranu (zmiana szerokości) zwalnia przypięcie i mierzy od nowa", async ({
     page,
   }) => {
     await gotoReady(page, PATH);
     await settle(page, 200);
     const before = await heroGeometry(page);
 
-    // Kontrola przeciwna do testu wyżej: mechanizm ma być odporny na pasek,
-    // ale NIE zamrożony — po obrocie hero musi zmierzyć się od nowa.
+    // Najpierw wymuś przypięcie (drgnięcie samej wysokości)…
     const vp = page.viewportSize()!;
+    await page.setViewportSize({ width: vp.width, height: vp.height + 90 });
+    await settle(page, 200);
+    expect(await pin(page)).not.toBe("");
+
+    // …a potem obróć ekran: mechanizm ma być odporny na pasek, ale NIE
+    // zamrożony na stałe — przy realnie innym viewporcie wraca do formuły.
     await page.setViewportSize({ width: vp.height, height: vp.width });
     await settle(page, 200);
     const rotated = await heroGeometry(page);
 
+    expect(await pin(page)).toBe("");
     expect(rotated.h).not.toBe(before.h);
-    // …i przypięcie zostało odświeżone, a nie zdjęte
-    const pinned = await page.evaluate(() =>
-      getComputedStyle(document.documentElement).getPropertyValue("--hero-h"),
-    );
-    expect(parseFloat(pinned)).toBeCloseTo(rotated.h, 0);
   });
 });
