@@ -30,6 +30,13 @@ const projects = entries
       <p class="kick" data-rev>REALIZACJE</p>
       <h2 class="mOnly" data-rev>Zobacz nasze realizacje</h2>
       <h2 class="dOnly">Nasze realizacje</h2>
+      {
+        /* Rozpórka odstępu nagłówek → opis. NIE margines: na desktopie lewa
+           kolumna jest kolumną flex i to właśnie ta rozpórka oddaje piksele
+           jako pierwsza, gdy okno robi się niskie (D-Q5). Marginesy się nie
+           kurczą, więc musi to być element. */
+      }
+      <i class="re-gap" aria-hidden="true"></i>
       <div class="re-txts" data-retxts>
         {
           projects.map((p, i) => (
@@ -184,6 +191,7 @@ const projects = entries
     display: none;
   }
   .re-bar,
+  .re-gap,
   .re-txts,
   .re-pill,
   .re-lupa {
@@ -303,6 +311,14 @@ const projects = entries
       font-size: clamp(38px, 3.89vw, 56px);
       line-height: 1.1;
     }
+    /* Nagłówek sekcji kurczy się DOPIERO po rozpórce i bloku opisu (D-Q5):
+       przy 768 i 1080 px człon vh przegrywa w min() z wartością dotychczasową. */
+    :global(html.js-motion) h2.dOnly {
+      font-size: min(clamp(38px, 3.89vw, 56px), max(24px, calc(17vh - 77px)));
+    }
+    :global(html.js-motion) .kick {
+      margin-bottom: min(18px, 2.6vh);
+    }
     .re-cards {
       gap: 26px;
     }
@@ -316,73 +332,139 @@ const projects = entries
       position: relative;
       padding: 0;
     }
+    /* Siatka zamiast rzędu flex (D-Q5): CTA „Przeglądaj nasze realizacje"
+       przestaje być pozycjonowane absolutnie i dostaje WŁASNY wiersz pod
+       lewą kolumną. Dzięki temu wysokość dostępna dla nagłówka i opisu to
+       `1fr`, czyli dokładnie tyle, ile zostaje po odjęciu pasa przycisku —
+       treść nie ma jak pod niego wjechać. Przy pełnej wysokości okna
+       geometria jest identyczna jak przed zmianą. */
     :global(html.js-motion) .re-pin {
       position: sticky;
       top: 0;
       height: 100vh;
       overflow: hidden;
       background: var(--bg-cream);
-      display: flex;
+      display: grid;
+      grid-template-columns: 46% 1fr;
+      grid-template-rows: 1fr auto;
     }
     :global(html.js-motion) .re-in {
-      width: 46%;
-      flex: none;
+      grid-column: 1;
+      grid-row: 1;
       max-width: none;
       margin: 0;
-      position: relative;
-      padding-block: clamp(84px, 8.33vw, 120px) 0;
+      /* kolumna flex — rozpórka i blok opisu oddają piksele wg priorytetu
+         (D-Q5); min-height:0 pozwala jej zejść poniżej rozmiaru treści */
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      /* rampa vh oddaje górne powietrze przy niskim oknie; przy 768 i 1080 px
+         wygrywa wartość dotychczasowa (D-Q5) */
+      padding-block: min(clamp(84px, 8.33vw, 120px), max(28px, 17vh)) 0;
       padding-right: clamp(34px, 3.89vw, 56px);
       padding-left: var(--pad);
     }
+    :global(html.js-motion) .kick,
     :global(html.js-motion) h2 {
-      margin-bottom: clamp(40px, 5vw, 72px);
+      flex: none;
     }
+    /* Etap 1 kurczenia: rozpórka ma sto razy większy współczynnik kurczenia
+       niż blok opisu, więc przy niskim oknie to ONA oddaje piksele — opis
+       jedzie w stronę nagłówka, zamiast nachodzić na przycisk. Dojechawszy
+       do podłogi 12 px, przestaje i pałeczkę przejmuje blok opisu. */
+    :global(html.js-motion) .re-gap {
+      display: block;
+      flex: 0 100 clamp(40px, 5vw, 72px);
+      min-height: 12px;
+    }
+    /* Etap 2: blok opisu. `container-type: size` sprawia, że tytuł i akapit
+       w środku skalują się jego wysokością (jednostki cqh niżej). */
     :global(html.js-motion) .re-txts {
       display: block;
       position: relative;
-      height: clamp(240px, 20.1vw, 290px);
+      flex: 0 1 clamp(240px, 20.1vw, 290px);
+      min-height: 112px;
+      container-type: size;
     }
+    /* Karta = kolumna flex wypełniająca pudełko bloku (D-Q5). To jest TWARDA
+       gwarancja braku kolizji z przyciskiem: treść nie ma jak wyjść poza
+       własny boks, bo opis (jedyny element, który wolno ścisnąć) oddaje
+       miejsce i przycina się na dole. Kicker, tytuł i „Więcej" są nietykalne
+       — przy najniższych oknach użytkownik traci ogon opisu, a nie
+       nagłówek albo wyjście do realizacji. Opisy idą z CMS-a i bywają
+       różnej długości, więc gwarancja musi być strukturalna, nie liczbowa. */
     .re-tx {
       position: absolute;
       inset: 0;
+      display: flex;
+      flex-direction: column;
       transition:
         opacity 0.45s ease,
         transform 0.55s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .re-meta,
+    .re-tx h3,
+    .re-tx a {
+      flex: none;
     }
     .re-meta {
       font-family: var(--font-display), sans-serif;
       font-weight: 500;
       font-size: 11px;
+      /* Cała treść karty skaluje się WYSOKOŚCIĄ swojego kontenera (D-Q5):
+         dzieci są ułożone jedno na drugim (position:absolute), więc pudełko
+         ma sztywną wysokość i treść musi się w niej zmieścić sama. Każdy
+         współczynnik cqh jest dobrany tak, żeby przy pełnej wysokości okna
+         przegrywał w min() z wartością dotychczasową — czyli mechanizm śpi,
+         dopóki nie zrobi się naprawdę ciasno. */
+      font-size: max(9px, min(11px, 5cqh));
       line-height: 1.6;
       letter-spacing: 0.18em;
       color: var(--accent-ink);
     }
     .re-tx h3 {
-      margin-top: 12px;
+      margin-top: min(12px, 5.5cqh);
       font-family: var(--font-display), sans-serif;
       font-weight: 200;
       font-size: clamp(28px, 2.78vw, 40px);
+      /* Człon cqh wygrywa DOPIERO, gdy blok opisu zacznie się kurczyć —
+         przy pełnej wysokości okna jest większy od dotychczasowej wartości,
+         więc min() wybiera stan sprzed rundy (zero zmian w baseline'ach).
+         Bez wsparcia dla kontenerów deklaracja jest nieprawidłowa i zostaje
+         sam clamp() z linijki wyżej — czytelna degradacja. */
+      font-size: max(19px, min(clamp(28px, 2.78vw, 40px), 14cqh));
       line-height: 1.15;
       text-wrap: pretty;
     }
     .re-tx p {
-      margin-top: 18px;
+      margin-top: min(18px, 8cqh);
       font-family: var(--font-display), sans-serif;
       font-weight: 200;
       font-size: clamp(15px, 1.15vw, 16.5px);
+      /* jak przy h3, z twardą podłogą czytelności */
+      font-size: max(12px, min(clamp(15px, 1.15vw, 16.5px), 7cqh));
       line-height: 1.55;
       color: var(--muted);
       text-wrap: pretty;
+      /* jedyny element oddający miejsce; min-height:0 pozwala mu zejść
+         poniżej rozmiaru treści, overflow ucina ogon zamiast wylewać go
+         na przycisk */
+      flex: 0 1 auto;
+      min-height: 0;
+      overflow: hidden;
       max-width: 46ch;
     }
     .re-tx a {
       display: inline-flex;
+      /* karta jest kolumną flex (D-Q5), więc bez tego link rozciągnąłby się
+         na całą szerokość kolumny razem z podkreśleniem */
+      align-self: flex-start;
       align-items: center;
       gap: 8px;
-      margin-top: 18px;
+      margin-top: min(18px, 8cqh);
       font-family: var(--font-body), sans-serif;
       font-weight: 500;
-      font-size: 14px;
+      font-size: max(11px, min(14px, 6.5cqh));
       line-height: 1;
       color: var(--ink);
       text-decoration: none;
@@ -398,7 +480,8 @@ const projects = entries
     }
     :global(html.js-motion) .re-cards {
       position: relative;
-      flex: 1;
+      grid-column: 2;
+      grid-row: 1 / span 2;
       overflow: hidden;
       background: #e5e1da;
       gap: 0;
@@ -424,14 +507,20 @@ const projects = entries
       display: none;
     }
     :global(html.js-motion) .re-cta {
-      position: absolute;
-      left: var(--pad);
-      right: calc(54% + clamp(34px, 3.89vw, 56px));
-      bottom: clamp(80px, 7.36vw, 106px);
+      grid-column: 1;
+      grid-row: 2;
       width: auto;
       max-width: none;
-      margin: 0;
-      padding: 0;
+      /* odstęp od dna sceny — dawne `bottom`. Człon vh oddaje piksele jako
+         OSTATNI (etap 3), gdy rozpórka i blok opisu są już na podłogach;
+         przy 768 i 1080 px wygrywa wartość dotychczasowa (D-Q5). */
+      /* Rampa przechodzi DOKŁADNIE przez dzisiejszą wartość przy 768 px
+         (36×7,68−175 = 101 px) i poniżej oddaje pas dwa razy szybciej niż
+         sama wysokość okna — to ostatni zapas, po rozpórce, opisie
+         i nagłówku. Powyżej 768 px wygrywa clamp, czyli stan sprzed rundy. */
+      margin: 0 0 min(clamp(80px, 7.36vw, 106px), max(36px, calc(36vh - 175px)));
+      /* pas przycisku pokrywa się z kolumną tekstu (dawne left/right) */
+      padding: 0 clamp(34px, 3.89vw, 56px) 0 var(--pad);
     }
     .re-cta :global(.btn-dark) {
       font-size: clamp(15px, 1.18vw, 17px);
@@ -440,12 +529,15 @@ const projects = entries
     :global(html.js-motion) .re-cta :global(.btn-dark) {
       padding: 20px 34px;
     }
+    /* Kotwiczony do DNA SCENY, nie do lewej kolumny: ta kończy się teraz nad
+       wierszem CTA (D-Q5). Stąd `right` liczone jak w CTA — 54 % + odstęp —
+       co daje dokładnie tę samą szerokość co przed zmianą. */
     :global(html.js-motion) .re-bar {
       display: block;
       position: absolute;
       left: var(--pad);
-      right: clamp(34px, 3.89vw, 56px);
-      bottom: clamp(54px, 5vw, 72px);
+      right: calc(54% + clamp(34px, 3.89vw, 56px));
+      bottom: min(clamp(54px, 5vw, 72px), max(24px, calc(24vh - 116px)));
       height: 2px;
       background: rgba(26, 26, 26, 0.12);
     }
