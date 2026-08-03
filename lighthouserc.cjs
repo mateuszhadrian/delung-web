@@ -46,28 +46,51 @@ module.exports = {
     assert: {
       aggregationMethod: "median-run",
       assertions: {
-        // 0.75 → 0.85 (4.5): próg 0.75 był awaryjnym poluzowaniem z 4.2,
-        // ustawionym PRZED pomiarem gotowej strony. Realne CI: 0.87–0.90 —
-        // 0.85 zostawia 2 pkt zapasu i wraca do roli ratchetu.
-        "categories:performance": ["error", { minScore: 0.85 }],
-        // 6000 → 4500 (4.5): LCP = pełnoekranowe zdjęcie hero (jakość kadru
-        // > metryka — kalibrowany wycinek 500 KB dla DPR≥2; wariant 174 KB
-        // dla DPR≤1.8 + preload w <head>). Zmierzone w CI: 3617–4064 ms,
-        // czyli sporo poniżej awaryjnego 6000 z 4.2. 4500 = +11 % nad
-        // najgorszą próbką.
-        "largest-contentful-paint": ["error", { maxNumericValue: 4500 }],
+        // 0.85 → 0.80 (Etap 6, decyzja Mateusza) — patrz uzasadnienie przy
+        // LCP niżej: score ciągnie w dół ta sama zmiana reżimu runnera
+        // (0.88 na szybkim, 0.83 na wolnym, przy identycznych bajtach).
+        "categories:performance": ["error", { minScore: 0.8 }],
+        // 4500 → 5200 (Etap 6, decyzja Mateusza) — POLUZOWANIE wbrew
+        // kierunkowi ratchetu, bo zwolnił runner, nie strona.
+        //
+        // LCP = pełnoekranowe zdjęcie hero (jakość kadru > metryka —
+        // kalibrowany wycinek 500 KB dla DPR≥2; wariant 174 KB dla DPR≤1.8
+        // + preload w <head>). Baseline z lipca: 3617–4064 ms.
+        //
+        // Pomiary z 3 sierpnia 2026 (te same bajty, script 19 053 B):
+        //   run 30806023358 (merge #27): LCP 3918 ms, FCP  421 ms — zielony
+        //   run 30803961568 (merge #26): LCP 4592 ms, FCP 1750 ms — CZERWONY
+        //   PR feat/etap-6-jsonld:       LCP 4890 ms                — CZERWONY,
+        //     po re-runie BEZ zmian w kodzie: zielony
+        // Rozstrzyga FCP: 421 vs 1750 ms, czyli cała strona ładowała się
+        // ~4× wolniej. To CPU runnera, nie regresja — potwierdzone osobno
+        // pomiarem A/B (12 przebiegów LHCI: dokument z JSON-LD i bez niego
+        // dają mediany 5035 vs 5035 ms).
+        //
+        // Mediana z 3 przebiegów nie ratuje: w wolnym przebiegu wszystkie
+        // trzy pomiary były wolne. 5200 ms = +6 % nad NAJGORSZĄ zaobserwowaną
+        // próbką (4890 ms) — świadomy zapas zamiast progu ocierającego się
+        // o nią; realna regresja obrazu hero i tak go przebije.
+        "largest-contentful-paint": ["error", { maxNumericValue: 5200 }],
         // Baseline 0 ms — próg-podłoga 150 ms (pojedyncze ms to szum
         // runnera; realna regresja JS i tak go przebije).
         "total-blocking-time": ["error", { maxNumericValue: 150 }],
         // Baseline 0 — 0.02 zostawia miejsce na fonty/obrazy sekcji,
         // wciąż daleko od progu „needs improvement" (0.1).
         "cumulative-layout-shift": ["error", { maxNumericValue: 0.02 }],
-        // 100 000 → 80 000 (4.5): pełny bundle wyszedł 67 978 B — poniżej
-        // szacunku hadrianm (~87 KB). 80 KB = +18 % zapasu.
-        "resource-summary:script:size": ["error", { maxNumericValue: 80000 }],
-        // 2 000 000 → 1 200 000 (4.5): pełna strona mobile waży 892 752 B
-        // (obrazy 600 KB, fonty 154 KB). 1,2 MB = +34 % zapasu.
-        "resource-summary:total:size": ["error", { maxNumericValue: 1200000 }],
+        // 80 000 → 30 000 (Etap 6): próg pamiętał czasy GSAP-a. Po jego
+        // wyjściu (Etap 5) bundle to 19 053 B i tyle samo pokazuje KAŻDY
+        // przebieg CI — bajty są deterministyczne, więc ten próg jest
+        // czystym sygnałem regresji, bez udziału szumu maszyny.
+        // 30 000 = +57 % zapasu na przyrost funkcji.
+        // UWAGA: beacon Cloudflare Web Analytics (11,4 kB) NIE liczy się do
+        // tego budżetu — Cloudflare wstrzykuje go na krawędzi, a LHCI mierzy
+        // lokalny dist/. Koszt beaconu zmierzony osobno na produkcji
+        // (docs/analiza-etap-6.md §6): +359 B w dokumencie, LCP bez zmian.
+        "resource-summary:script:size": ["error", { maxNumericValue: 30000 }],
+        // 1 200 000 → 900 000 (Etap 6): zmierzone w CI 816 437–816 496 B
+        // (rozrzut 59 B). 900 kB = +10 % nad najgorszą próbką.
+        "resource-summary:total:size": ["error", { maxNumericValue: 900000 }],
         // 5 → 6 (4.2): doszły subsety italic Cormoranta (cytat o-nas).
         "resource-summary:font:count": ["warn", { maxNumericValue: 6 }],
       },

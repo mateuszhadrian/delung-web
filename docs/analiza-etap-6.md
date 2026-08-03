@@ -1,6 +1,8 @@
 # Mini-analiza Etapu 6 — SEO, pomiar, polish
 
-Status: **plan do akceptacji** (data: 2026-08-02).
+Status: **WYKONANY** (2026-08-03; plan zaakceptowany 2026-08-02).
+Przebieg realizacji, korekty decyzji i zmierzone liczby — sekcja 11 na
+końcu dokumentu.
 Zakres: 7 punktów Etapu 6 z `docs/delung-web-creation-process.md`
 (Część B → „Etap 6 — SEO, pomiar, polish"). Wszystkie 8 widoków stoi na
 designie delung, Etapy 0–5 i runda poprawek wizualnych są zamknięte —
@@ -422,3 +424,103 @@ Kroki w chmurze przeplatają się z PR-ami wg kolejności z §7.
 - [ ] pomiar przed/po (§6) zaraportowany, decyzja o PR C podjęta
 - [ ] `/release-check` przed ogłoszeniem strony klientowi
 - [ ] `CLAUDE.md` zaktualizowane (Etap 6 wykonany + numery PR-ów)
+
+---
+
+## 11. Realizacja — co faktycznie wyszło
+
+Etap zamknięty **sześcioma** PR-ami zamiast planowanych trzech: doszły
+polityka prywatności (konsekwencja włączenia Analytics), korekta kształtu
+JSON-LD i porządek w kolejności `<head>`.
+
+| PR | Zawartość |
+| -- | --------- |
+| **#23** | ikony (odrys znaczka), og-image 1200×630, manifest, `scripts/make-icons.mjs`, meta w `BaseLayout` |
+| **#24** | `src/lib/jsonld.ts` + `components/seo/JsonLd.astro`, `FurnitureStore` na `/kontakt/`, `WebSite` na `/`, testy unit + e2e |
+| **#25** | preload zdjęcia hero przed JSON-LD w `<head>` |
+| **#26** | polityka prywatności pod Web Analytics + 6 baseline'ów |
+| **#27** | `Organization` jako samodzielny węzeł `@graph` |
+| **#28** | budżety LHCI (zacieśnienie + poluzowanie LCP, dwa osobne commity) |
+
+### Korekty decyzji
+
+**KOREKTA D-E6 (PR #27).** Pierwsza wersja miała `Organization`
+zagnieżdżoną w `publisher` węzła `WebSite`. Rich Results Test na `/kontakt/`
+wypisywał „Organizacja", a na `/` — „nie wykryto elementów". Poprawka:
+`@graph` z dwoma węzłami najwyższego poziomu, `publisher` jako czysta
+referencja `@id`. **Uwaga na przyszłość:** to nie zmienia komunikatu Rich
+Results Test dla `/` i nie miało — samodzielna `Organization` nie jest
+typem uprawnionym do wyników rozszerzonych, więc narzędzie jej nie
+raportuje. Właściwym narzędziem weryfikacji strony głównej jest
+`validator.schema.org` (wynik: `WebSite` + `Organization`, 0 błędów,
+0 ostrzeżeń). Zmiana zostaje, bo Google zaleca umieszczanie danych
+organizacji z `logo` na stronie głównej samodzielnie.
+
+**D-E12 (NOWA, PR #26). Polityka prywatności musiała opisać pomiar.**
+Włączenie Web Analytics unieważniło zdanie z §02: „Strona nie prowadzi
+analityki". Poprawione cztery sekcje naraz (02 dane techniczne + nowy
+akapit o tym, czego pomiar NIE robi; 03 statystyka jako osobny cel na
+art. 6 ust. 1 lit. f RODO; 04 Cloudflare z Web Analytics; 08
+doprecyzowanie braku profilowania) oraz data obowiązywania 11 lipca →
+2 sierpnia 2026 — tak nakazuje §09 samego dokumentu. Banera zgód nie
+dodajemy: pomiar jest bezcookie'owy i nic nie zapisuje w przeglądarce.
+Dokument nie przeszedł weryfikacji prawnika — jeśli umowa (Etap 7) ją
+przewiduje, ten tekst też powinien przez nią przejść.
+
+**Wizytówka Google — PRZENIESIONA DO ETAPU 7** (decyzja Mateusza):
+poprawki NAP i adresu `delungmeble.pl` → `delung.pl` robimy razem
+z klientem przy przekazaniu, gdy zaloguje się na swoje konto Google.
+Do tego czasu Google widzi dwa niespójne komplety danych — JSON-LD ze
+strony i nieaktualną wizytówkę. To osłabia efekt danych strukturalnych,
+ale niczego nie psuje.
+
+### Incydent: LCP w CI (podstawa progów PR #28)
+
+Trzy czerwone przebiegi w jednym dniu, wszystkie na LCP mobile, przy
+**identycznych bajtach** (`script` 19 053 B w każdym przebiegu):
+
+| Przebieg | LCP | FCP | wynik |
+| -------- | --- | --- | ----- |
+| run 30806023358 (merge #27) | 3918 ms | 421 ms | zielony |
+| run 30803961568 (merge #26) | 4592 ms | 1750 ms | czerwony |
+| PR `feat/etap-6-jsonld` | 4890 ms | — | czerwony, po re-runie zielony |
+
+Rozstrzyga FCP: 421 vs 1750 ms — cała strona ładowała się ~4× wolniej,
+czyli zwolnił runner, nie strona. Potwierdzone niezależnie pomiarem A/B
+na tym samym buildzie (12 przebiegów LHCI, dokument z JSON-LD i z
+wyciętym JSON-LD): mediany **5035 vs 5035 ms**. Do tego jeden czerwony
+`e2e` na main (merge #25) okazał się **timeoutem instalacji przeglądarek
+Playwrighta** po 10 minutach — też infrastruktura.
+
+### Zmierzone liczby (przed → po)
+
+| Pozycja | Przed Etapem 6 | Po |
+| ------- | -------------- | -- |
+| pliki marki w `public/` | 238 822 B | **24 673 B** |
+| ↳ `favicon.svg` | 43 374 B (WebP w base64) | 786 B (wektor) |
+| ↳ `og-image.png` | 145 093 B, 1200×1200 | 12 328 B, 1200×630 |
+| `dist/index.html` | 126 909 B | 127 756 B (+847 B: meta + `@graph`) |
+| `dist/kontakt/index.html` | 27 965 B | 29 189 B (+1 224 B: `LocalBusiness`) |
+| suma chunków JS | 52 118 B | **52 118 B** (bez zmian) |
+| beacon Analytics (produkcja) | — | +359 B w dokumencie, 11 364 B transferu |
+
+Wierność odrysu znaczka: **0,60 %** różniących się pikseli przy progu 2 %
+(render ścieżek vs kadr znaczka z oryginału, porównanie klasowe
+zieleń/szarość/tło).
+
+Wpływ beaconu na produkcji (A/B, ten sam Chromium i sieć, po 4 przebiegi):
+LCP **bez mierzalnej różnicy** (mediany 364 vs 452 ms przy rozrzucie
+348–812 ms), główny wątek **+~19 ms** długich zadań. Beacon nie jest
+widoczny dla CI (Cloudflare wstrzykuje go na krawędzi, LHCI mierzy
+lokalny `dist/`), więc **nie wlicza się do budżetu skryptów** — nota w
+komentarzu przy progu.
+
+### Baseline'y wizualne
+
+Założenie „Etap 6 nie rusza baseline'ów" utrzymało się dla PR #23, #24,
+#25, #27 i #28. Wyjątek — PR #26 (polityka): 6 zrzutów darwin i **5**
+linuksowych. Asymetria jest poprawna: zrzut `polityka-top` na
+`chromium-1920` zmienia się wyłącznie datą w nagłówku, co na darwinie daje
+2632 z 2 073 600 pikseli (0,127 %) przy tolerancji `maxDiffPixelRatio`
+0.0005 (1037 px), a na linuksie — cieńsza rasteryzacja tego samego
+rozstrzelonego napisu — mieści się pod progiem.
