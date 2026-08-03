@@ -250,13 +250,22 @@ const SVG_TEXT_STYLE =
     position: relative;
     overflow: hidden;
     background: #e5e1da;
-    /* svh, NIE dvh (eksport miał dvh): dvh żyje z chowanym paskiem URL —
-       hero zmieniało wysokość W TRAKCIE scrolla, a tekst (kotwiczony do
-       dołu sekcji) skakał po zdjęciu. svh = stała wysokość „małego"
-       viewportu (pasek widoczny); po schowaniu paska pod hero wcześniej
-       wjeżdża pasek zaufania — akceptowalny standard. */
+    /* Wysokość pierwszego ekranu — trzy szczeble degradacji (D-Q2):
+       1. --hero-h: PRZYPIĘTY pomiar tego pudełka (skrypt na dole pliku),
+          przeliczany tylko przy zmianie szerokości i wysokości paska.
+          Jedyna wartość odporna na przeglądarki iOS, które przy chowaniu
+          własnego paska zmieniają rozmiar webview (DuckDuckGo, Firefox,
+          Opera, Edge) — tam nawet svh nie jest stałe, a `cover` zmienia
+          wtedy KADR i napisy siedzą w innym miejscu zdjęcia.
+       2. 100svh — bez JS: stała wysokość „małego" viewportu w Safari
+          i Chrome iOS (korekta 4.2, która wyparła dvh); ta sama formuła
+          jest źródłem pomiaru dla szczebla 1.
+       3. 100vh — silniki bez svh.
+       Po schowaniu paska pod hero wcześniej wjeżdża pasek zaufania —
+       to zaakceptowany standard z 4.2, teraz identyczny wszędzie. */
     height: calc(100vh - var(--hdr-h, 74px));
     height: calc(100svh - var(--hdr-h, 74px));
+    height: var(--hero-h, calc(100svh - var(--hdr-h, 74px)));
     min-height: 400px;
   }
   .hero-img {
@@ -633,4 +642,49 @@ const SVG_TEXT_STYLE =
       once: true,
     });
   }
+
+  // ── Wysokość hero PRZYPIĘTA do pierwszego pomiaru (D-Q2) ──────────────
+  // Problem: przeglądarki iOS, które przy chowaniu własnego paska ZMIENIAJĄ
+  // ROZMIAR webview (DuckDuckGo, Firefox, Opera, Edge — Safari i Chrome nie),
+  // przeliczają wtedy `100svh`. Zdjęcie jest `object-fit: cover`, więc inna
+  // wysokość boksu to inny KADR: napisy „przeskakiwały" po zdjęciu przy
+  // każdym schowaniu i pokazaniu paska.
+  //
+  // Dlaczego mierzymy PUDEŁKO HERO, a nie wysokość viewportu: `100svh`
+  // odczytane sondą nie równa się temu, co przeglądarka wylicza w formule
+  // hero — WebKit snapuje samo `height: 100svh` do pełnych pikseli, a
+  // `calc(100svh - X)` liczy w swoich 1/64 px (iPhone SE: 568 vs 567,984375).
+  // Wpisanie zaokrąglonej wartości robiło hero o 0,016 px wyższe, co
+  // przesuwało całą stronę o ułamek piksela i zmieniało rasteryzację
+  // rozmytego tła bannera kontaktu (złapał to test wizualny). Odczyt
+  // własnego pudełka jest z definicji dokładny w każdym silniku.
+  //
+  // Kiedy przeliczamy: przy zmianie SZEROKOŚCI (obrót ekranu, zmiana okna)
+  // i przy zmianie wysokości paska nawigacji (podmiana fontu — obserwator
+  // rozmiaru na `.hdr`). Zmiana samej wysokości viewportu to pasek
+  // przeglądarki albo klawiatura — świadomie ignorowana.
+  const root = document.documentElement;
+  const hero = document.querySelector<HTMLElement>(".hero");
+  let lastWidth = window.innerWidth;
+
+  function pinHero() {
+    if (!hero) return;
+    // zdjąć przypięcie → CSS liczy formułę od nowa → zmierzyć → przypiąć
+    root.style.removeProperty("--hero-h");
+    const h = hero.getBoundingClientRect().height;
+    // powyżej progu desktop hero mobile jest `display: none` (wysokość 0) —
+    // nie ma czego przypinać, a zerowa wartość zepsułaby powrót pod próg
+    if (h > 0) root.style.setProperty("--hero-h", `${h}px`);
+  }
+
+  pinHero();
+  const hdrEl = document.querySelector(".hdr");
+  // Pasek zmienia wysokość po podmianie fontu; jego obserwator NIE reaguje
+  // na chowany pasek przeglądarki (pudełko navbara wtedy nie drga).
+  if (hdrEl) new ResizeObserver(pinHero).observe(hdrEl);
+  addEventListener("resize", () => {
+    if (window.innerWidth === lastWidth) return;
+    lastWidth = window.innerWidth;
+    pinHero();
+  });
 </script>

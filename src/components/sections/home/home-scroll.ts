@@ -50,12 +50,26 @@ qa("[data-rev]").forEach((el) => {
    innerHeight na mobile skacze przy chowaniu/pokazywaniu paska URL —
    parallax liczony z niego szarpał obrazem pod tekstem hero dokładnie
    w momencie zwijania paska. svh = wysokość „małego" viewportu (pasek
-   widoczny), stała w trakcie scrolla; na desktopie równa innerHeight. */
+   widoczny), stała w trakcie scrolla; na desktopie równa innerHeight.
+
+   PONIŻEJ PROGU DESKTOP wartość jest dodatkowo ZAMRAŻANA (D-Q2): svh jest
+   stałe w Safari i Chrome iOS, ale przeglądarki zmieniające rozmiar
+   webview przy chowaniu własnego paska (DuckDuckGo, Firefox, Opera, Edge)
+   przeliczają je w trakcie scrolla — a parallax hero liczony z ruchomego
+   H szarpie zdjęciem pod tekstem. Na desktopie sonda zostaje żywa: tam
+   wysokość okna zmienia użytkownik i sceny przypięte MAJĄ za tym nadążać.
+   Odmrożenie przy zmianie szerokości (obrót ekranu) — patrz refresh(). */
 const svhProbe = document.createElement("div");
 svhProbe.style.cssText =
   "position:fixed;top:0;left:0;width:0;height:100svh;visibility:hidden;pointer-events:none";
 document.body.appendChild(svhProbe);
-const vpH = () => svhProbe.offsetHeight || window.innerHeight;
+const probeH = () => svhProbe.offsetHeight || window.innerHeight;
+let frozenH = 0;
+const vpH = () => {
+  if (!mqMobile.matches) return probeH();
+  if (!frozenH) frozenH = probeH();
+  return frozenH;
+};
 
 /* ── parallax [data-par] (zapas w wymiarach obrazów — komponenty) ── */
 const pars = qa("[data-par]");
@@ -281,7 +295,15 @@ function tick() {
     paint();
   });
 }
+let lastWidth = window.innerWidth;
 const refresh = () => {
+  // Zmiana SZEROKOŚCI (obrót ekranu, zmiana okna) = realnie inny viewport
+  // → zamrożona wysokość mobile idzie do przeliczenia. Zmiana samej
+  // wysokości to pasek przeglądarki i ma zostać zignorowana (D-Q2).
+  if (window.innerWidth !== lastWidth) {
+    lastWidth = window.innerWidth;
+    frozenH = 0;
+  }
   fitCta();
   tick();
 };
