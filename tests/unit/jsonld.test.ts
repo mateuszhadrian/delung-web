@@ -30,8 +30,16 @@ describe("antyscraping (D-CH5)", () => {
           false,
         );
       }
-      expect(Object.keys(node)).not.toContain("telephone");
-      expect(Object.keys(node)).not.toContain("email");
+      // Rekurencyjnie — od czasu @graph (D-E6) węzły siedzą w tablicy,
+      // więc sprawdzanie kluczy samego korzenia niczego by nie pilnowało.
+      const keysDeep = (value: unknown): string[] =>
+        Array.isArray(value)
+          ? value.flatMap(keysDeep)
+          : value && typeof value === "object"
+            ? Object.entries(value).flatMap(([k, v]) => [k, ...keysDeep(v)])
+            : [];
+      expect(keysDeep(node)).not.toContain("telephone");
+      expect(keysDeep(node)).not.toContain("email");
     }
   });
 
@@ -101,13 +109,33 @@ describe("localBusiness()", () => {
 });
 
 describe("webSite()", () => {
-  it("ma wydawcę z logo i wskazuje węzeł firmy przez @id", () => {
-    expect(site["@type"]).toBe("WebSite");
-    expect(site.inLanguage).toBe("pl-PL");
-    const publisher = site.publisher as Record<string, unknown>;
-    expect(publisher["@type"]).toBe("Organization");
-    expect(publisher["@id"]).toBe(business["@id"]);
-    expect(publisher.logo).toMatchObject({ "@type": "ImageObject" });
+  const graph = site["@graph"] as Record<string, unknown>[];
+  const node = (type: string) => graph.find((n) => n["@type"] === type)!;
+
+  it("emituje DWA węzły najwyższego poziomu: WebSite i Organization", () => {
+    // Zagnieżdżona Organization (pierwsza wersja D-E6) nie była wykrywana
+    // przez Rich Results Test na „/" — stąd @graph. Nie zwijaj tego z
+    // powrotem do publisher-obiektu.
+    expect(graph).toHaveLength(2);
+    expect(node("WebSite")).toBeTruthy();
+    expect(node("Organization")).toBeTruthy();
+  });
+
+  it("WebSite wskazuje wydawcę SAMĄ referencją @id (bez duplikatu danych)", () => {
+    const website = node("WebSite");
+    expect(website.inLanguage).toBe("pl-PL");
+    expect(website.publisher).toEqual({ "@id": business["@id"] });
+  });
+
+  it("Organization niesie logo i ten sam @id co węzeł firmy z /kontakt/", () => {
+    const org = node("Organization");
+    expect(org["@id"]).toBe(business["@id"]);
+    expect(org.logo).toMatchObject({ "@type": "ImageObject" });
+    expect(String((org.logo as { url: string }).url)).toContain(
+      "/og-image.png",
+    );
+    expect(org.url).toBe(business.url);
+    expect(org.sameAs).toEqual(business.sameAs);
   });
 
   it("NIE deklaruje SearchAction (strona nie ma wyszukiwarki)", () => {

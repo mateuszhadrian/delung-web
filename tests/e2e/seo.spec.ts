@@ -144,18 +144,27 @@ test("JSON-LD /kontakt/: LocalBusiness z adresem, geo i godzinami — bez telefo
   expect(node.email).toBeUndefined();
 });
 
-test("JSON-LD /: WebSite z wydawcą wskazującym węzeł firmy", async ({
+test("JSON-LD /: graf z WebSite i samodzielną Organization", async ({
   request,
 }) => {
   const nodes = jsonLdFrom(await (await request.get(HOME_PATH)).text());
   expect(nodes).toHaveLength(1);
-  const [node] = nodes;
+  const graph = nodes[0]["@graph"];
+  expect(graph).toHaveLength(2);
 
-  expect(node["@type"]).toBe("WebSite");
-  expect(node.url).toBe(`${SITE}/`);
-  expect(node.publisher["@type"]).toBe("Organization");
-  expect(node.publisher["@id"]).toBe(`${SITE}/#firma`);
-  expect(node.publisher.logo.url).toBe(`${SITE}/og-image.png`);
+  // Organization MUSI być węzłem najwyższego poziomu — zagnieżdżona
+  // w publisher nie była wykrywana przez Rich Results Test (D-E6).
+  const website = graph.find(
+    (n: { "@type": string }) => n["@type"] === "WebSite",
+  );
+  const org = graph.find(
+    (n: { "@type": string }) => n["@type"] === "Organization",
+  );
+  expect(website.url).toBe(`${SITE}/`);
+  expect(website.publisher).toEqual({ "@id": `${SITE}/#firma` });
+  expect(org["@id"]).toBe(`${SITE}/#firma`);
+  expect(org.logo.url).toBe(`${SITE}/og-image.png`);
+  expect(org.sameAs).toContain("https://www.instagram.com/delung_meble/");
 });
 
 test("robots.txt blokuje /admin i wskazuje sitemapę", async ({ request }) => {
