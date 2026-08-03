@@ -1,9 +1,10 @@
 // Strona główna — kontrakty, których nie pilnują specy per sekcja:
-// zakotwiczenie hero mobile w wysokości viewportu (D-Q2) i odporność sceny
-// realizacji na niskie okno (D-Q5). Decyzje: docs/analiza-poprawki-2.md.
+// zakotwiczenie hero mobile w wysokości viewportu (D-Q2), odporność sceny
+// realizacji na niskie okno (D-Q5) i zachowanie linku „Więcej" w tej scenie
+// (D-Q6). Decyzje: docs/analiza-poprawki-2.md.
 import { expect, test, type Page } from "@playwright/test";
 import { usePreviewGuard } from "../helpers/guards";
-import { gotoReady, settle } from "../helpers/scroll";
+import { gotoReady, scrollPageTo, settle } from "../helpers/scroll";
 
 usePreviewGuard();
 
@@ -192,5 +193,83 @@ test.describe("scena realizacji: niskie okno (D-Q5)", () => {
       male.txts / duze.txts,
       "blok opisu skurczył się przed odstępem",
     ).toBeGreaterThan(0.98);
+  });
+});
+
+test.describe("scena realizacji: link „Więcej” (D-Q6)", () => {
+  test.skip(
+    ({ isMobile }) => !!isMobile,
+    "karta opisu z linkiem istnieje tylko w scenie desktopowej",
+  );
+
+  /** Przewija scenę tak, żeby aktywny był wpis o podanym indeksie. */
+  async function ustawWpis(page: Page, i: number) {
+    const y = await page.evaluate((idx) => {
+      const sec = document.querySelector<HTMLElement>("[data-home-re]")!;
+      const zakres = sec.offsetHeight - window.innerHeight;
+      return Math.round(sec.offsetTop + zakres * ((idx + 0.5) / 3));
+    }, i);
+    await scrollPageTo(page, y);
+    await settle(page, 400);
+  }
+
+  for (const i of [0, 1, 2]) {
+    test(`wpis ${i + 1}: link jest klikalny i otwiera detal TEJ realizacji`, async ({
+      page,
+    }) => {
+      await gotoReady(page, PATH);
+      await ustawWpis(page, i);
+
+      const stan = await page.evaluate(() => {
+        const karty = [
+          ...document.querySelectorAll<HTMLElement>("[data-retx]"),
+        ];
+        const widoczny = karty.findIndex(
+          (t) => getComputedStyle(t).opacity === "1",
+        );
+        const link =
+          karty[widoczny].querySelector<HTMLElement>("a[data-work-more]")!;
+        const b = link.getBoundingClientRect();
+        // Zgłoszenie D-Q6: karty leżą jedna na drugiej, więc niewidoczna
+        // potrafiła przechwytywać kliknięcia. Sprawdzamy, CO naprawdę leży
+        // pod kursorem — nie samą widoczność linku.
+        const pod = document.elementFromPoint(
+          b.left + b.width / 2,
+          b.top + b.height / 2,
+        );
+        return {
+          widoczny,
+          nazwa: karty[widoczny].dataset.txName ?? "",
+          trafiaWLink: !!pod?.closest("a[data-work-more]"),
+          kursor: pod ? getComputedStyle(pod).cursor : "",
+        };
+      });
+
+      expect(stan.widoczny, "scena nie ustawiła oczekiwanego wpisu").toBe(i);
+      expect(stan.trafiaWLink, "link zasłonięty innym elementem").toBe(true);
+      expect(stan.kursor).toBe("pointer");
+
+      await page
+        .locator("[data-retx]")
+        .nth(i)
+        .locator("a[data-work-more]")
+        .click();
+
+      const detal = page.locator("#work-detail");
+      await expect(detal).toHaveClass(/is-open/);
+      await expect(detal).toContainText(stan.nazwa);
+      // …i to detal, a NIE nawigacja na podstronę (tak było przed D-Q6)
+      await expect(page).toHaveURL(/\/$/);
+    });
+  }
+
+  test("bez JS link zostaje zwykłym odnośnikiem na podstronę", async ({
+    page,
+  }) => {
+    await gotoReady(page, PATH);
+    // fallback dla braku/awarii JS — wzorzec kafli kategorii (D-P2)
+    await expect(
+      page.locator("[data-retx] a[data-work-more]").first(),
+    ).toHaveAttribute("href", "/realizacje/");
   });
 });

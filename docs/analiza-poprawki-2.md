@@ -430,6 +430,48 @@ w nowym wpisie może przy niskim oknie wyjść poza blok. Dlatego test
 sprawdza luz dla **każdego z trzech wpisów zajawki**, a nie tylko
 pierwszego, i robi to na całej rampie wysokości.
 
+### D-Q6. Link „Więcej" w scenie realizacji: detal zamiast nawigacji
+
+**Zgłoszenie (desktop, strona główna):** klik w „Więcej" w karcie opisu
+dawał efekt nieodróżnialny od CTA „Przeglądaj nasze realizacje" tuż niżej
+— przenosił na `/realizacje/`, zamiast otworzyć modal TEJ realizacji, tak
+jak klik w zdjęcie obok. Do tego przycisk bywał **nieklikalny**: bez
+kursora `pointer` i bez reakcji.
+
+**Stan zastany (pomiar).** Obie rzeczy mają jedną wspólną scenografię:
+trzy karty opisu leżą **jedna na drugiej** (`position: absolute; inset: 0`),
+przełączane wyłącznie `opacity`. Sonda `elementFromPoint` w środku linku
+pokazała, co naprawdę łapie kliknięcie:
+
+| postęp sceny | widoczny wpis | element pod kursorem | kursor |
+| --- | --- | --- | --- |
+| 5 % | 1 | `DIV.re-tx` (karta 3, niewidoczna) | `auto` |
+| 40 % | 2 | `DIV.re-tx` (karta 3, niewidoczna) | `auto` |
+| 75 % | 3 | `A` (właściwy link) | `pointer` |
+
+Czyli link działał **wyłącznie wtedy**, gdy widoczna była ostatnia karta —
+bo tylko wtedy element na wierzchu pokrywał się z widocznym. `opacity: 0`
+nie wyłącza łapania zdarzeń; robi to dopiero `pointer-events`.
+
+**Decyzja, część 1 — klikalność.** Karty nieaktywne dostają
+`pointer-events: none`, aktywna `auto` (ustawia to `home-scroll.ts` razem
+z `opacity`, a pierwsza karta ma to samo regułą CSS na czas SSR). Bez tego
+każda przyszła interaktywność w karcie opisu miałaby ten sam problem.
+
+**Decyzja, część 2 — cel linku.** Karta niesie `data-tx-slug`/`data-tx-name`,
+a delegowany handler otwiera detal przez wspólny `openWorkDetail` — ten sam,
+którego używają kafle zdjęć, więc projnav i licznik detalu dostają ten sam
+kontekst. `href="/realizacje/"` **zostaje** jako fallback bez JS (wzorzec
+kafli kategorii z D-P2). Bramki progowej nie ma i nie potrzeba: karta opisu
+żyje wyłącznie w scenie desktopowej — poniżej progu `.re-txts` jest
+`display: none`.
+
+**Konsekwencja dla testów:** kontrakt „wszystkie linki `data-work-more` mają
+href `/realizacje/`" zostaje spełniony (href jest fallbackiem), ale dochodzi
+spec sprawdzający dla KAŻDEGO z trzech wpisów, że pod kursorem leży link
+(a nie sąsiednia karta), że kursor to `pointer`, że otwiera się detal
+właściwej realizacji i że adres strony się NIE zmienia.
+
 ---
 
 ## 4. Implementacja — pliki
@@ -476,6 +518,14 @@ pierwszego, i robi to na całej rampie wysokości.
 | `src/components/sections/home/HomeRealizacje.astro` | kolumna flex lewej strony sceny, rozpórka odstępu, `.re-cta` z potoku, kontener zapytań na `.re-txts`, rampy `vh` dolnego pasa |
 | `tests/e2e/index.spec.ts` (z PR-a B) | sweep wysokości: luz „Więcej" → CTA nigdy ujemny |
 | `docs/analiza-strona-glowna.md` | dopisek KOREKTA (scena realizacji przestaje mieć sztywne odstępy) |
+
+**PR E (link „Więcej" w scenie realizacji) — D-Q6**
+
+| Plik | Zmiana |
+| ---- | ------ |
+| `src/components/sections/home/HomeRealizacje.astro` | `data-tx-slug`/`data-tx-name` na karcie, `pointer-events` kart, delegowany handler otwierający detal |
+| `src/components/sections/home/home-scroll.ts` | `pointerEvents` aktywnej karty razem z `opacity` |
+| `tests/e2e/index.spec.ts` | trzy testy klikalności i celu linku + fallback `href` bez JS |
 
 ## 5. Testy
 
@@ -546,6 +596,7 @@ pierwszego, i robi to na całej rampie wysokości.
 | B   | nic — pierwszy paint ma tę samą geometrię, zmienia się tylko odporność na późniejsze zmiany viewportu | **0** |
 | C   | nic — Lenis nie maluje własnych pikseli, hero zostaje nietknięte | **0** |
 | D   | nic przy 1920×1080 i 1366×768 — mechanizm budzi się dopiero poniżej ~730 px wysokości, a takiego profilu nie mamy | **0** |
+| E   | nic — `pointer-events` i cel linku nie malują pikseli | **0** |
 
 Każdy diff pokazuję **obrazkiem** (`open test-results/*/…-diff.png`) przed
 jakąkolwiek regeneracją. Święta kolejność bez zmian: kod → workflow
@@ -573,6 +624,9 @@ jakąkolwiek regeneracją. Święta kolejność bez zmian: kod → workflow
    kolumna sceny realizacji. Wchodzi **po** C, bo obie zmiany dotykają
    strony głównej, a C usuwa Lenisa (czyli zmienia sposób, w jaki scena
    jest przewijana podczas ręcznych testów).
+6. **PR E — `fix/home-realizacje-wiecej`** (D-Q6): link „Więcej" otwiera
+   detal i przestaje być zasłaniany przez nieaktywne karty. Wchodzi po D
+   (ten sam plik).
 
 `CLAUDE.md` (wpis o rundzie + numery PR-ów) i status tego dokumentu
 aktualizuję **na końcu rundy**, jednym wpisem.

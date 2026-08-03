@@ -186,6 +186,9 @@ function paint() {
       reTxts.forEach((el, k) => {
         el.style.opacity = k === i ? "1" : "0";
         el.style.transform = k === i ? "translateY(0)" : "translateY(14px)";
+        // karty leżą jedna na drugiej — nieaktywna nie może przechwytywać
+        // kliknięć w link „Więcej" karty widocznej (D-Q6)
+        el.style.pointerEvents = k === i ? "auto" : "none";
       });
       reRcs.forEach((rc, k) => {
         rc.style.zIndex = String(k);
