@@ -1,6 +1,8 @@
 # Analiza refaktoru (po rundzie poprawek 3, przed Etapem 7)
 
-Status: **W REALIZACJI** (2026-08-04). Zakres: audyt całego kodu przed
+Status: **WYKONANY W ZAKRESIE A–C** (2026-08-04; PR #42 martwy kod,
+#43 komentarze, #44 kontrakt progów). **D/E/F odłożone** decyzją Mateusza —
+to one niosą ryzyko wizualne (§9, §12.2). Zakres: audyt całego kodu przed
 przekazaniem klientowi — bez zmiany zachowania i bez zmiany wyglądu.
 Numeracja decyzji: **R1 … R15** (R = refactor) + przegląd komentarzy
 7A/7B/7C. Wykonanie i pomiary — §13.
@@ -890,3 +892,63 @@ a nie regresja. Powtórka punktowa tych testów: 8 passed w 7,4 s;
 powtórka pełnego kompletu: 541 passed w 3,5 min. Wniosek na przyszłość —
 przy czerwonym przebiegu e2e **najpierw porównaj czas trwania z normą**,
 zanim zaczniesz szukać przyczyny w kodzie.
+
+### PR C — `test/progi-breakpointow` (R14 droga B)
+
+**Weszło:** nowy helper `tests/helpers/breakpoint.ts` + po jednym teście
+w `tests/e2e/{index,oferta,work-index}.spec.ts` + dopiski w trzech
+configach (komentarz znów wymienia testy — tym razem zgodnie z prawdą).
+
+**Co dokładnie jest pilnowane.** Helper `expectBreakpointFlip()` mierzy
+`display` wybranych elementów przy `minPx - 1` i przy `minPx`, czyli po
+OBU stronach progu. Sygnały per widok — wszystkie binarne i sterowane
+wyłącznie przez `@media`:
+
+| Widok | Poniżej progu | Od progu |
+| --- | --- | --- |
+| `/` | `.hero` (zdjęcie + tekst) `block`, `.hero-d` `none` | odwrotnie — wchodzi typografia SVG |
+| `/oferta/` | karuzela `.of-rail` `flex`, `.of-tabs` `none` | zakładki ARIA `flex`, karuzela `none` |
+| `/realizacje/` | `.re-head` `contents` (szyna klei się przez całą listę — D-Q4), `.re-in` `block` | `.re-head` `block` (sticky kolumna), `.re-in` `flex` |
+
+Testy biegają na **jednym profilu desktop** — same zmieniają szerokość
+okna, więc powtarzanie ich na sześciu profilach niczego by nie dodało.
+
+**Dlaczego pomiar po obu stronach, a nie wariant z `contact.spec.ts`.**
+Wzorzec z kontaktu sprawdza, który wariant obowiązuje przy szerokości
+BIEŻĄCEGO profilu. To łapie rozjazd tylko wtedy, gdy nowy próg wypadnie
+poza pasmem 1024–1366; przesunięcie progu wewnątrz tego pasma jest dla
+profili niewidoczne — dokładnie tak jak bug z rundy 3 (§10.3). Pomiar na
+`minPx - 1` / `minPx` wiąże stałą z `@media` niezależnie od profili.
+
+**Weryfikacja, że testy ŁAPIĄ regresję — wykonana w OBIE strony:**
+
+| Symulowana pomyłka | Wynik |
+| --- | --- |
+| stała → 1200, `@media` zostaje 1024 | **3 czerwone**: „układ mobilny musi obowiązywać przy 1199 px" |
+| `@media` → 1200 (rebuild), stała zostaje 1024 | **3 czerwone**: „układ desktopowy musi obowiązywać już przy 1024 px" |
+| po przywróceniu (`git diff src/` pusty) | 3 zielone |
+
+**Bramka lokalna:** `format:check`, `lint`, `typecheck` (137 plików,
+0 błędów), `test:unit` 67 passed, `test:e2e` **544 passed** (541 + 3 nowe)
+/ 482 skipped, `test:visual` **203 passed** — zero regeneracji baseline'ów.
+JS w `dist/_astro` bajt w bajt jak po PR A i B; `dist` 6 584 kB.
+
+---
+
+## 14. Stan po serii — co zostało nietknięte i dlaczego
+
+Do zrobienia w przyszłości, świadomie NIE w tej serii:
+
+| Pozycja | Powód odłożenia |
+| --- | --- |
+| **R2 (PR D)** — `MotionGate.astro` | ryzyko wizualne: CSS na 6 trasach + niegwarantowana kolejność wstrzykiwania stylów przez Astro (§10.1) |
+| **R1 (PR E)** — wspólny moduł ruchu | ryzyko wizualne + układ chunków; warunek merge'a to pomiar bajtów wobec 6 948 B (§10.2). Ostrzeżenie o `freeze.css` (nie zatrzymuje pętli rAF) siedzi od PR-a B w samym pliku |
+| **R7 (PR F)** — `NavSheet.astro` | najwyższe ryzyko serii — `chrome-bar` i menu mają własne baseline'y na 6 profilach |
+| **R3** — martwy ogon `, sans-serif` (161 wystąpień) | wchodzi wyłącznie przy okazji innej pracy w tym samym pliku; nie jako osobny PR |
+| **R4** — kickery | decyzja Mateusza §12.3: zostaje 12 kopii |
+| **R8** — umiejscowienie `WorkIndexPage`/`PolicyPage` | zysk porządkowy, koszt = dotknięcie dwóch największych widoków (§8) |
+| **R12** — warunkowe ładowanie `back-link.ts` | zmiana zachowania, nie refaktor; zmierzony koszt 307 B/stronę bez dodatkowego żądania (§12.4) |
+
+Trzy wykonane PR-y nie zmieniły ANI JEDNEGO bajtu w `dist` — cały zysk
+jest w źródłach (−162 linie martwego kodu, komentarze przestały kłamać)
+i w pokryciu (trzy progi realnie pod ochroną zamiast deklaratywnie).
