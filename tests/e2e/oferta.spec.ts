@@ -14,6 +14,8 @@ import {
   PROCESS_PATH,
   WORK_INDEX_PATH,
 } from "../../src/lib/routes";
+import { OFERTA_DESKTOP_MIN_PX } from "../../src/components/sections/oferta/oferta-config";
+import { expectBreakpointFlip } from "../helpers/breakpoint";
 import { collectPageIssues, usePreviewGuard } from "../helpers/guards";
 import { gotoReady, scrollPageTo, settle } from "../helpers/scroll";
 
@@ -341,4 +343,25 @@ test.describe("dojście ze strony głównej — kafle zajawki oferty", () => {
     await expect(page).toHaveURL(new RegExp(`${target}$`));
     await expect(page.locator("main h1")).toBeVisible();
   });
+});
+
+// ── kontrakt progu (R14) ──
+// Poniżej progu kategorie żyją jako karuzela `.of-rail`, powyżej — jako
+// zakładki ARIA `.of-tabs` z panelami. Przełącza to wyłącznie @media,
+// więc próg musi zgadzać się ze stałą OFERTA_DESKTOP_MIN_PX.
+test("próg desktopowy: zakładki zastępują karuzelę dokładnie na OFERTA_DESKTOP_MIN_PX", async ({
+  page,
+}, testInfo) => {
+  test.skip(
+    testInfo.project.name !== "chromium-1920",
+    "kontrakt progu — jeden profil desktop wystarczy (test sam zmienia szerokość)",
+  );
+  await gotoReady(page, OFERTA_PATH);
+  await expectBreakpointFlip(
+    page,
+    OFERTA_DESKTOP_MIN_PX,
+    { zakladki: ".of-tabs", karuzela: ".of-rail" },
+    { zakladki: "none", karuzela: "flex" },
+    { zakladki: "flex", karuzela: "none" },
+  );
 });
