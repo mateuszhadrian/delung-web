@@ -11,7 +11,7 @@ import { CATEGORIES, categoryLabel, type CategorySlug } from "@/lib/categories";
 
 // Pozycja galerii detalu; `video` (URL MP4 w R2) => zdjęcie pełni rolę
 // posteru, a kafel dostaje badge play (+ opcjonalny opis `duration`).
-export interface WorkGalleryItem {
+interface WorkGalleryItem {
   image: string;
   position?: string;
   video?: string;
@@ -19,7 +19,7 @@ export interface WorkGalleryItem {
 }
 
 // Para tabeli parametrów detalu (MATERIAŁY / BLAT / ZAKRES / …).
-export interface WorkSpec {
+interface WorkSpec {
   label: string;
   value: string;
 }

@@ -62,15 +62,9 @@ html {
      zostać przy --accent. */
   --accent-ink: #256f47;
   --glow: 47, 143, 91; /* składowe RGB → rgba(var(--glow), α) */
-  --accent-gradient: linear-gradient(105deg, #2f8f5b 0%, #7fd0a2 100%);
 
   /* akcent ciepły (bursztyn — punktowo w designach) */
   --accent-gold: #f2a90c;
-  --accent-gold-rgb: 242, 169, 12;
-
-  /* Docelowa SUMA odstępu wizualnego na granicy dwóch sekcji strony głównej
-     (padding-bottom sekcji górnej + padding-top sekcji dolnej). */
-  --section-gap: clamp(56px, 7vw, 96px);
 
   /* Layout z eksportów designów: margines boczny + maks. szerokość kolumny
      treści (wzorce 390/1440). Wartości desktop w @media niżej — próg 1024

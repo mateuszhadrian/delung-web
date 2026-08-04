@@ -10,10 +10,3 @@ export function useTranslations(lang: Lang) {
     return ui[lang][key] ?? ui[defaultLang][key];
   };
 }
-
-// Wyciąga język ze ścieżki URL (np. "/en/..." → "en"), inaczej język domyślny.
-export function getLangFromUrl(url: URL): Lang {
-  const [, maybeLang] = url.pathname.split("/");
-  if (maybeLang && maybeLang in ui) return maybeLang as Lang;
-  return defaultLang;
-}

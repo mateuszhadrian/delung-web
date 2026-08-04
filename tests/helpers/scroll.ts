@@ -81,22 +81,6 @@ export async function scrollPageToStable(
   );
 }
 
-/** Zakres scrolla sekcji #hero (offsetHeight − innerHeight) + maks. strony. */
-export async function heroScrollRange(
-  page: Page,
-): Promise<{ hero: number; max: number }> {
-  const range = await page.evaluate(() => {
-    const hero = document.querySelector<HTMLElement>("#hero");
-    if (!hero) return null;
-    return {
-      hero: hero.offsetHeight - window.innerHeight,
-      max: document.documentElement.scrollHeight - window.innerHeight,
-    };
-  });
-  if (!range) throw new Error("Brak #hero na stronie");
-  return range;
-}
-
 /** Nawigacja + fonty gotowe — wspólny start testów E2E. */
 export async function gotoReady(page: Page, path = "/"): Promise<void> {
   await page.goto(path, { waitUntil: "networkidle" });

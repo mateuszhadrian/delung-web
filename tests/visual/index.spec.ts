@@ -1,6 +1,6 @@
 // Strona główna (część 4.2) — element-zrzuty sekcji na wszystkich
 // 6 profilach + mini-sweep scen przypiętych (oferta/realizacje) tylko na
-// chromium-1920 (bez mnożenia baseline'ów; wzorzec SWEEP_PROJECTS).
+// chromium-1920 (bez mnożenia baseline'ów).
 // Determinizm: freeze.css (prepareSweep) zeruje CZASOWE animacje —
 // crossfade hero staje na pierwszym kadrze (baza opacity w komponencie),
 // marquee logotypów i opinii na początku pętli; transformy sterowane

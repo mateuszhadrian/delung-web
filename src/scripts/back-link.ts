@@ -1,3 +1,8 @@
+// UŚPIONY ŚWIADOMIE (D-CH8) — nie kasować bez decyzji Mateusza: dziś żaden
+// komponent nie renderuje atrybutu data-back (poza nieużywanym BackButton),
+// ale delegacja zostaje podpięta w BaseLayout, żeby przyszła podstrona
+// dostała to zachowanie samym atrybutem.
+//
 // Linki „wstecz" na podstronach: każdy <a data-back> cofa się w historii
 // przeglądarki (history.back()) zamiast otwierać href jako NOWĄ nawigację —
 // tylko cofnięcie w historii przywraca pozycję scrolla strony, z której

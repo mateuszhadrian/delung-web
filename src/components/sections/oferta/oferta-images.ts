@@ -14,7 +14,7 @@ import catLazienki from "@/assets/oferta/cat-zabudowy-lazienkowe.webp";
 import catNietypowe from "@/assets/oferta/cat-meble-nietypowe.webp";
 import type { CategorySlug } from "@/lib/categories";
 
-export const OFERTA_IMAGES: Partial<Record<CategorySlug, ImageMetadata>> = {
+const OFERTA_IMAGES: Partial<Record<CategorySlug, ImageMetadata>> = {
   kuchnie: catKuchnie,
   "szafy-garderoby": catSzafy,
   "wnetrza-komercyjne": catKomercyjne,
