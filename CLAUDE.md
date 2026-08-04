@@ -324,6 +324,36 @@ treść/sekcje budowane od nowa wg `docs/design/`).
   domenowa + sitemapa) i UptimeRobot (HTTPS, 5 min) zrobione;
   **wizytówka Google PRZENIESIONA DO ETAPU 7** (poprawki NAP razem
   z klientem przy przekazaniu) — do tego czasu Google widzi niespójny NAP.
+- **Runda poprawek nr 2 (po Etapie 6) — WYKONANA** (2026-08-04, PR #29 szyna
+  realizacji + link opinii, #30 hero mobile, #31 wyjście Lenisa, #32 scena
+  realizacji na niskim ekranie, #33 link „Więcej" w tej scenie; decyzje
+  D-Q1–D-Q6: `docs/analiza-poprawki-2.md` — czytać RAZEM z analizami
+  widoków, bo koryguje D-P6, D-R7 i ustalenia 4.2 o scrollu):
+  **LENIS WYSZEDŁ Z PROJEKTU** (D-Q1) — scroll natywny wszędzie, reguła
+  `.claude/rules/scroll.md` (dawne `scroll-lenis.md`), prop `smoothScroll`
+  i atrybuty `data-lenis-prevent*` skasowane, −5,3 kB gz. Powód ustalony
+  sesją pomiarową na fizycznym Macu (15 wariantów): koszt to duże zdjęcie
+  przycinane MASKĄ W KSZTAŁCIE LITER w hero — osobno tanie, razem drogie do
+  przemalowania, a Lenis wymuszał przemalowanie w każdej klatce scrolla.
+  Hero NIETKNIĘTE (żadna zmiana po jego stronie nie pomagała — wszystkie
+  zmierzone). Rekompensata: `--p` navbara wygładzane własną pętlą rAF.
+  Hero mobile (D-Q2): wysokość przypinana `--hero-h`, ale **dopiero gdy
+  sonda wykryje drgające `100svh` przy stałej szerokości** — czyli tylko
+  w przeglądarkach iOS zmieniających rozmiar webview (DuckDuckGo, Firefox,
+  Opera, Edge). Lekcja warta zapamiętania: **długość wpisana z JS nigdy nie
+  jest bit w bit tym, co przeglądarka wyliczyła sama** — dwie wcześniejsze
+  wersje (przypinanie „profilaktyczne") ruszały rasteryzację o ułamek
+  piksela i wywracały testy wizualne. Link opinii (D-Q3) → Place ID
+  (KOREKTA D-P6: poprzedni wariant działał TYLKO na desktopie; kontrakt
+  dekoduje Place ID i porównuje z CID-em z `sameAs`). Szyna filtrów
+  `/realizacje/` klei się przez całą listę (D-Q4, KOREKTA D-R7 —
+  `display: contents` na mobilnym nagłówku). Scena realizacji na stronie
+  głównej (D-Q5): `.re-pin` z rzędu flex → **siatka**, przycisk we własnym
+  wierszu, rozpórka odstępu ze sto razy większym `flex-shrink` niż blok
+  opisu, treść karty skalowana `cqh` — przycisk nie zasłania treści NIGDY
+  (było: od ~730 px wysokości okna, do −214 px przy 520). Link „Więcej"
+  w karcie otwiera detal zamiast nawigować i przestał być zasłaniany przez
+  nieaktywne karty (D-Q6, `pointer-events`). Budżety LHCI NIETKNIĘTE.
 - Etap 7 — przed nami (umowa → przekazanie).
 
 ## Mapa projektu
