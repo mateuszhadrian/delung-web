@@ -1,6 +1,6 @@
 // Ruch strony głównej (część 4.2, decyzja D-SG9) — wierny port wspólnego
-// skryptu eksportu docs/design/index.html BEZ GSAP (sticky + rAF + IO;
-// budżet skryptu zostaje na Etap 5). Moduł ładowany DYNAMICZNIE z Home.astro
+// skryptu eksportu docs/design/index.html BEZ GSAP (sticky + rAF + IO).
+// Moduł ładowany DYNAMICZNIE z Home.astro
 // wyłącznie przy prefers-reduced-motion: no-preference; stany startowe
 // animacji uzbraja klasa html.js-motion (inline skrypt przed paintem —
 // zero CLS), więc bez tego modułu strona stoi w pełni statyczna.

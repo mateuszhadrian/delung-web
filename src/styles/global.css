@@ -1,15 +1,11 @@
 @import "tailwindcss";
 
 @theme {
-  /* Role fontów wg eksportów designów (docs/design/):
-     — display: Helvetica z designów NIE wchodzi do produkcji (komercyjna,
-       Arial nie ma wagi 200) — rolę przejmuje Archivo Variable (decyzja
-       2026-07-29, test A/B w Etapie 0.4; kandydat nr 2: Inter Variable);
-     — body: Manrope (body/formularze w eksportach);
-     — serif: Cormorant Garamond (akcenty italic);
-     — mono: kickery/etykiety w designach to Archivo z letter-spacingiem,
-       ale komponenty odziedziczone używają --font-mono — mapujemy na
-       systemowy monospace do czasu portu widoków delung (Etap 4). */
+  /* Role fontów wg eksportów designów (docs/design/; wybór krojów —
+     Etap 0.4, docs/delung-web-entrance-analysis.md): display = Archivo
+     Variable w roli Helvetiki z designów, body = Manrope, serif =
+     Cormorant Garamond. --font-mono to systemowy monospace i taki
+     zostaje — drobny druk i etykiety go realnie używają. */
   --font-display: "Archivo Variable", system-ui, Arial, sans-serif;
   --font-body: "Manrope Variable", system-ui, Arial, sans-serif;
   --font-serif: "Cormorant Garamond", Georgia, serif;

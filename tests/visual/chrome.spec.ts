@@ -1,7 +1,7 @@
 // Chrome globalny (część 4.1) — regres wizualny elementów wspólnych:
 // pasek `hdr` (desktop, wariant plain) i otwarty bottom sheet menu
-// (mobile). Zrzuty na stronie głównej (szkielet) — baseline'y odświeżą
-// się przy porcie widoków (4.2+), ale sheet/pasek mają regres od razu.
+// (mobile). Zrzuty robione na stronie głównej — chrome jest wspólny dla
+// całego serwisu, więc jeden widok wystarczy jako regres.
 // Determinizm: freeze.css (prepareSweep) zeruje przejścia, więc sheet
 // otwiera się od razu w stanie końcowym (stagger linków bez animacji).
 import { expect, test } from "@playwright/test";

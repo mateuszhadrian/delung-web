@@ -12,14 +12,12 @@ const FREEZE = fileURLToPath(new URL("./freeze.css", import.meta.url));
 const FREEZE_REPAINT_MS = 400;
 
 /**
- * Determinizm ZDJĘĆ: sekcje ładują obrazy `loading="lazy"` z
- * `decoding="async"`, więc przy zrzucie elementu WYŻSZEGO niż viewport
- * (Playwright zszywa go z kilku przewinięć) przeglądarka może rasteryzować
- * kadr w trakcie asynchronicznego dekodowania. Efekt: różnice WYŁĄCZNIE na
- * krawędziach zdjęć (tekst pikselowo identyczny) — tak wywracał się
- * `o-nas: zespół` na webkit-iphone-14 w CI, przy zielonym przebiegu
- * lokalnym. Przełączenie na eager+sync i doczekanie `decode()` zdejmuje
- * wyścig; dla obrazów już wczytanych to no-op.
+ * Determinizm ZDJĘĆ (PR #17): przy zrzucie elementu wyższego niż viewport
+ * Playwright zszywa go z kilku przewinięć, więc obraz `lazy`+`async` bywa
+ * rasteryzowany w trakcie dekodowania. Objaw diagnostyczny: różnice
+ * WYŁĄCZNIE na krawędziach zdjęć, tekst pikselowo identyczny (czerwone CI
+ * przy zielonym przebiegu lokalnym). Eager+sync i doczekanie `decode()`
+ * zdejmuje wyścig; dla obrazów już wczytanych to no-op.
  */
 export async function settleImages(page: Page): Promise<void> {
   await page.evaluate(async () => {

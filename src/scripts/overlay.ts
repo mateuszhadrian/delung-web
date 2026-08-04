@@ -1,13 +1,15 @@
 // Generyczny kontroler nakładek (modal + bottom sheet). Obsługuje dowolny
 // element `[data-overlay]` w DOM — niezależnie od treści. Zapewnia:
 //  • otwieranie/zamykanie z animacją (klasy is-open / is-closing),
-//  • blokadę scrolla strony (Lenis stop + body fixed, wzorzec jak w Navbarze),
+//  • blokadę scrolla strony (body { position: fixed } + zapamiętana pozycja,
+//    odblokowanie natywnym window.scrollTo — jedyna ścieżka, D-Q1),
 //  • zamykanie przez Esc, klik w tło i przyciski [data-overlay-close],
 //  • focus-trap + przywrócenie fokusu po zamknięciu,
 //  • API: window.overlay.open(id, opts) / .close(id) / .isOpen().
 //
-// Reużywalny: Modal.astro i BottomSheet.astro importują ten moduł (bundlowany
-// raz). Treść jest wstrzykiwana przez konsumenta (np. sekcja Work).
+// Reużywalny — konsumenci (bundlowany raz): menu mobilne w Navbarze, karty
+// kategorii (KategorieSheets), detal realizacji (WorkDetailOverlay) wraz
+// z podglądem pełnoekranowym. Treść wstrzykuje konsument.
 
 declare global {
   interface Window {

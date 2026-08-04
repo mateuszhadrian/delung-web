@@ -9,10 +9,9 @@
 //    (elementem LCP) opóźnia LCP — jedyne dwa URL-e mierzone przez
 //    lighthouserc.cjs (required check);
 //  • na wejściu na PODSTRONĘ zasłona podczas `load` i jej zdejmowanie ściga
-//    się z reveal sekcji: axe łapie `.pp-sub` jako color-contrast serious na
-//    /oferta/ + /en/services/ (pixel-5) — 2× deterministycznie w pełnym
-//    test:e2e (kontrola bez auto-show: 634/0). Ta sama klasa problemu co
-//    reguła o ScrollTrigger.refresh() i o measure() w navbarze.
+//    się z reveal sekcji: axe łapał wtedy color-contrast serious
+//    deterministycznie w pełnym test:e2e (pomiar z szablonu hadrianm-web,
+//    na trasach, których delung nie ma — mechanizm wyścigu jest ten sam).
 // Przejścia pokazują nakładkę na STRONIE, z której wychodzimy (jej reveal
 // jest już ustabilizowany), więc nie dotykają żadnego z tych checków.
 //

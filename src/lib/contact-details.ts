@@ -3,8 +3,9 @@
 // w bundle'u ani w statycznym HTML — składane z fragmentów dopiero w JS
 // po załadowaniu strony (sloty [data-tel]/[data-mail] startują ukryte;
 // bez JS chrome nie pokazuje numeru — spójnie z polityką prywatności).
-// Sekcja kontaktu ma własne fragmenty (contact-ui.ts, odsłanianie na klik)
-// — ewentualna unifikacja przy porcie widoku kontaktu (Etap 5).
+// Ten moduł jest JEDYNYM miejscem w projekcie, które zna fragmenty numeru
+// i adresu: kafle /kontakt/ też jadą na tych slotach (contact-ui.ts odsyła
+// tutaj), a JSON-LD celowo nie dostaje ani telefonu, ani maila (D-CH5).
 
 const PHONE_PARTS = [48, 690, 291, 143] as const;
 const EMAIL_PARTS = ["kontakt", "delung", "pl"] as const;

@@ -1,4 +1,4 @@
-// Strażniki wspólne dla testów Playwright (port wzorców z verify-hero.mjs).
+// Strażniki wspólne dla testów Playwright.
 import { test, type Page } from "@playwright/test";
 
 /** Strażnik preview: testy biegają na buildzie produkcyjnym (pnpm preview),
