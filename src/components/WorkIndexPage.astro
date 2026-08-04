@@ -142,6 +142,7 @@ const pad = (n: number) => String(n).padStart(2, "0");
     openWorkDetail,
     setDetailContext,
   } from "./sections/work/open-detail";
+  import { WORK_DESKTOP_MIN_PX } from "./sections/work/work-config";
 
   const pad = (n: number) => String(n).padStart(2, "0");
   const tiles = Array.from(
@@ -152,8 +153,63 @@ const pad = (n: number) => String(n).padStart(2, "0");
   );
   const label = document.querySelector<HTMLElement>("[data-gridlabel]");
   const total = tiles.length;
+  const grid = document.querySelector<HTMLElement>("[data-tiles]");
+  const rail = document.querySelector<HTMLElement>("[data-rail]");
 
-  function applyFilter(slug: string) {
+  /** Powrót na początek listy po zmianie kategorii (D-T2).
+   *  Skacze WYŁĄCZNIE w górę: kto filtruje stojąc na nagłówku strony, nie
+   *  zostaje zepchnięty w dół — zgłoszenie dotyczy sytuacji odwrotnej
+   *  (po zmianie filtra pierwszy kafel zostawał kilkaset pikseli nad
+   *  ekranem, więc nie było widać wyniku filtrowania). */
+  function scrollToListTop() {
+    // celujemy w PIERWSZY WIDOCZNY KAFEL, nie w pudełko siatki: siatka ma
+    // własny górny padding (kompensacja odstępów z D-Q4), przez który kafel
+    // lądowałby niżej, niż wynika z przyklejonego chromu
+    const kafel = tiles.find((t) => !t.hidden) ?? grid;
+    if (!kafel) return;
+    const hdr =
+      parseFloat(
+        getComputedStyle(document.documentElement).getPropertyValue("--hdr-h"),
+      ) || 0;
+    // Poniżej progu desktop szyna klei się NAD listą (D-Q4) i zasłoniłaby
+    // pierwszy kafel; na desktopie jest częścią przyklejonej kolumny bocznej.
+    const railH = matchMedia(`(min-width:${WORK_DESKTOP_MIN_PX}px)`).matches
+      ? 0
+      : (rail?.getBoundingClientRect().height ?? 0);
+    const cel = Math.max(
+      0,
+      Math.round(
+        kafel.getBoundingClientRect().top + window.scrollY - hdr - railH - 12,
+      ),
+    );
+    if (window.scrollY <= cel) return;
+    window.scrollTo({
+      top: cel,
+      behavior: matchMedia("(prefers-reduced-motion: no-preference)").matches
+        ? "smooth"
+        : "auto",
+    });
+  }
+
+  /** Nakładka przywraca pozycję scrolla dopiero po przejściu zamknięcia
+   *  (`unlockScroll` w overlay.ts), więc skok musi poczekać na jej koniec —
+   *  inaczej przywrócona pozycja nadpisałaby nasz. */
+  function afterDetailClosed(fn: () => void) {
+    const el = document.getElementById("work-detail");
+    if (!el || el.hidden) return fn();
+    let done = false;
+    const run = () => {
+      if (done || !el.hidden) return;
+      done = true;
+      mo.disconnect();
+      fn();
+    };
+    const mo = new MutationObserver(run);
+    mo.observe(el, { attributes: true, attributeFilter: ["hidden"] });
+    window.setTimeout(run, 600);
+  }
+
+  function applyFilter(slug: string, odUzytkownika = false) {
     let shown = 0;
     tiles.forEach((tile) => {
       const on = !slug || tile.dataset.cat === slug;
@@ -183,10 +239,13 @@ const pad = (n: number) => String(n).padStart(2, "0");
     if (location.hash !== hash) {
       history.replaceState(null, "", hash || location.pathname);
     }
+    // deep-link na wejściu NIE przewija (strona ma się pokazać od góry) —
+    // stąd osobny argument zamiast bezwarunkowego skoku (D-T2)
+    if (odUzytkownika) scrollToListTop();
   }
 
   buttons.forEach((b) =>
-    b.addEventListener("click", () => applyFilter(b.dataset.f ?? "")),
+    b.addEventListener("click", () => applyFilter(b.dataset.f ?? "", true)),
   );
 
   // Deep-link na wejściu; slug spoza szyny (pusta kategoria, literówka)
@@ -217,6 +276,8 @@ const pad = (n: number) => String(n).padStart(2, "0");
     e.preventDefault();
     applyFilter(slug);
     window.overlay?.close("work-detail");
+    // skok dopiero po zamknięciu detalu — patrz afterDetailClosed
+    afterDetailClosed(scrollToListTop);
   });
 
   // Ruch — dynamicznie, tylko przy motion OK (wzorzec D-SG9).

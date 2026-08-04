@@ -621,3 +621,85 @@ test.describe("dojście ze strony głównej — linki Więcej realizacji", () =>
     await expect(page.locator(".re-grid")).toBeVisible();
   });
 });
+
+// ── Powrót na początek listy po zmianie kategorii (D-T2) ─────────────────
+// Zgłoszenie: po zmianie filtru lista zostawała przewinięta tam, gdzie była,
+// więc nie było widać wyniku filtrowania (zmierzone: pierwszy kafel −1467 px
+// nad ekranem na telefonie, −700 px na desktopie).
+// Decyzje: docs/analiza-poprawki-3.md.
+test.describe("filtry: powrót na początek listy (D-T2)", () => {
+  const hdr = (page: Page) =>
+    page.evaluate(
+      () =>
+        parseFloat(
+          getComputedStyle(document.documentElement).getPropertyValue(
+            "--hdr-h",
+          ),
+        ) || 0,
+    );
+
+  /** Górna krawędź pierwszego widocznego kafla względem viewportu. */
+  const pierwszyKafel = (page: Page) =>
+    page.evaluate(() => {
+      const t = [
+        ...document.querySelectorAll<HTMLElement>(
+          "[data-tiles] [data-work-slug]",
+        ),
+      ].find((x) => !x.hidden);
+      return t ? Math.round(t.getBoundingClientRect().top) : null;
+    });
+
+  test("po zmianie kategorii pierwsza realizacja jest widoczna u góry listy", async ({
+    page,
+    isMobile,
+  }) => {
+    await gotoReady(page, PATH);
+    await scrollPageTo(
+      page,
+      await page.evaluate(() =>
+        Math.round(document.documentElement.scrollHeight * 0.6),
+      ),
+    );
+
+    const cat = CATS_WITH[0];
+    await page.locator(`[data-rail] button[data-f="${cat.slug}"]`).click();
+
+    // kafel ma stanąć pod przyklejonym chromem: --hdr-h + szyna (mobile,
+    // gdzie klei się nad listą — D-Q4) + 12 px oddechu. Skok jest PŁYNNY,
+    // więc odpytujemy do skutku, zamiast mierzyć raz w locie.
+    const railH = isMobile
+      ? ((await page.locator("[data-rail]").boundingBox())?.height ?? 0)
+      : 0;
+    const oczekiwane = (await hdr(page)) + railH + 12;
+    await expect
+      .poll(
+        async () => {
+          const top = await pierwszyKafel(page);
+          return top === null ? Infinity : Math.abs(top - oczekiwane);
+        },
+        { timeout: 5000, message: "lista nie wróciła na początek" },
+      )
+      .toBeLessThanOrEqual(2);
+  });
+
+  test("filtrowanie z góry strony NIE spycha w dół", async ({ page }) => {
+    await gotoReady(page, PATH);
+    await scrollPageTo(page, 0);
+    await page
+      .locator(`[data-rail] button[data-f="${CATS_WITH[0].slug}"]`)
+      .click();
+    await page.waitForTimeout(500);
+    // skaczemy wyłącznie w górę — kto filtruje stojąc na nagłówku, zostaje
+    expect(await page.evaluate(() => Math.round(window.scrollY))).toBe(0);
+  });
+
+  test("wejście z deep-linkiem #<slug> nie przewija strony", async ({
+    page,
+  }) => {
+    await gotoReady(page, `${PATH}#${CATS_WITH[0].slug}`);
+    await page.waitForTimeout(500);
+    // deep-link ma pokazać stronę od góry (D-R2) — skok dotyczy tylko
+    // zmiany filtru przez użytkownika
+    expect(await page.evaluate(() => Math.round(window.scrollY))).toBe(0);
+  });
+});
