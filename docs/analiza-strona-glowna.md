@@ -71,6 +71,19 @@ czytelnika ekranu to nagłówek strony, bo desktopowy hero nagłówka
 tekstowego nie ma). Na każdym progu dokładnie jeden h1 w drzewie
 dostępności (drugi siedzi w gałęzi `display:none`).
 
+**ROZSZERZENIE (D-T1, runda poprawek 3 — `docs/analiza-poprawki-3.md`)**:
+typografia SVG hero desktop nie renderuje się, dopóki Archivo nie jest
+realnie wczytany. Skrypt `is:inline` stojący PRZED markupem hero zakłada
+`html.hero-wait` (reguła chowa `.hero-d svg`; warstwa jest
+`position: absolute`, więc zero CLS) i zdejmuje ją po jawnym
+`document.fonts.load(...)` albo po twardym timeoucie 2500 ms. Powód:
+Gecko po podmianie kroju nie unieważnia rastra napisów, więc biała kopia
+`<use>` i kopia przycięta maską zostawały narysowane RÓŻNYMI krojami
+(zgłoszenie z Firefoksa 153, pierwsze wejście na stronę). Zamiana
+sygnału `document.fonts.ready` na `document.fonts.load` jest istotą
+poprawki, nie detalem — przy preloadowanych fontach `ready` rozstrzyga
+się, zanim pobranie w rozumieniu Font Loading API wystartuje.
+
 Animacje hero = „umiarkowane" z instrukcji: crossfade/Ken Burns to
 czasowe animacje CSS (visual testy zamraża `freeze.css`), parallax
 mobile w `home-scroll` (motion-gate). `prefers-reduced-motion: reduce`:

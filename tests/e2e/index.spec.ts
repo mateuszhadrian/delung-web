@@ -273,3 +273,90 @@ test.describe("scena realizacji: link „Więcej” (D-Q6)", () => {
     ).toHaveAttribute("href", "/realizacje/");
   });
 });
+
+// ── Bramka fontu przy typografii hero (D-T1) ────────────────────────────
+// Zgłoszenie: w Firefoksie przy PIERWSZYM wejściu napisy hero renderowały
+// się podwójnie (biała kopia <use> i kopia przycięta maską — każda innym
+// krojem), bo Gecko nie unieważnia rastra po podmianie fontu. Poprawka nie
+// dopuszcza do rasteryzacji napisów krojem zastępczym.
+// Decyzje: docs/analiza-poprawki-3.md.
+test.describe("hero desktop: bramka fontu typografii (D-T1)", () => {
+  test.skip(
+    ({ isMobile }) => isMobile,
+    "typografia SVG istnieje tylko w hero desktopowym",
+  );
+
+  /** Opóźnia pliki fontów — symulacja zimnego cache / wolnego łącza. */
+  async function slowFonts(page: Page, ms: number) {
+    await page.route("**/*.woff2", async (route) => {
+      await new Promise((r) => setTimeout(r, ms));
+      await route.continue();
+    });
+  }
+
+  const svg = (page: Page) => page.locator(".hero-d svg");
+
+  test("dopóki font się nie wczytał, warstwa napisów nie jest renderowana", async ({
+    page,
+  }) => {
+    await slowFonts(page, 3000);
+    await page.goto(PATH, { waitUntil: "commit" });
+    // skrypt bramki stoi PRZED markupem hero — gdy .hero-d już istnieje,
+    // klasa musi być założona
+    await page.locator(".hero-d").waitFor({ state: "attached" });
+
+    expect(
+      await page.evaluate(() =>
+        document.documentElement.classList.contains("hero-wait"),
+      ),
+    ).toBe(true);
+    await expect(svg(page)).toHaveCSS("display", "none");
+  });
+
+  test("po wczytaniu fontu bramka spada i napisy wracają", async ({ page }) => {
+    await slowFonts(page, 700);
+    await page.goto(PATH, { waitUntil: "load" });
+
+    await expect
+      .poll(() =>
+        page.evaluate(() =>
+          document.documentElement.classList.contains("hero-wait"),
+        ),
+      )
+      .toBe(false);
+    await expect(svg(page)).toHaveCSS("display", "block");
+  });
+
+  test("awaria pobrania fontu NIE kasuje napisów (twarda podłoga)", async ({
+    page,
+  }) => {
+    await page.route("**/*.woff2", (route) => route.abort());
+    await page.goto(PATH, { waitUntil: "commit" });
+    await page.locator(".hero-d").waitFor({ state: "attached" });
+
+    // timeout bramki to 2500 ms i siedzi w skrypcie inline, więc działa
+    // nawet gdy moduły JS nie dojadą
+    await expect(svg(page)).toHaveCSS("display", "block", { timeout: 5000 });
+  });
+
+  test("lista znaków bramki pokrywa wszystkie napisy hero", async ({
+    page,
+  }) => {
+    await gotoReady(page, PATH);
+    // kontrakt: [data-font-text] i <text> mają jedno źródło w komponencie —
+    // nowa nazwa kategorii ze znakiem spoza listy nie wymusiłaby pobrania
+    // właściwego podzbioru fontu i bramka przepuściłaby krój zastępczy
+    const brak = await page.evaluate(() => {
+      const dozwolone = new Set(
+        document.querySelector<HTMLElement>(".hero-d")!.dataset.fontText ?? "",
+      );
+      const napisy = [...document.querySelectorAll(".hero-d defs text")]
+        .map((t) => t.textContent ?? "")
+        .join("");
+      return [...new Set(napisy.replace(/\s/g, ""))].filter(
+        (z) => !dozwolone.has(z),
+      );
+    });
+    expect(brak).toEqual([]);
+  });
+});

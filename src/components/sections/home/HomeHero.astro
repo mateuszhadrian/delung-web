@@ -79,6 +79,14 @@ const FRAMES = [
 const SVG_TEXT_STYLE =
   "font-family:'Archivo Variable',Helvetica,Arial,sans-serif;" +
   "font-weight:900;font-size:144px;letter-spacing:-1.44px";
+
+// Skrót fontu i treść napisów dla bramki D-T1 (skrypt inline niżej).
+// Treść ma pokryć ZNAKI wszystkich czterech nazw — wymusza pobranie obu
+// podzbiorów (latin i latin-ext: Ł, ę). Ta sama stała ląduje w atrybucie
+// [data-font-text] jako kontrakt testu (tests/e2e/index.spec.ts pilnuje,
+// że napisy nie wprowadziły znaku spoza tej listy).
+const HERO_FONT = '900 144px "Archivo Variable"';
+const HERO_FONT_TEXT = "Kuchnie Łazienki Wnętrza komercyjne Garderoby";
 ---
 
 {
@@ -95,7 +103,42 @@ const SVG_TEXT_STYLE =
      zatrzymuje pobierania obrazów — bez tego telefon ściągał kadry
      desktopowe, a desktop zdjęcie mobilne (fix transferu 4.2). */
 }
-<div class="hero-d" data-navref>
+{
+  /* Bramka D-T1 (docs/analiza-poprawki-3.md): dopóki Archivo nie jest
+     realnie wczytany, warstwa typografii SVG się NIE renderuje. Powód nie
+     jest kosmetyczny — Gecko po podmianie kroju nie unieważnia rastra
+     napisów, więc biała kopia <use> i kopia przycięta maską zostają na
+     ekranie narysowane RÓŻNYMI krojami (zgłoszenie: Firefox 153, pierwsze
+     wejście; naprawiało to dopiero odświeżenie albo zmiana rozmiaru okna).
+     Wymuszone przemalowanie po podmianie NIE wystarcza — przy żywej
+     animacji `pan` duch zostaje (pomiar w §2.5 dokumentu).
+
+     Skrypt stoi PRZED markupem hero i jest inline, więc klasa jest na
+     miejscu przed pierwszym paintem. Sygnałem jest JAWNE
+     `document.fonts.load(...)`, a nie `document.fonts.ready`: fonty są
+     preloadowane, więc `ready` potrafi rozstrzygnąć się, ZANIM pobranie
+     w rozumieniu Font Loading API w ogóle wystartuje — bramka oparta na
+     nim zdejmowała się przed podmianą i nie chroniła przed niczym.
+
+     Twardy timeout stoi w TYM SAMYM skrypcie (nie w module): przy błędzie
+     JS albo padniętym foncie napisy pojawią się mimo wszystko. Bez JS
+     klasa nie powstaje i hero renderuje się jak dotąd.
+     Ukrywane jest `.hero-d svg` (position:absolute) — zero wpływu na
+     układ, więc i zero CLS. Poniżej progu desktop `.hero-d` i tak nie
+     istnieje wizualnie; bramka jest tam bez znaczenia. */
+}
+<script is:inline define:vars={{ HERO_FONT, HERO_FONT_TEXT }}>
+  (() => {
+    const root = document.documentElement;
+    if (!document.fonts || !document.fonts.load) return;
+    root.classList.add("hero-wait");
+    const go = () => root.classList.remove("hero-wait");
+    setTimeout(go, 2500);
+    document.fonts.load(HERO_FONT, HERO_FONT_TEXT).then(go, go);
+  })();
+</script>
+
+<div class="hero-d" data-navref data-font-text={HERO_FONT_TEXT}>
   {
     FRAMES.map((f, i) => (
       <div class={`heroimg f${i}`}>
@@ -413,6 +456,11 @@ const SVG_TEXT_STYLE =
       height: 100%;
       pointer-events: none;
       z-index: 2;
+    }
+    /* Bramka D-T1 — patrz skrypt inline nad markupem hero. Warstwa jest
+       `position: absolute`, więc ukrycie nie rusza układu (zero CLS). */
+    :global(html.hero-wait) .hero-d svg {
+      display: none;
     }
 
     /* pętla 26 s: crossfade kadrów (f0–f3) + Ken Burns zdjęć */
