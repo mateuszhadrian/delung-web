@@ -26,9 +26,13 @@ module.exports = {
       aggregationMethod: "median-run",
       assertions: {
         "categories:performance": ["error", { minScore: 0.9 }],
-        // 2000 → 1800 (4.5): zmierzone 1544–1572 ms, rozrzut ±30 ms —
-        // najstabilniejsza z metryk. 1800 = +14 % nad najgorszą próbką.
-        "largest-contentful-paint": ["error", { maxNumericValue: 1800 }],
+        // 1800 → 1700 (runda poprawek 3): zmierzone 1541 i 1566 ms na main
+        // (wcześniej 1544–1572 ms w 4.5) — rozrzut ±30 ms przez cztery
+        // rundy pomiarowe, czyli najstabilniejsza metryka zestawu.
+        // 1700 = +8,5 % nad najgorszą próbką. Odpowiednik mobilny (5200 ms)
+        // zostaje NIETKNIĘTY: tam ta sama metryka potrafiła dać 4890 ms przy
+        // identycznych bajtach (uzasadnienie w lighthouserc.cjs).
+        "largest-contentful-paint": ["error", { maxNumericValue: 1700 }],
         // 100 → 200 (decyzja Mateusza, 4.5): próg-podłoga z Etapu 3 leżał
         // w ŚRODKU pasma szumu runnera. Pomiary na `/` z main (mediana z 3):
         // #8 73 ms, #10 22 ms, #11 40 ms, #12 73 ms, #13 138 ms (main
@@ -42,13 +46,14 @@ module.exports = {
         // 0.02 zostaje). Wciąż daleko od „needs improvement" (0.1).
         "cumulative-layout-shift": ["error", { maxNumericValue: 0.01 }],
         // Wspólny bundle z profilem mobile — ten sam próg skryptu
-        // (80 000 → 30 000 w Etapie 6; zmierzone 19 053 B, uzasadnienie
-        // w lighthouserc.cjs).
-        "resource-summary:script:size": ["error", { maxNumericValue: 30000 }],
-        // 1 800 000 → 1 650 000 (Etap 6): zmierzone w CI 1 519 558 B.
-        // Zapas mniejszy niż na mobile (+8,6 %), bo tu masę robią kadry hero
-        // w gęstości DPR≥2 — pozycja stała, nieczuła na szum runnera.
-        "resource-summary:total:size": ["error", { maxNumericValue: 1650000 }],
+        // (30 000 → 20 000 w rundzie poprawek 3; zmierzone 13 659 B,
+        // uzasadnienie w lighthouserc.cjs).
+        "resource-summary:script:size": ["error", { maxNumericValue: 20000 }],
+        // 1 650 000 → 1 580 000 (runda poprawek 3): zmierzone w CI 1 514 451
+        // i 1 514 472 B (rozrzut 21 B). Zapas mniejszy niż na mobile (+4,3 %),
+        // bo tu masę robią cztery kadry hero w gęstości DPR≥2 — pozycja stała,
+        // nieczuła na szum runnera, więc próg może stać bliżej pomiaru.
+        "resource-summary:total:size": ["error", { maxNumericValue: 1580000 }],
         // 5 → 6 (4.5): wyrównanie z profilem mobile — szósty font to subset
         // italic Cormoranta z 4.2. Próg 5 spamował warnem każdy run.
         "resource-summary:font:count": ["warn", { maxNumericValue: 6 }],
