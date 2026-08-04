@@ -3,6 +3,8 @@
 // realizacji na niskie okno (D-Q5) i zachowanie linku „Więcej" w tej scenie
 // (D-Q6). Decyzje: docs/analiza-poprawki-2.md.
 import { expect, test, type Page } from "@playwright/test";
+import { HOME_DESKTOP_MIN_PX } from "../../src/components/sections/home/home-config";
+import { expectBreakpointFlip } from "../helpers/breakpoint";
 import { usePreviewGuard } from "../helpers/guards";
 import { gotoReady, scrollPageTo, settle } from "../helpers/scroll";
 
@@ -453,4 +455,25 @@ test.describe("hero desktop: bramka fontu typografii (D-T1)", () => {
     });
     expect(brak).toEqual([]);
   });
+});
+
+// ── kontrakt progu (R14) ──
+// Hero ma dwa NIEZALEŻNE warianty markupu (mobilny `.hero` ze zdjęciem
+// i tekstem, desktopowy `.hero-d` z typografią SVG) przełączane wyłącznie
+// przez @media. Ten test wiąże ten próg ze stałą HOME_DESKTOP_MIN_PX.
+test("próg desktopowy: hero przełącza wariant dokładnie na HOME_DESKTOP_MIN_PX", async ({
+  page,
+}, testInfo) => {
+  test.skip(
+    testInfo.project.name !== "chromium-1920",
+    "kontrakt progu — jeden profil desktop wystarczy (test sam zmienia szerokość)",
+  );
+  await gotoReady(page, PATH);
+  await expectBreakpointFlip(
+    page,
+    HOME_DESKTOP_MIN_PX,
+    { heroDesktop: ".hero-d", heroMobile: ".hero" },
+    { heroDesktop: "none", heroMobile: "block" },
+    { heroDesktop: "block", heroMobile: "none" },
+  );
 });

@@ -389,6 +389,27 @@ treść/sekcje budowane od nowa wg `docs/design/`).
     desktop LCP 1800 → **1700** ms, mobile CLS 0,02 → **0,015**. NIETKNIĘTE
     zostają mobilne LCP 5200, oba `perf`, oba TBT i desktopowy CLS — stoją na
     metrykach z udokumentowanym szumem runnera.
+- **Refaktor przed Etapem 7 (zakres A–C) — WYKONANY** (2026-08-04, PR #42
+  martwy kod, #43 komentarze, #44 kontrakt progów; decyzje R1–R15 i wyniki:
+  `docs/analiza-refactor.md` — czytać PRZED każdym sprzątaniem kodu, bo §2
+  wylicza strefy no-go, a §8 i §14 mówią, co ODRZUCONO i dlaczego): kasacja
+  martwego kodu bez konsumenta (3 tokeny `global.css`, ~130 linii helperów
+  testów opisujących sekcje `about`/`audience` i trasę `/dla-kogo/` z
+  szablonu, `getLangFromUrl`/`languages`, zawężenie eksportów); komentarze
+  przestały kłamać — **sześć z siedmiu stałych `*_DESKTOP_MIN_PX`
+  deklarowało ochronę testami, której nie było**, a `proces-config.ts` nie
+  ma ANI JEDNEGO konsumenta (stała jest dekoracją — próg żyje w czterech
+  `@media`); duchy po GSAP/ScrollTriggerze/Lenisie/`verify-hero.mjs`
+  usunięte, wiedza pomiarowa (7C) nietknięta. `home`/`oferta`/`work` dostały
+  **realny kontrakt progu** (`tests/helpers/breakpoint.ts` mierzy układ przy
+  `1023` i `1024` — łapie rozjazd stała↔`@media` także w paśmie 1024–1280,
+  niewidocznym dla profili testowych); weryfikacja „test łapie regresję"
+  wykonana w obie strony. **Zero zmian w `dist`** (JS bajt w bajt), zero
+  regeneracji baseline'ów. **Odłożone: D/E/F** — `MotionGate.astro` (R2),
+  wspólny moduł ruchu (R1) i wydzielenie sheeta z `Navbara` (R7); to one
+  niosą ryzyko wizualne. `BackButton`/`back-link.ts` zostają uśpione
+  świadomie (D-CH8, status dopisany w plikach; koszt zmierzony: 307 B na
+  stronę inline, bez dodatkowego żądania).
 - Etap 7 — przed nami (umowa → przekazanie).
 
 ## Mapa projektu

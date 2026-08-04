@@ -11,6 +11,8 @@ import { expect, test, type Page } from "@playwright/test";
 import { ui } from "../../src/i18n/ui";
 import { CATEGORIES } from "../../src/lib/categories";
 import { OFERTA_PATH, POLICY_PATH } from "../../src/lib/routes";
+import { WORK_DESKTOP_MIN_PX } from "../../src/components/sections/work/work-config";
+import { expectBreakpointFlip } from "../helpers/breakpoint";
 import {
   collectPageIssues,
   useChromium1920Only,
@@ -702,4 +704,26 @@ test.describe("filtry: powrót na początek listy (D-T2)", () => {
     // zmiany filtru przez użytkownika
     expect(await page.evaluate(() => Math.round(window.scrollY))).toBe(0);
   });
+});
+
+// ── kontrakt progu (R14) ──
+// Poniżej progu nagłówek listy rozpływa się w siatce (`display: contents`),
+// żeby szyna filtrów kleiła się przez CAŁĄ listę (D-Q4); powyżej wraca jako
+// sticky kolumna boczna w `.re-in`. Oba przełączniki to @media — ten test
+// wiąże ich próg ze stałą WORK_DESKTOP_MIN_PX.
+test("próg desktopowy: nagłówek listy wraca jako kolumna dokładnie na WORK_DESKTOP_MIN_PX", async ({
+  page,
+}, testInfo) => {
+  test.skip(
+    testInfo.project.name !== "chromium-1920",
+    "kontrakt progu — jeden profil desktop wystarczy (test sam zmienia szerokość)",
+  );
+  await gotoReady(page, PATH);
+  await expectBreakpointFlip(
+    page,
+    WORK_DESKTOP_MIN_PX,
+    { naglowek: ".re-head", kolumny: ".re-in" },
+    { naglowek: "contents", kolumny: "block" },
+    { naglowek: "block", kolumny: "flex" },
+  );
 });
