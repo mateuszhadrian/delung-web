@@ -16,7 +16,7 @@ const PATH = "/";
 
 usePreviewGuard();
 
-/** Dojeżdża do sekcji, czeka aż reveale/scrub usiądą i zrzuca element.
+/** Dojeżdża do sekcji, czeka aż reveale i pętle ruchu usiądą, zrzuca element.
  *  Mikro-scroll przed zrzutem = wymuszenie re-rasteryzacji warstwy sticky
  *  paska (WebKit trzyma ją „miękko" do pierwszego przemalowania, a pasek
  *  wjeżdża w kadr elementów u góry viewportu — wzorzec z widoku

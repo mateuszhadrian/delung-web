@@ -63,10 +63,9 @@ export type Opinia = (typeof OPINIE)[number];
 /** Link „Zobacz więcej opinii w Google" (wspólny obu sekcjom) — wejście
  *  Google'a do opinii wizytówki, budowane z Place ID (D-Q3).
  *
- *  KOREKTA D-P6: poprzedni wariant (`tbm=lcl` + `rldimm` +
- *  `#lkt=LocalPoiReviews`) był adresem DESKTOPOWEGO UI wyszukiwarki —
- *  Google nie ma tego widoku na telefonie, więc mobile dostawało pustą
- *  stronę. Lekcja: link sprawdzamy klikiem na OBU progach, nie na jednym.
+ *  KOREKTA D-P6: poprzedni wariant był adresem DESKTOPOWEGO UI
+ *  wyszukiwarki i na telefonie dawał pustą stronę. Lekcja: link
+ *  sprawdzamy klikiem na OBU progach, nie na jednym.
  *
  *  Ten adres Google sam przekierowuje na formę właściwą dla urządzenia
  *  (telefon: wizytówka z opiniami, desktop: panel lokalny z opiniami).

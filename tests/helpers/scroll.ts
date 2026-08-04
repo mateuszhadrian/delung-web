@@ -3,7 +3,7 @@
 // natywny wszędzie, więc testy przewijają dokładnie tak jak użytkownik.
 import { type Page } from "@playwright/test";
 
-/** Czeka aż strona „usiądzie": 2×rAF (GSAP scrub dogania) + timeout. */
+/** Czeka aż strona „usiądzie": 2×rAF (pętla ruchu dogania) + timeout. */
 export async function settle(page: Page, ms = 350): Promise<void> {
   await page.evaluate(
     () =>
@@ -19,12 +19,11 @@ export async function scrollPageTo(page: Page, y: number): Promise<void> {
 }
 
 /**
- * Płynny dojazd do y (ease-out, rAF) — dla sekcji ze scrubem i snapem
- * ScrollTriggera (about). Skok „immediate" NIE działa tam deterministycznie:
- * snap podejmuje decyzję na podstawie SCRUBOWANEGO (opóźnionego ~1 s)
- * postępu, więc po skoku cofa scroll do poprzedniego punktu osi. Dojazd
- * z wyhamowaniem pozwala scrubowi nadążyć; gdy y JEST punktem snapa,
- * snap staje się no-opem.
+ * Płynny dojazd do y (ease-out, rAF) — dla scen przypiętych, których postęp
+ * jest przeliczany w pętli rAF przy każdej zmianie pozycji scrolla. Skok
+ * „immediate" nie daje im ani jednej klatki na dogonienie celu, więc
+ * pierwsza klatka po skoku bywa policzona ze starego postępu. Dojazd
+ * z wyhamowaniem pozwala pętli nadążyć.
  */
 async function scrollPageToSmooth(
   page: Page,
@@ -54,12 +53,10 @@ async function scrollPageToSmooth(
 }
 
 /**
- * Dojeżdża płynnie do y i czeka aż pozycja USIĄDZIE dokładnie tam.
- * Cel musi być punktem spoczynku snapa (albo sekcją bez snapa) — inaczej
- * snap odciągnie scroll i funkcja rzuci po wyczerpaniu prób. Sekcje ze
- * snapem testuj z wyłącznikiem `?nosnap` (about-scroll.ts): snap decyduje
- * na scrubowanym postępie i na wolnych runnerach CI potrafi uciec o cały
- * segment osi mimo dojazdu dokładnie w punkt.
+ * Dojeżdża płynnie do y i czeka aż pozycja USIĄDZIE dokładnie tam
+ * (tolerancja 2 px, do 3 prób) — inaczej rzuca. W delung nie ma scroll-snapa
+ * na osi strony, więc jedyne, co może tu przeszkodzić, to zmiana wysokości
+ * dokumentu w trakcie dojazdu (dogrywane zdjęcia).
  */
 export async function scrollPageToStable(
   page: Page,
@@ -69,7 +66,9 @@ export async function scrollPageToStable(
   const target = Math.round(y);
   for (let i = 0; i < tries; i++) {
     await scrollPageToSmooth(page, target);
-    // Okno snapa: delay 0.08 s + tween do 0.55 s.
+    // Bufor po dojeździe: pętle ruchu i dogrywane zdjęcia potrafią jeszcze
+    // ruszyć pozycją. Wartość dobrana empirycznie — nie skracać bez pomiaru
+    // na wolnym runnerze CI.
     await page.waitForTimeout(900);
     const at = await page.evaluate(() => window.scrollY);
     if (Math.abs(at - target) <= 2) return;
@@ -77,7 +76,7 @@ export async function scrollPageToStable(
   const at = await page.evaluate(() => window.scrollY);
   throw new Error(
     `scrollPageToStable: pozycja nie zbiegła do ${target} (jest ${at}) — ` +
-      `czy cel na pewno jest punktem spoczynku snapa?`,
+      `czy dokument nie zmienia wysokości w trakcie dojazdu?`,
   );
 }
 

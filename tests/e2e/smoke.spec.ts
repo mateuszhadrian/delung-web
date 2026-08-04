@@ -1,8 +1,8 @@
 // Minimalny smoke (@prod-smoke): strona wstaje, hero renderuje, formularz
 // w DOM, brak błędów konsoli. PL-only (delung). Ten sam kod biega w E2E na
 // preview i po deployu przeciw produkcji: pnpm test:smoke:prod (BASE_URL).
-// Selektory celowo ogólne (main h1, #contact .kt-form) — mają przeżyć
-// wymianę szkieletu na docelowe widoki w Etapie 4 bez edycji smoke'a.
+// Selektory celowo ogólne (main h1, #contact .kt-form) — przetrwały wymianę
+// szkieletu Etapu 0 na docelowe widoki bez edycji smoke'a i mają tak zostać.
 import { expect, test } from "@playwright/test";
 import { collectPageIssues } from "../helpers/guards";
 

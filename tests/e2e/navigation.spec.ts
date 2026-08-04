@@ -13,8 +13,8 @@ test.describe("nawigacja desktop", () => {
 
   test("link Oferta nawiguje na podstronę /oferta/", async ({ page }) => {
     await gotoReady(page);
-    // Asercja treści celowo ogólna (main h1): przeżyje wymianę szkieletu
-    // na docelowy widok w Etapie 4.
+    // Asercja treści celowo ogólna (main h1) — przetrwała wymianę szkieletu
+    // Etapu 0 na docelowy widok i ma przetrwać kolejne zmiany treści.
     await page.locator('.nav-link[href="/oferta/"]').click();
     await expect(page).toHaveURL(/\/oferta\/?$/);
     await expect(page.locator("main h1")).toBeVisible();
@@ -171,8 +171,8 @@ test.describe("nawigacja mobile (bottom sheet)", () => {
   });
 });
 
-// „Proces współpracy" żyje POZA navbarem (jak w designach — 4 pozycje);
-// do czasu CTA sekcji (4.2/4.3) trasę linkuje stopka (D-CH4).
+// „Proces współpracy" żyje POZA navbarem (jak w designach — 4 pozycje,
+// D-CH4): trasę linkuje stopka oraz CTA procesu na stronie głównej.
 test("link Proces współpracy w stopce nawiguje na podstronę", async ({
   page,
 }) => {
