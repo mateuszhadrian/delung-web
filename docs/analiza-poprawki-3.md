@@ -1,6 +1,8 @@
 # Runda poprawek nr 3 (po rundzie 2, przed Etapem 7)
 
-Status: **W TOKU** (start 2026-08-04; D-T1 zamknięte PR-em #36).
+Status: **WYKONANE** (2026-08-04; PR #36 hero w Firefoksie, #37 powrót na
+początek listy, #38 opis i odstęp w scenie realizacji, #39 zacieśnienie
+budżetów LHCI + domknięcie rundy).
 Zakres: cztery zgłoszenia Mateusza z testów na fizycznej maszynie — jedno
 renderowania hero w Firefoksie (D-T1, zamknięte), jedno użytkowe na
 `/realizacje/` (D-T2) i dwa w scenie realizacji na stronie głównej
@@ -459,10 +461,27 @@ visual baselines" z brancha PR-a → `git pull` → lokalne
 3. **PR C — `fix/home-realizacje-opis`** (D-T3 + D-T4): obie poprawki
    dotyczą tej samej kolumny sceny i tych samych liczb, więc rozdzielanie
    ich dałoby dwa razy tę samą weryfikację zrzutami. Wchodzi po B.
-4. **PR ostatni — budżety LHCI**: osobny commit, liczby z zielonego
-   przebiegu `lighthouse` na `main` (po wyjściu Lenisa skryptów ubyło
-   ~5,3 kB gz — liczby biorę z CI, nie z lokalnego builda). Uwaga:
-   `total` ma najciaśniejszy zapas (~9 % na mobile).
+4. **PR #39 — budżety LHCI + domknięcie rundy**: osobny commit na progi,
+   osobny na dokumentację. Liczby z DWÓCH zielonych przebiegów `lighthouse`
+   na `main` (runy 30909810628 i 30911240907), ściągnięte z medianowych
+   raportów LHCI:
+
+   | Metryka | mobile | desktop | próg przed | próg po |
+   | --- | --- | --- | --- | --- |
+   | perf | 0,880 / 0,860 | 0,940 / 0,950 | 0,80 / 0,90 | bez zmian |
+   | LCP | 3838 / 4062 | 1566 / 1541 | 5200 / 1800 | 5200 / **1700** |
+   | TBT | 0 / 0 | 89 / 0 | 150 / 200 | bez zmian |
+   | CLS | 0,0117 / 0,0117 | 0,0042 / 0,0042 | 0,02 / 0,01 | **0,015** / 0,01 |
+   | script | 13 659 (co do bajta w obu) | 30 000 | **20 000** |
+   | total | 811 389 / 811 410 | 1 514 451 / 1 514 472 | 900 000 / 1 650 000 | **860 000** / **1 580 000** |
+
+   Zacieśnione zostały WYŁĄCZNIE progi stojące na wielkościach
+   deterministycznych albo o rozrzucie ±30 ms: wagi zasobów (rozrzut 21 B
+   między przebiegami), desktopowe LCP i mobilny CLS. Nietknięte zostają
+   mobilne LCP 5200, oba `perf`, oba TBT i desktopowy CLS — one stoją na
+   metrykach z udokumentowanym szumem runnera (LCP 4890 ms i TBT 22–138 ms
+   przy IDENTYCZNYCH bajtach), a dwie próbki to za mało, żeby je ruszać.
+   Skrypty spadły z 19 053 do 13 659 B — to widać wyjście Lenisa (D-Q1).
 
 ## 8. Ryzyka i weryfikacja na fizycznym urządzeniu
 
