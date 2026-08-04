@@ -372,6 +372,12 @@ const projects = entries
       display: grid;
       grid-template-columns: 46% 1fr;
       grid-template-rows: 1fr auto;
+      /* Dolna granica odstępu „Więcej" → CTA (D-T4). Odstęp zabiera wysokość
+         wierszowi tekstu, więc kolumna ma mniej miejsca i jej zawartość jedzie
+         do góry — najpierw rozpórka, potem rampy skalowania. Przy wysokim
+         oknie nic się nie rusza: pod tekstem zostaje tam kilkaset pikseli
+         zapasu. Było: przy 1280×560 odstęp schodził do 0 px (styk). */
+      row-gap: clamp(16px, 2.2vh, 28px);
     }
     :global(html.js-motion) .re-in {
       grid-column: 1;
@@ -383,6 +389,18 @@ const projects = entries
       display: flex;
       flex-direction: column;
       min-height: 0;
+      /* Kontener zapytań dla ramp skalowania treści karty (KOREKTA D-Q5 →
+         D-T3). Dotąd siedział na `.re-txts`, ale tamto pudełko ma teraz
+         wysokość WŁASNEJ TREŚCI, więc przestało maleć razem z oknem.
+         Kolumna maleje: jej wysokość wyznacza wiersz `1fr` sceny minus
+         `row-gap`. Współczynniki `cqh` niżej są przeliczone na tę wysokość
+         Liczą się one od CONTENT-BOXA kolumny, czyli po odjęciu jej
+         górnego paddingu — zmierzone 766 px przy oknie 1080 i 473 px przy 768.
+         Próg zadziałania ramp (~392 px) jest dobrany tak, żeby budziły się
+         DOPIERO wtedy, gdy rozpórka odda już swoje piksele — kolejność
+         kurczenia z D-Q5 zostaje: najpierw odstęp nagłówek → opis, potem
+         skalowanie treści karty. */
+      container-type: size;
       /* rampa vh oddaje górne powietrze przy niskim oknie; przy 768 i 1080 px
          wygrywa wartość dotychczasowa (D-Q5) */
       padding-block: min(clamp(84px, 8.33vw, 120px), max(28px, 17vh)) 0;
@@ -399,17 +417,29 @@ const projects = entries
        do podłogi 12 px, przestaje i pałeczkę przejmuje blok opisu. */
     :global(html.js-motion) .re-gap {
       display: block;
-      flex: 0 100 clamp(40px, 5vw, 72px);
+      /* Rozpórka oddaje piksele PIERWSZA — i robi to proaktywnie, rampą
+         liczoną z wysokości kolumny (D-T3). Bez tego rampy skalowania treści
+         (niżej) budziły się, gdy rozpórka miała jeszcze 60 px zapasu, czyli
+         odwrotnie niż ustala D-Q5. Człon `calc` jest tak przesunięty, żeby
+         przy 768 px wysokości okna dawał ponad 72 px (rozpórka śpi na obu
+         rozmiarach referencyjnych), a podłogę 12 px osiągał przy kolumnie
+         ~392 px — dopiero tam pałeczkę przejmuje skalowanie treści. */
+      flex: 0 100 min(clamp(40px, 5vw, 72px), max(12px, calc(100cqh - 380px)));
       min-height: 12px;
     }
-    /* Etap 2: blok opisu. `container-type: size` sprawia, że tytuł i akapit
-       w środku skalują się jego wysokością (jednostki cqh niżej). */
+    /* Etap 2: blok opisu. Wysokość bierze się z NAJWYŻSZEJ z trzech kart
+       (D-T3), a nie z szerokości okna. Poprzednia wartość
+       `flex: 0 1 clamp(240px, 20.1vw, 290px)` była zgadywana z `vw`, a liczba
+       linii, na które łamie się opis, nie zmienia się proporcjonalnie do
+       szerokości — stąd ucinanie opisu przy 1024–1280 px NIEZALEŻNIE od
+       wysokości okna (10 px przy 1152 px, czyli pół wiersza). Karty dzielą
+       jedną komórkę siatki, więc dalej leżą jedna na drugiej, ale pudełko wie,
+       ile miejsca naprawdę potrzebują. */
     :global(html.js-motion) .re-txts {
-      display: block;
+      display: grid;
       position: relative;
-      flex: 0 1 clamp(240px, 20.1vw, 290px);
+      flex: 0 1 auto;
       min-height: 112px;
-      container-type: size;
     }
     /* Karta = kolumna flex wypełniająca pudełko bloku (D-Q5). To jest TWARDA
        gwarancja braku kolizji z przyciskiem: treść nie ma jak wyjść poza
@@ -422,10 +452,12 @@ const projects = entries
       pointer-events: auto;
     }
     .re-tx {
-      position: absolute;
-      inset: 0;
+      /* wszystkie trzy karty w JEDNEJ komórce siatki — leżą na sobie jak
+         dotąd (przełącza je opacity), ale współtworzą wysokość pudełka (D-T3) */
+      grid-area: 1 / 1;
       display: flex;
       flex-direction: column;
+      min-height: 0;
       /* Trzy karty leżą JEDNA NA DRUGIEJ. Bez tego ostatnia w DOM-ie łapie
          kliknięcia także przy `opacity: 0` i zasłania link „Więcej"
          widocznej karty — stąd zgłoszony brak kursora i brak reakcji
@@ -451,13 +483,13 @@ const projects = entries
          współczynnik cqh jest dobrany tak, żeby przy pełnej wysokości okna
          przegrywał w min() z wartością dotychczasową — czyli mechanizm śpi,
          dopóki nie zrobi się naprawdę ciasno. */
-      font-size: max(9px, min(11px, 5cqh));
+      font-size: max(9px, min(11px, 2.85cqh));
       line-height: 1.6;
       letter-spacing: 0.18em;
       color: var(--accent-ink);
     }
     .re-tx h3 {
-      margin-top: min(12px, 5.5cqh);
+      margin-top: min(12px, 3.1cqh);
       font-family: var(--font-display), sans-serif;
       font-weight: 200;
       font-size: clamp(28px, 2.78vw, 40px);
@@ -466,17 +498,17 @@ const projects = entries
          więc min() wybiera stan sprzed rundy (zero zmian w baseline'ach).
          Bez wsparcia dla kontenerów deklaracja jest nieprawidłowa i zostaje
          sam clamp() z linijki wyżej — czytelna degradacja. */
-      font-size: max(19px, min(clamp(28px, 2.78vw, 40px), 14cqh));
+      font-size: max(19px, min(clamp(28px, 2.78vw, 40px), 9.7cqh));
       line-height: 1.15;
       text-wrap: pretty;
     }
     .re-tx p {
-      margin-top: min(18px, 8cqh);
+      margin-top: min(18px, 4.65cqh);
       font-family: var(--font-display), sans-serif;
       font-weight: 200;
       font-size: clamp(15px, 1.15vw, 16.5px);
       /* jak przy h3, z twardą podłogą czytelności */
-      font-size: max(12px, min(clamp(15px, 1.15vw, 16.5px), 7cqh));
+      font-size: max(12px, min(clamp(15px, 1.15vw, 16.5px), 4.05cqh));
       line-height: 1.55;
       color: var(--muted);
       text-wrap: pretty;
@@ -495,10 +527,10 @@ const projects = entries
       align-self: flex-start;
       align-items: center;
       gap: 8px;
-      margin-top: min(18px, 8cqh);
+      margin-top: min(18px, 4.65cqh);
       font-family: var(--font-body), sans-serif;
       font-weight: 500;
-      font-size: max(11px, min(14px, 6.5cqh));
+      font-size: max(11px, min(14px, 3.6cqh));
       line-height: 1;
       color: var(--ink);
       text-decoration: none;

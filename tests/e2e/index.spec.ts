@@ -103,6 +103,9 @@ test.describe("hero mobile: zakotwiczenie w wysokości viewportu (D-Q2)", () => 
   });
 });
 
+/** Podłoga odstępu „Więcej" → CTA z D-T4 (`row-gap` sceny: clamp 16–28 px). */
+const MIN_ODSTEP = 16;
+
 test.describe("scena realizacji: niskie okno (D-Q5)", () => {
   test.skip(
     ({ isMobile }) => !!isMobile,
@@ -155,11 +158,11 @@ test.describe("scena realizacji: niskie okno (D-Q5)", () => {
         m.kolumna,
         "kolumna tekstu wchodzi na przycisk",
       ).toBeGreaterThanOrEqual(0);
-      // pełna widoczność treści — do 600 px włącznie; niżej ogon opisu wolno
-      // PRZYCIĄĆ (nigdy zasłonić), co jest świadomą degradacją z D-Q5
-      if (h >= 600) {
-        expect(m.tresc, "link Więcej ucięty").toBeGreaterThanOrEqual(0);
-      }
+      // D-T4: sam brak kolizji nie wystarcza — styk (0 px) wygląda jak błąd
+      // i tak został zgłoszony. Odstęp ma podłogę na każdej wysokości okna.
+      expect(m.tresc, "brak odstępu Więcej → CTA").toBeGreaterThanOrEqual(
+        MIN_ODSTEP,
+      );
     });
   }
 
@@ -188,11 +191,102 @@ test.describe("scena realizacji: niskie okno (D-Q5)", () => {
 
     // rozpórka oddaje co najmniej jedną trzecią swojej wysokości…
     expect(male.gap, "odstęp nie oddał miejsca").toBeLessThan(duze.gap * 0.7);
-    // …a blok opisu w tym czasie prawie nie drgnął (priorytet z D-Q5)
+    // …a blok opisu oddaje mniej niż ona (priorytet z D-Q5). Po D-T3 pudełko
+    // ma wysokość WŁASNEJ TREŚCI, więc maleje razem ze skalowaniem fontów —
+    // dlatego porównujemy udziały, a nie „czy w ogóle drgnęło".
+    const udzialGap = 1 - male.gap / duze.gap;
+    const udzialTxts = 1 - male.txts / duze.txts;
     expect(
-      male.txts / duze.txts,
-      "blok opisu skurczył się przed odstępem",
-    ).toBeGreaterThan(0.98);
+      udzialTxts,
+      "blok opisu oddał więcej miejsca niż rozpórka",
+    ).toBeLessThan(udzialGap);
+  });
+});
+
+// ── Opis w scenie realizacji: koniec przycinania (D-T3) ──────────────────
+// Zgłoszenie: opis nad linkiem „Więcej" bywał ucięty. Pomiar pokazał, że
+// ucięcie NIE zależało od wysokości okna (stałe 10 px przy 1152 px szerokości
+// niezależnie od tego, czy pod opisem zostawało 280 px, czy 16 px wolnego
+// miejsca) — pudełko opisu miało wysokość zgadywaną z `vw`. Decyzje:
+// docs/analiza-poprawki-3.md.
+test.describe("scena realizacji: opis nie jest przycinany (D-T3)", () => {
+  test.skip(
+    ({ isMobile }) => !!isMobile,
+    "scena przypięta istnieje tylko na desktopie",
+  );
+
+  /** Ile pikseli opisu wypada poza swój boks — dla KAŻDEGO z trzech wpisów
+   *  (opisy idą z CMS-a i różnią się długością). */
+  const przyciecie = async (page: Page) => {
+    await page.addStyleTag({
+      content: "*{transition:none!important;animation:none!important}",
+    });
+    return page.evaluate(() => {
+      let max = 0;
+      document.querySelectorAll<HTMLElement>("[data-retx]").forEach((tx) => {
+        tx.style.opacity = "1";
+        tx.style.transform = "none";
+        const p = tx.querySelector<HTMLElement>("p:not(.re-meta)")!;
+        max = Math.max(max, p.scrollHeight - p.clientHeight);
+      });
+      return max;
+    });
+  };
+
+  // Szerokości, na których bug był widoczny (1024–1280), plus kontrola wyżej.
+  // Profile testowe mają 1920 i 1366 px, więc bez tego przemiatania regresja
+  // przechodziłaby niezauważona.
+  for (const w of [1024, 1152, 1280, 1366, 1440, 1920]) {
+    test(`opis mieści się w całości przy szerokości ${w} px`, async ({
+      page,
+    }) => {
+      for (const h of [900, 800, 720]) {
+        await page.setViewportSize({ width: w, height: h });
+        await gotoReady(page, PATH);
+        await settle(page, 200);
+        expect(
+          await przyciecie(page),
+          `opis ucięty przy ${w}×${h}`,
+        ).toBeLessThanOrEqual(0);
+      }
+    });
+  }
+
+  test("rampy skalowania śpią przy rozmiarach referencyjnych", async ({
+    page,
+  }) => {
+    // Kalibracja z D-T3: `cqh` liczy się teraz od kolumny `.re-in`, a nie od
+    // pudełka opisu. Ten test pilnuje, że przy 1920×1080 i 1366×768 `min()`
+    // dalej wybiera wartość sprzed rundy — czyli że przeliczone współczynniki
+    // nie ruszyły baseline'ów wizualnych.
+    for (const [w, h] of [
+      [1920, 1080],
+      [1366, 768],
+    ]) {
+      await page.setViewportSize({ width: w, height: h });
+      await gotoReady(page, PATH);
+      await settle(page, 200);
+      const px = await page.evaluate(() => {
+        const tx = document.querySelector("[data-retx]")!;
+        return {
+          h3: parseFloat(getComputedStyle(tx.querySelector("h3")!).fontSize),
+          p: parseFloat(
+            getComputedStyle(tx.querySelector("p:not(.re-meta)")!).fontSize,
+          ),
+        };
+      });
+      // czysty clamp() bez członu cqh — ta sama arytmetyka w każdym silniku
+      const clamp = (min: number, val: number, max: number) =>
+        Math.min(max, Math.max(min, val));
+      expect(px.h3, `h3 skurczone przy ${w}×${h}`).toBeCloseTo(
+        clamp(28, 0.0278 * w, 40),
+        1,
+      );
+      expect(px.p, `opis skurczony przy ${w}×${h}`).toBeCloseTo(
+        clamp(15, 0.0115 * w, 16.5),
+        1,
+      );
+    }
   });
 });
 
