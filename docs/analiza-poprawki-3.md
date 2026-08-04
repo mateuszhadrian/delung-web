@@ -1,9 +1,10 @@
 # Runda poprawek nr 3 (po rundzie 2, przed Etapem 7)
 
-Status: **W TOKU** (start 2026-08-04).
-Zakres wejściowy: jedno zgłoszenie Mateusza z testów na fizycznej maszynie
-(hero strony głównej w Firefoksie po pierwszym wejściu) + zapowiedziane dwa
-mniejsze zgłoszenia, które dołączą do tej samej rundy jako **D-T2+**.
+Status: **W TOKU** (start 2026-08-04; D-T1 zamknięte PR-em #36).
+Zakres: cztery zgłoszenia Mateusza z testów na fizycznej maszynie — jedno
+renderowania hero w Firefoksie (D-T1, zamknięte), jedno użytkowe na
+`/realizacje/` (D-T2) i dwa w scenie realizacji na stronie głównej
+(D-T3, D-T4 — oba korygują D-Q5 z poprzedniej rundy).
 Na koniec rundy — osobną decyzją i osobnym commitem — zacieśnienie budżetów
 LHCI do baseline'u po wyjściu Lenisa.
 
@@ -16,8 +17,9 @@ Numeracja decyzji: **D-T1 …** (T = trzecia runda poprawek).
 | #   | Zgłoszenie                                                                                                                                                  | Widok / środowisko          |
 | --- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------- |
 | 1   | Napis na hero jest „rozjechany": obok liter wypełnionych zdjęciem stoi ta sama nazwa jeszcze raz — biała, grubsza, przesunięta o kilka(naście) pikseli. Naprawia to dopiero odświeżenie strony albo lekka zmiana rozmiaru okna | `/`, desktop, **Firefox 153.0.1 (aarch64) na macOS**, pierwsze wejście na stronę |
-| 2   | (zapowiedziane, opis po zamknięciu #1)                                                                                                                        | —                           |
-| 3   | (zapowiedziane, opis po zamknięciu #1)                                                                                                                        | —                           |
+| 2   | Po zmianie kategorii lista zostaje przewinięta tam, gdzie była — a ma wrócić na swój początek, żeby pierwsza realizacja z wybranej kategorii była widoczna u góry listy | `/realizacje/`              |
+| 3   | Opis nad przyciskiem „Więcej" przycina się na niektórych rozmiarach ekranu                                                                                    | `/`, scena realizacji, desktop |
+| 4   | Na niektórych wysokościach okna nie ma żadnego odstępu między „Więcej" a przyciskiem „Przeglądaj nasze realizacje"; odstęp ma być zawsze, choćby minimalny, i ma przepychać opis do góry | `/`, scena realizacji, desktop |
 
 Materiał dowodowy: dwa zrzuty ekranu (stan zepsuty — „Garderobyy" z dwiema
 warstwami liter; stan poprawny po odświeżeniu).
@@ -130,6 +132,63 @@ narzędzie. Analogicznie zamrożenie samych klatek potrafi wygenerować
 własne artefakty — ostateczna weryfikacja poprawki idzie **na żywej
 stronie, bez żadnych wstrzyknięć**.
 
+### 2.6. Zmiana filtru na `/realizacje/` — pomiar
+
+Scenariusz Mateusza odtworzony: zjazd na ~60 % strony, klik w kategorię.
+Po przefiltrowaniu pierwszy widoczny kafel ma górną krawędź:
+
+| Profil        | scroll przed | scroll po | górna krawędź 1. kafla | wysokość szyny |
+| ------------- | ------------ | --------- | ---------------------- | -------------- |
+| 393×727       | 2394         | 1879      | **−1467 px**           | 40 px (sticky pod `--hdr-h` 105) |
+| 1366×768      | 1348         |  901      | **−700 px**            | 145 px (sticky kolumna boczna, `--hdr-h` 87) |
+
+Pozycja scrolla drgnęła sama (dokument po odfiltrowaniu jest krótszy), ale
+początek listy zostaje daleko nad ekranem. Filtr działa — tylko nie widać
+jego wyniku.
+
+### 2.7. Przycinanie opisu — to problem SZEROKOŚCI, nie wysokości
+
+Przemiat 9 szerokości × 6 wysokości, przejścia wyłączone, dla każdego
+z trzech wpisów (liczba: uciętych pikseli opisu / odstęp „Więcej" → CTA):
+
+| wys \ szer | 1024   | 1152    | 1280   | 1366  | 1440  | 1600  | 1920  |
+| ---------- | ------ | ------- | ------ | ----- | ----- | ----- | ----- |
+| 900        | 4/307  | **10**/280 | 3/231 | 0/195 | 0/166 | 0/166 | 0/212 |
+| 800        | 4/207  | **10**/180 | 3/131 | 0/95  | 0/66  | 0/66  | 0/112 |
+| 720        | 4/127  | **10**/100 | 3/65  | 0/40  | 0/20  | 0/20  | 0/66  |
+| 640        | 4/82   | **10**/65  | 3/31  | 0/10  | 0/9   | 0/9   | 0/55  |
+| 560        | 4/32   | **10**/16  | 3/**0** | 0/3 | 0/7   | 0/8   | 0/54  |
+
+Rozstrzygające jest to, że **przycięcie nie zależy od wysokości okna** —
+przy 1152 px szerokości ucina 10 px zarówno wtedy, gdy pod opisem zostaje
+280 px wolnego miejsca, jak i wtedy, gdy zostaje 16 px. Czyli to nie jest
+kurczenie się kolumny z D-Q5; to pudełko opisu jest po prostu za niskie.
+
+Powód w kodzie: `.re-txts` ma wysokość **zgadywaną z szerokości okna**
+(`flex: 0 1 clamp(240px, 20.1vw, 290px)`), a liczba linii, na które łamie
+się opis, wcale nie zmienia się proporcjonalnie do `vw`. Zmierzone:
+
+| Szerokość | pudełko (`20.1vw`) | ile potrzebuje najwyższa karta | brakuje |
+| --------- | ------------------ | ------------------------------ | ------- |
+| 1920      | 290                | 234                            | −56 (zapas) |
+| 1440      | 289                | 280                            | −9 (zapas) |
+| 1366      | 275                | 271                            | −4 (zapas) |
+| 1280      | 257                | 260                            | **3**   |
+| 1152      | 240 (podłoga)      | 250                            | **10**  |
+| 1024      | 240 (podłoga)      | 244                            | **4**   |
+
+10 px przy `line-height` ≈ 25 px to ucięta połowa ostatniego wiersza —
+dokładnie to, co widać. Opisy idą z CMS-a, więc każda liczba wpisana tu
+ręcznie zestarzeje się przy pierwszym dłuższym opisie.
+
+### 2.8. Brak odstępu „Więcej" → CTA
+
+Z tej samej tabeli: odstęp dochodzi do **0 px** przy 1280×560 i jest już
+tylko kilkupikselowy przy 1366×560 (3 px) i 1440×560 (7 px). Formalnie
+gwarancja D-Q5 („przycisk nigdy nie zasłania treści") jest spełniona —
+najgorszy przypadek to styk, 0 px. Ale styk wygląda jak błąd i tak też
+został zgłoszony. Brakuje **dolnej granicy** odstępu.
+
 ---
 
 ## 3. Decyzje
@@ -186,6 +245,92 @@ zarówno na klatce pierwszej, jak i na dalszych.
   wariantem awaryjnym**, gdyby bramka okazała się niewystarczająca na
   fizycznym Firefoksie Mateusza.
 
+### D-T2. Zmiana filtru wraca na początek listy
+
+`applyFilter()` po zmianie kategorii **przez użytkownika** przewija stronę
+tak, żeby pierwszy kafel wybranej kategorii stanął tuż pod przyklejonym
+chromem: `--hdr-h` + wysokość szyny (mobile, gdzie szyna klei się nad
+listą — D-Q4) albo samo `--hdr-h` (desktop, gdzie szyna jest kolumną
+boczną), plus 12 px oddechu.
+
+Trzy rozstrzygnięcia, każde z powodem:
+
+- **tylko w górę.** Przewijamy WYŁĄCZNIE wtedy, gdy użytkownik jest już
+  poniżej początku listy. Kto filtruje stojąc na nagłówku strony, nie
+  zostanie nagle zepchnięty w dół — a zgłoszenie dotyczy sytuacji
+  odwrotnej („niech wróci na górę listy").
+- **nie na wejściu.** Deep-link `#<slug>` (D-R2) woła tę samą funkcję przy
+  starcie strony; tam przewijanie jest niepożądane (użytkownik ma zobaczyć
+  stronę od góry). Dlatego skok dostaje osobny argument i wchodzi tylko
+  przy kliku w szynę oraz przy „Zobacz więcej z kategorii X" w detalu.
+- **płynnie, chyba że reduce.** `behavior: "smooth"` przy
+  `prefers-reduced-motion: no-preference`, inaczej skok. Scroll jest
+  natywny (D-Q1) — nie wraca tu żaden wygładzacz.
+
+### D-T3. Pudełko opisu bierze wysokość z treści, nie z `20.1vw` — KOREKTA D-Q5
+
+Znika liczba, która była źródłem przycięcia. `.re-txts` przestaje mieć
+`flex-basis` liczony z szerokości okna i dostaje wysokość **najwyższej
+z trzech kart**. Żeby to było możliwe, trzy karty przestają leżeć na sobie
+przez `position: absolute; inset: 0`, a zaczynają dzielić **tę samą komórkę
+siatki** (`display: grid` na pudełku, `grid-area: 1/1` na kartach) — układ
+na ekranie jest identyczny (nadal jedna na drugiej, przełączane
+`opacity`), ale pudełko wie, ile miejsca naprawdę potrzebuje.
+
+Konsekwencja dla mechanizmu skalowania z D-Q5: jednostki `cqh` liczyły się
+dotąd od wysokości `.re-txts`, a ta po zmianie nie kurczy się już razem
+z oknem (jest równa treści). **Kontener zapytań przenosi się na `.re-in`**
+— kolumnę, której wysokość jest twardo wyznaczona przez wiersz `1fr`
+sceny, czyli realnie maleje przy niskim oknie. Współczynniki przeliczam
+tak, żeby przy 1920×1080 i 1366×768 `min()` dalej wybierał wartość
+dotychczasową **co do piksela** (kontrola: `font-size` h3 i opisu ma
+zostać 40px/16.5px oraz 37.9748px/15.709px).
+
+`overflow: hidden` na akapicie **zostaje**, ale zmienia rolę: przestaje
+być stanem roboczym przy 1152 px szerokości, a staje się ostatnim
+zaworem, który odpala się dopiero wtedy, gdy kolumna naprawdę nie ma już
+miejsca (po wyczerpaniu rozpórki i ramp skalowania). Gwarancja z D-Q5
+(„treść nigdy nie wychodzi na przycisk") zostaje nietknięta — zmienia się
+tylko to, że zawór nie jest wyzwalany bez powodu.
+
+**Pułapka, którą odsłonił dopiero pomiar po implementacji.** Przeniesienie
+kontenera zapytań na kolumnę zmienia charakter ramp: dotąd budziły się
+REAKTYWNIE (pudełko kurczyło się dopiero pod naciskiem kolumny), a od teraz
+reagują wprost na wysokość okna, czyli **proaktywnie**. Skutek uboczny
+w pierwszej wersji: przy 1366×560 tytuł schodził do 30,7 px, choć rozpórka
+miała jeszcze 68 px zapasu — czyli dokładnie odwrotnie, niż ustala D-Q5
+(„najpierw odstęp, potem skalowanie"). Złapał to test kolejności kurczenia
+z poprzedniej rundy.
+
+Rozwiązanie: **rozpórka też dostaje rampę**, przesuniętą tak, żeby zeszła do
+podłogi 12 px, zanim ruszą rampy treści
+(`flex-basis: min(clamp(40px, 5vw, 72px), max(12px, calc(100cqh - 380px)))`).
+Kolejność z D-Q5 jest znowu zadeklarowana w CSS, tylko obiema rampami zamiast
+mechaniką flexa. Zmierzone po dostrojeniu (1366 px szerokości): przy 640 px
+rozpórka 68 → 16 px, fonty **nietknięte**; przy 560 px rozpórka na podłodze
+12 px i dopiero wtedy tytuł 37,97 → 33,8 px.
+
+**KOREKTA D-Q5**: „blok opisu ma sztywną wysokość, bo jego dzieci są
+ułożone jedno na drugim" przestaje obowiązywać. Ta sztywna wysokość była
+zgadywana z `vw` i to ona ucinała opis; strukturalna gwarancja z D-Q5
+opiera się na wierszu siatki dla przycisku, a nie na tej liczbie, więc
+zostaje w mocy.
+
+### D-T4. Dolna granica odstępu „Więcej" → CTA
+
+`.re-pin` dostaje `row-gap: clamp(16px, 2.2vh, 28px)` — czyli wiersz
+przycisku jest **oddzielony od kolumny tekstu odstępem, którego nie da się
+skonsumować**. Mechanicznie działa dokładnie tak, jak Mateusz opisał:
+odstęp zabiera wysokość wierszowi `1fr`, więc kolumna tekstu ma mniej
+miejsca i jej zawartość jedzie do góry (najpierw rozpórka z D-Q5, potem
+rampy skalowania). Przy wysokich oknach nic się nie rusza, bo kolumna ma
+tam kilkaset pikseli zapasu pod tekstem.
+
+Wartość: 16 px podłogi (widoczna szpara przy skrajnie niskim oknie),
+2,2vh w środku pasma, 28 px sufitu — sufit nie ma znaczenia wizualnego
+(przy wysokim oknie odstęp i tak liczy się w setkach pikseli), pilnuje
+tylko, żeby przy bardzo wysokim oknie nie zjadać kolumny bez potrzeby.
+
 ---
 
 ## 4. Implementacja — pliki
@@ -199,7 +344,22 @@ zarówno na klatce pierwszej, jak i na dalszych.
 | `docs/analiza-strona-glowna.md` | dopisek o bramce fontu przy hero desktop |
 | `docs/analiza-poprawki-3.md`, `docs/README.md` | ten dokument + wpis w indeksie |
 
-Skrypt siedzi w komponencie hero, a nie w `Home.astro`: stoi w markupie
+**PR B — D-T2**
+
+| Plik | Zmiana |
+| ---- | ------ |
+| `src/components/WorkIndexPage.astro` | `applyFilter(slug, odUzytkownika)` + skok na początek listy (offset z `--hdr-h` i wysokości szyny poniżej progu desktop); wywołania z szyny i z detalu przekazują `true`, deep-link na wejściu `false` |
+| `tests/e2e/work-index.spec.ts` | asercje skoku (mobile + desktop) i braku skoku na wejściu z deep-linkiem |
+
+**PR C — D-T3 + D-T4**
+
+| Plik | Zmiana |
+| ---- | ------ |
+| `src/components/sections/home/HomeRealizacje.astro` | `.re-txts` na siatkę z kartami w jednej komórce i wysokością z treści; `container-type: size` przeniesiony na `.re-in` + przeliczone współczynniki `cqh`; `row-gap` na `.re-pin` |
+| `tests/e2e/index.spec.ts` | asercje: zero przycięcia opisu w paśmie roboczym, odstęp zawsze ≥ podłogi, niezmienione rozmiary fontów przy 1920×1080 i 1366×768 |
+| `docs/analiza-strona-glowna.md` | dopisek KOREKTA D-Q5 |
+
+Skrypt bramki hero siedzi w komponencie hero, a nie w `Home.astro`: stoi w markupie
 przed `.hero-d`, więc klasa jest na miejscu przed pierwszym paintem, a cała
 wiedza o bramce (skrypt + reguła + lista znaków) zostaje w jednym pliku.
 Kolejność wykonania jest tu istotna dwa razy: skrypt musi zdążyć przed
@@ -243,11 +403,46 @@ przywrócona z kopii.
 - `a11y.spec.ts` — bez zmian (allowlista zostaje pusta; napisy hero to
   dekoracja, `h1` jest sr-only i bramki nie dotyczy).
 
+**PR B (D-T2)** — `tests/e2e/work-index.spec.ts`, mobile i desktop:
+
+1. po zmianie kategorii ze zjazdu w dół pierwszy widoczny kafel stoi
+   `--hdr-h` + szyna (mobile) + 12 px od góry, z tolerancją 2 px;
+2. filtrowanie ze szczytu strony **nie** przewija (skaczemy tylko w górę);
+3. wejście z deep-linkiem `#<slug>` zostawia stronę na górze.
+
+**PR C (D-T3 + D-T4)** — `tests/e2e/index.spec.ts`:
+
+1. przemiat szerokości **1024 / 1152 / 1280** / 1366 / 1440 / 1920 × trzy
+   wysokości: zero uciętych pikseli opisu dla KAŻDEGO z trzech wpisów.
+   Przemiat jest konieczny, bo bug żył na szerokościach, których nie ma
+   w profilach testowych (1920 i 1366 były czyste);
+2. rampy skalowania śpią przy 1920×1080 i 1366×768 — rozmiar fontu równa
+   się czystemu `clamp()` bez członu `cqh` (ta sama arytmetyka w każdym
+   silniku, więc asercja nie jest wpisaną na sztywno liczbą);
+3. odstęp „Więcej" → CTA ≥ 16 px na całej rampie wysokości (dopisane do
+   istniejącego testu z D-Q5);
+4. kolejność kurczenia z D-Q5 przeliczona na udziały (pudełko opisu ma
+   teraz wysokość treści, więc maleje razem ze skalowaniem fontów).
+
+**Weryfikacja, że testy łapią regresję** (wykonana dla obu PR-ów): po
+`git checkout HEAD -- <pliki>` i przebudowie czerwone są dokładnie
+te asercje, które mają być — przycinanie przy 1024/1152/1280, oba testy
+skoku listy (mobile i desktop) oraz odstęp na profilu chromium-1366 (pięć
+wysokości). Kod przywrócony z kopii.
+
+Stan po poprawkach (pomiar, 9 szerokości × 6 wysokości × 3 wpisy):
+**zero przycięcia** w całym paśmie i odstęp nigdy poniżej 31 px. Test
+odporności na dłuższe opisy z CMS-a (opis 2× dłuższy niż dzisiejsze):
+odstęp dalej zawsze ≥ 16 px, a zawór przycinania otwiera się dopiero przy
+oknach ≤ 640 px — czyli działa jak zawór, a nie jak stan roboczy.
+
 ## 6. Rachunek baseline'ów
 
 | PR  | Co zmienia się wizualnie | Pliki do regeneracji |
 | --- | ------------------------ | -------------------- |
 | A   | nic w stanie ustalonym — zmienia się wyłącznie to, co widać przez pierwsze ~60–90 ms zimnego wejścia | **0** |
+| B   | nic — zmienia się pozycja scrolla po kliku, nie wygląd | **0** |
+| C   | **potwierdzone zrzutami: nic** — `pnpm test:visual` (203 zrzuty, 6 profili) zielony bez jednej regeneracji. Teza z planu się obroniła.<br />Było: **cel: nic** na profilach testowych. Pudełko opisu zmienia wysokość (1920: 290 → 234 px), ale treść karty jest wyrównana do GÓRY i pod pudełkiem nie ma nic w potoku (pasek postępu jest absolutny), więc żaden piksel nie powinien drgnąć. Podobnie `row-gap`: przy 1080 i 768 kolumna ma pod tekstem setki pikseli zapasu. **To jest teza do sprawdzenia zrzutami, nie pewnik** — profile testowe (1920×1080, 1366×768) leżą w paśmie, gdzie oba mechanizmy śpią | **0** (a jeśli nie: `index-realizacje*` × 3 profile desktop × 2 platformy) |
 
 Każdy ewentualny diff pokazuję **obrazkiem** przed jakąkolwiek
 regeneracją. Święta kolejność bez zmian: kod → workflow „Update linux
@@ -256,11 +451,15 @@ visual baselines" z brancha PR-a → `git pull` → lokalne
 
 ## 7. Podział na PR-y
 
-1. **PR A — `fix/hero-font-swap-firefox`** (D-T1): bramka + testy + dopiski
-   w dokumentacji. Razem z nim jedzie osobny commit dokumentacyjny
-   (ten plik + wpis w `docs/README.md`).
-2. **PR B, C — zgłoszenia #2 i #3** (D-T2+), po opisie od Mateusza.
-3. **PR ostatni — budżety LHCI**: osobny commit, liczby z zielonego
+1. **PR A — `fix/hero-font-swap-firefox`** (D-T1): **ZMERGOWANY** (PR #36),
+   potwierdzony przez Mateusza na fizycznym Firefoksie; `prod-smoke`
+   zielony.
+2. **PR B — `fix/realizacje-scroll-po-filtrze`** (D-T2): jedna zmiana
+   w skrypcie strony, zero ryzyka wizualnego — idzie pierwszy.
+3. **PR C — `fix/home-realizacje-opis`** (D-T3 + D-T4): obie poprawki
+   dotyczą tej samej kolumny sceny i tych samych liczb, więc rozdzielanie
+   ich dałoby dwa razy tę samą weryfikację zrzutami. Wchodzi po B.
+4. **PR ostatni — budżety LHCI**: osobny commit, liczby z zielonego
    przebiegu `lighthouse` na `main` (po wyjściu Lenisa skryptów ubyło
    ~5,3 kB gz — liczby biorę z CI, nie z lokalnego builda). Uwaga:
    `total` ma najciaśniejszy zapas (~9 % na mobile).
@@ -305,7 +504,9 @@ starcie.
 
 ## 10. Rozstrzygnięcia
 
-1. **Środowisko zgłoszenia**: Firefox 153.0.1 (aarch64) na macOS.
+0. **Kolejność**: D-T1 zamknięte i potwierdzone; D-T2 → D-T4 idą teraz,
+   budżety LHCI na koniec rundy.
+1. **Środowisko zgłoszenia D-T1**: Firefox 153.0.1 (aarch64) na macOS.
 2. **Zasięg objawu**: wszystkie cztery napisy naraz — mój pierwszy model
    („tylko ta nazwa, która była na ekranie w chwili podmiany") był
    błędny, korekta w §2.3.

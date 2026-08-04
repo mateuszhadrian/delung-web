@@ -144,6 +144,17 @@ wyrównanie do 1024 to plan części 4.4 (razem z `/realizacje/`); między
 zachowaniem podstrony i nie ma pokrycia profilem testowym. Świadome
 odroczenie, nie przeoczenie.
 
+**KOREKTA D-Q5 (D-T3/D-T4, runda poprawek 3 — `docs/analiza-poprawki-3.md`)**:
+blok opisu w scenie przypiętej przestał mieć wysokość zgadywaną z szerokości
+okna (`clamp(240px, 20.1vw, 290px)`) — bierze ją z najwyższej z trzech kart,
+bo tamta liczba ucinała opis o pół wiersza przy 1024–1280 px NIEZALEŻNIE od
+wysokości okna. Karty leżą na sobie w jednej komórce siatki zamiast przez
+`position: absolute`, kontener zapytań (`cqh`) przeniósł się z pudełka na
+kolumnę `.re-in`, a rozpórka odstępu dostała własną rampę, żeby kolejność
+kurczenia z D-Q5 (najpierw odstęp, potem skalowanie treści) została
+zachowana. Dodatkowo `.re-pin` ma `row-gap`, czyli odstęp „Więcej" → CTA
+ma teraz dolną granicę — wcześniej przy 1280×560 schodził do zera.
+
 ### D-SG7. O nas + opinie: port z korektami kontrastu (pusta allowlista axe)
 
 `abt` 1:1 (zdjęcie `adam-hero` tylko mobile; desktop cytat słowo po
