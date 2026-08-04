@@ -354,6 +354,41 @@ treść/sekcje budowane od nowa wg `docs/design/`).
   (było: od ~730 px wysokości okna, do −214 px przy 520). Link „Więcej"
   w karcie otwiera detal zamiast nawigować i przestał być zasłaniany przez
   nieaktywne karty (D-Q6, `pointer-events`). Budżety LHCI NIETKNIĘTE.
+- **Runda poprawek nr 3 (po Etapie 6) — WYKONANA** (2026-08-04, PR #36 hero
+  w Firefoksie, #37 powrót na początek listy realizacji, #38 opis i odstęp
+  w scenie realizacji, #39 budżety LHCI + domknięcie; decyzje D-T1–D-T4:
+  `docs/analiza-poprawki-3.md` — czytać RAZEM z analizami widoków, bo
+  koryguje D-Q5): **typografia SVG hero nie renderuje się, dopóki Archivo
+  nie jest realnie wczytany** (D-T1) — Gecko po podmianie kroju NIE
+  unieważnia rastra napisów, więc biała kopia `<use>` i kopia przycięta
+  maską zostawały narysowane różnymi krojami (Firefox 153, pierwsze wejście;
+  naprawiało to dopiero odświeżenie albo zmiana rozmiaru okna). Bramka to
+  skrypt `is:inline` PRZED markupem hero + reguła chowająca `.hero-d svg`
+  (warstwa jest `position:absolute` — zero CLS), zdejmowana po **jawnym
+  `document.fonts.load`**; `document.fonts.ready` jest tu sygnałem
+  FAŁSZYWYM (przy preloadowanych fontach rozstrzyga się, zanim wystartuje
+  pobranie w rozumieniu Font Loading API), a jednorazowe przemalowanie po
+  podmianie NIE działa przy żywej animacji `pan` — oba warianty zmierzone.
+  Twardy timeout 2500 ms siedzi w tym samym skrypcie (awaria JS/fontu nie
+  kasuje napisów). `/realizacje/`: zmiana kategorii **wraca na początek
+  listy** (D-T2) — pierwszy kafel 12 px pod przyklejonym chromem (`--hdr-h`
+  - szyna poniżej progu desktop), skok TYLKO w górę i NIE przy deep-linku
+    `#<slug>` na wejściu. Scena realizacji na `/` (KOREKTA D-Q5): pudełko
+    opisu bierze wysokość z najwyższej z trzech kart (dzielą komórkę siatki)
+    zamiast zgadywać ją z `20.1vw` — tamta liczba ucinała pół wiersza opisu
+    przy 1024–1280 px NIEZALEŻNIE od wysokości okna (D-T3); kontener zapytań
+    `cqh` przeniesiony z pudełka na kolumnę `.re-in`, a rozpórka dostała
+    własną rampę, bo przeniesienie kontenera zmieniło rampy z reaktywnych na
+    proaktywne i odwróciło kolejność kurczenia z D-Q5; `.re-pin` ma `row-gap`,
+    czyli odstęp „Więcej" → CTA ma dolną granicę 16 px (było: 0 przy
+    1280×560) i przepycha opis do góry (D-T4). Zero nowych baseline'ów
+    w całej rundzie. **Budżety LHCI zacieśnione** (osobny commit, decyzja
+    Mateusza; liczby z dwóch zielonych przebiegów na main): script 30 000 →
+    **20 000** B (zmierzone 13 659 B co do bajta — widać wyjście Lenisa),
+    total mobile 900 000 → **860 000** / desktop 1 650 000 → **1 580 000**,
+    desktop LCP 1800 → **1700** ms, mobile CLS 0,02 → **0,015**. NIETKNIĘTE
+    zostają mobilne LCP 5200, oba `perf`, oba TBT i desktopowy CLS — stoją na
+    metrykach z udokumentowanym szumem runnera.
 - Etap 7 — przed nami (umowa → przekazanie).
 
 ## Mapa projektu

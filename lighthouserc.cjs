@@ -75,22 +75,32 @@ module.exports = {
         // Baseline 0 ms — próg-podłoga 150 ms (pojedyncze ms to szum
         // runnera; realna regresja JS i tak go przebije).
         "total-blocking-time": ["error", { maxNumericValue: 150 }],
-        // Baseline 0 — 0.02 zostawia miejsce na fonty/obrazy sekcji,
-        // wciąż daleko od progu „needs improvement" (0.1).
-        "cumulative-layout-shift": ["error", { maxNumericValue: 0.02 }],
+        // 0.02 → 0.015 (runda poprawek 3): zmierzone 0.0117 w DWÓCH kolejnych
+        // przebiegach na main (runy 30909810628 i 30911240907) — co do
+        // czwartego miejsca po przecinku ta sama wartość, więc to nie jest
+        // metryka szumiąca jak LCP. 0.015 = +28 % nad pomiarem, wciąż daleko
+        // od progu „needs improvement" (0.1).
+        "cumulative-layout-shift": ["error", { maxNumericValue: 0.015 }],
         // 80 000 → 30 000 (Etap 6): próg pamiętał czasy GSAP-a. Po jego
         // wyjściu (Etap 5) bundle to 19 053 B i tyle samo pokazuje KAŻDY
         // przebieg CI — bajty są deterministyczne, więc ten próg jest
         // czystym sygnałem regresji, bez udziału szumu maszyny.
-        // 30 000 = +57 % zapasu na przyrost funkcji.
+        // 30 000 → 20 000 (runda poprawek 3): próg pamiętał pomiar sprzed
+        // wyjścia Lenisa (19 053 B). Po nim bundle to 13 659 B i tyle samo
+        // pokazał KAŻDY z dwóch przebiegów na main — co do bajta. 20 000 =
+        // +46 % zapasu na przyrost funkcji.
         // UWAGA: beacon Cloudflare Web Analytics (11,4 kB) NIE liczy się do
         // tego budżetu — Cloudflare wstrzykuje go na krawędzi, a LHCI mierzy
         // lokalny dist/. Koszt beaconu zmierzony osobno na produkcji
         // (docs/analiza-etap-6.md §6): +359 B w dokumencie, LCP bez zmian.
-        "resource-summary:script:size": ["error", { maxNumericValue: 30000 }],
-        // 1 200 000 → 900 000 (Etap 6): zmierzone w CI 816 437–816 496 B
-        // (rozrzut 59 B). 900 kB = +10 % nad najgorszą próbką.
-        "resource-summary:total:size": ["error", { maxNumericValue: 900000 }],
+        "resource-summary:script:size": ["error", { maxNumericValue: 20000 }],
+        // 900 000 → 860 000 (runda poprawek 3): zmierzone w CI 811 389
+        // i 811 410 B (rozrzut 21 B — masę robią kadry hero, pozycja stała
+        // i nieczuła na szum runnera). 860 kB = +6 % nad najgorszą próbką.
+        // Zapas jest tu NAJCIAŚNIEJSZY z całego zestawu: jedno nowe zdjęcie
+        // sekcji potrafi go zjeść, więc przy dokładaniu grafiki na `/`
+        // najpierw policz transfer, a próg zmieniaj osobną decyzją.
+        "resource-summary:total:size": ["error", { maxNumericValue: 860000 }],
         // 5 → 6 (4.2): doszły subsety italic Cormoranta (cytat o-nas).
         "resource-summary:font:count": ["warn", { maxNumericValue: 6 }],
       },
