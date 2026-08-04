@@ -1,15 +1,17 @@
 # Runda poprawek nr 2 (po Etapie 6, przed Etapem 7)
 
-Status: **plan do akceptacji** (data: 2026-08-03).
-Zakres: 4 zgłoszenia Mateusza z testów na fizycznych urządzeniach — dwa
+Status: **WYKONANE** (2026-08-04; PR #29, #30, #31, #32, #33).
+Zakres: 6 zgłoszeń Mateusza z testów na fizycznych urządzeniach — dwa
 wydajnościowo-geometryczne (Safari na macOS, hero mobile w przeglądarkach
-iOS spoza Safari/Chrome), jedno treściowe (link do opinii Google) i jedno
-strukturalne (`/realizacje/`). Zgłoszenia dotykają trzech różnych widoków,
-więc — jak w rundzie poprzedniej (`analiza-poprawki-wizualne.md`) — trafiają
-do wspólnego dokumentu, a decyzje korygujące wcześniejsze ustalenia są
-opisane jako **KOREKTA D-…** i dublowane dopiskiem w analizie widoku.
+iOS spoza Safari/Chrome), jedno treściowe (link do opinii Google), jedno
+strukturalne (`/realizacje/`) oraz dwa dorzucone w trakcie rundy po testach
+na maszynie z Windows (scena realizacji przy niskim oknie, link „Więcej"
+w tej scenie). Zgłoszenia dotykają czterech widoków, więc — jak w rundzie
+poprzedniej (`analiza-poprawki-wizualne.md`) — trafiają do wspólnego
+dokumentu, a decyzje korygujące wcześniejsze ustalenia są opisane jako
+**KOREKTA D-…** i dublowane dopiskiem w analizie widoku.
 
-Numeracja decyzji: **D-Q1 … D-Q4** (Q = druga runda poprawek).
+Numeracja decyzji: **D-Q1 … D-Q6** (Q = druga runda poprawek).
 
 ---
 
