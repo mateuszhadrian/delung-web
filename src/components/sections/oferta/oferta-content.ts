@@ -14,7 +14,7 @@
 // oferta-images.ts (konsumują komponenty .astro).
 import type { CategorySlug } from "@/lib/categories";
 
-export interface OfertaSpec {
+interface OfertaSpec {
   /** Etykieta specyfikacji (WERSALIKI z eksportu). */
   readonly label: string;
   readonly text: string;

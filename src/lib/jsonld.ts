@@ -57,7 +57,7 @@ export const BUSINESS = {
  *  kafel „24/7" na /kontakt/ mówi o telefonie i to dwie różne rzeczy.
  *  Niedziela nieobecna = zamknięte (schema.org czyta brak wpisu tak samo
  *  jak jawne zero godzin, a wpis 00:00–00:00 bywa raportowany jako błąd). */
-export const OPENING_HOURS = [
+const OPENING_HOURS = [
   {
     days: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
     opens: "07:00",

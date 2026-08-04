@@ -1,8 +1,9 @@
 # Analiza refaktoru (po rundzie poprawek 3, przed Etapem 7)
 
-Status: **DO AKCEPTACJI** (2026-08-04). Zakres: audyt całego kodu przed
+Status: **W REALIZACJI** (2026-08-04). Zakres: audyt całego kodu przed
 przekazaniem klientowi — bez zmiany zachowania i bez zmiany wyglądu.
-Numeracja decyzji: **R1 … R21** (R = refactor).
+Numeracja decyzji: **R1 … R15** (R = refactor) + przegląd komentarzy
+7A/7B/7C. Wykonanie i pomiary — §13.
 
 Ten dokument jest **samowystarczalny**: da się go wykonać w świeżej sesji
 bez dostępu do rozmowy, w której powstał. Każde znalezisko niesie plik,
@@ -755,12 +756,81 @@ na `quality` + `e2e` + `lighthouse`; po merge'u `prod-smoke` zielony;
 `CLAUDE.md` (stan projektu + numery PR-ów) i `docs/README.md`
 zaktualizowane.
 
-## 12. Do rozstrzygnięcia przez Mateusza
+## 12. Rozstrzygnięcia Mateusza (2026-08-04)
 
-1. **R14 — droga (A) czy (B)?** Naprawić same komentarze, czy dołożyć
-   realne asercje progu dla `work`/`oferta`/`home`? (rekomendacja: B dla
-   tych trzech, A dla reszty).
-2. **Zakres serii.** Tylko A+B+C (zero ryzyka wizualnego), czy pełne A–F?
-3. **R4 (kickery)** — wchodzi wariant tokenowy, czy zostawiamy 12 kopii?
-4. **R12** — czy `back-link.ts` ma dalej ładować się na każdej stronie,
-   skoro mechanizm jest uśpiony? (to zmiana zachowania — osobna decyzja).
+1. **R14 — droga (B) dla `work`/`oferta`/`home`, (A) dla reszty.** PR B
+   naprawia komentarze wszystkich siedmiu configów, PR C dokłada realne
+   asercje progu tam, gdzie układ po obu stronach 1024 px różni się
+   naprawdę.
+2. **Zakres serii: A + B + C.** D/E/F (MotionGate, wspólny moduł ruchu,
+   wydzielenie sheeta z Navbara) **odłożone** — to one niosą ryzyko
+   wizualne i to one mogą kosztować rundę diagnostyki przed Etapem 7.
+3. **R4 (kickery): zostają 12 kopii.** Wariant tokenowy dotyka 12 bloków
+   `<style>` w komponentach, a `font` shorthand resetuje właściwości,
+   których długa forma nie ruszała — to zmiana o profilu ryzyka D/E/F,
+   więc niespójne byłoby wpuszczać ją przy odłożonym D/E/F.
+4. **R12: `back-link.ts` bez zmian**, wyłącznie dopisek statusu w pliku.
+   Warunkowe ładowanie zostaje na liście §8 jako zmiana zachowania.
+   Zmierzony koszt uśpionego mechanizmu (PR A): **307 B na stronę**,
+   wstrzyknięte inline w HTML (nie osobny chunk, **zero dodatkowych
+   żądań**), 9 stron = 2 763 B nieskompresowane w całym `dist`.
+
+---
+
+## 13. Wykonanie — co weszło i co się zmierzyło
+
+### PR A — `refactor/martwy-kod` (R9 + R10 + R11 + R12)
+
+**Weszło:** 13 plików, +22 / −162 linie.
+
+- **R9** — skasowane `--accent-gradient`, `--accent-gold-rgb`,
+  `--section-gap` z `global.css` wraz z komentarzem opisującym mechanizm
+  odstępów, którego nie ma. Sprawdzone po buildzie: żaden z trzech
+  tokenów nie występuje już w `dist/`. `--line` i `--accent-gold`
+  zostają (jedyny konsument: `BackButton.astro`).
+- **R10** — skasowane `snappedSectionSweep` (61 linii), `sectionAnchors`
+  (31), `MOBILE_POINTS` i `heroScrollRange`; razem ~130 linii helperów
+  opisujących sekcje `about`/`audience` i trasę `/dla-kogo/`, których
+  w delung nigdy nie było. Po kasacji `tests/helpers/visual.ts` traci
+  importy `expect`, `scrollPageToStable` i `settle` — zostają w
+  `scroll.ts`, gdzie mają realnych konsumentów (`tests/visual/{index,
+  o-nas,proces}.spec.ts`).
+- **R11** — zdjęty `export` z `OFERTA_IMAGES`, `EMAIL_MAX`,
+  `OPENING_HOURS`, `FREEZE` oraz typów `OfertaSpec`, `WorkSpec`,
+  `WorkGalleryItem`, `ContactLang`. `assertPreview` i `settleImages`
+  **zostają wyeksportowane** zgodnie z zastrzeżeniem R11 (nazywa je po
+  imieniu `.claude/rules/testing.md` i `CLAUDE.md`).
+- **R12** — skasowane `getLangFromUrl` i `languages` (ścieżki `/en/`,
+  których nie ma i nie będzie — D2). `BackButton.astro` i `back-link.ts`
+  dostały linię statusu „NIEUŻYWANY/UŚPIONY ŚWIADOMIE (D-CH8) — nie
+  kasować bez decyzji"; informacja przeniosła się tam, gdzie potrzebuje
+  jej osoba czytająca kod.
+
+**KOREKTA R13 — `SWEEP_PROJECTS` jednak jest martwy.** Audyt zaliczył go
+do fałszywych trafień knipa („używany w `tests/visual/index.spec.ts`"),
+ale to trafienie w **komentarz** (`index.spec.ts:3` — „wzorzec
+SWEEP_PROJECTS"), nie w import. W całym repo poza definicją stała
+występowała wyłącznie w dwóch komentarzach i dwóch zdaniach w `docs/`;
+specy wizualne ograniczają profile inline (`test.skip(testInfo.project
+.name !== …)` / `useChromium1920Only`). Skasowana razem z resztą, a
+komentarz w `index.spec.ts` przepisany tak, żeby nie odsyłał do
+nieistniejącej stałej. Wniosek metodyczny: przy weryfikacji kandydatów
+knipa `grep` musi rozróżniać import od wzmianki w komentarzu.
+
+**Pomiary (build lokalny, `main` vs PR A):**
+
+| Wielkość | main | PR A |
+| --- | --- | --- |
+| JS w `dist/_astro` (21 chunków) | 35 494 B | **35 494 B — bajt w bajt, te same hashe nazw** |
+| `dist` łącznie | 6 584 kB | 6 584 kB |
+| Tokeny R9 w `dist` | 3 | **0** |
+
+Zerowa różnica w JS jest oczekiwana: skasowany kod nie miał konsumentów,
+więc tree-shaking usuwał go już wcześniej. Zysk jest w źródłach
+(−162 linie), nie w transferze — zgodnie z priorytetem §0.
+
+**Bramka lokalna:** `format:check`, `lint`, `typecheck` (0 błędów,
+0 ostrzeżeń, 2 hinty — oba sprzed tej zmiany), `test:unit` 67 passed /
+1 skipped, `test:e2e` **541 passed** / 467 skipped (6 profili),
+`test:visual` **203 passed** — **zero regeneracji baseline'ów**, zero
+nowych wpisów w allowliście axe.

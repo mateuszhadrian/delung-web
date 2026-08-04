@@ -15,7 +15,7 @@ export const CONTACT_FROM_CONFIRM = "Delung Meble <no-reply@send.delung.pl>";
 
 export const MIN_FILL_MS = 4000;
 export const NAME_MAX = 100;
-export const EMAIL_MAX = 254;
+const EMAIL_MAX = 254;
 export const PHONE_MAX = 40;
 export const MESSAGE_MIN = 10;
 export const MESSAGE_MAX = 5000;
@@ -36,7 +36,7 @@ export const TOPICS = [
 
 // PL-only (decyzja #2 delung) — pole lang zostaje w kontrakcie multipart,
 // ale jedyną wartością jest "pl".
-export type ContactLang = "pl";
+type ContactLang = "pl";
 
 /** Surowe pola z multipart/form-data (zawsze stringi, mogą być puste). */
 export interface ContactRaw {

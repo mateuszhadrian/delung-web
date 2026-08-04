@@ -3,10 +3,6 @@
 // Widoki portowane w Etapach 4–5 trzymają teksty INLINE w komponentach
 // (wzorzec sekcji home/oferta/work/proces/o-nas) — tutaj zostają wyłącznie
 // meta stron, których używają wrappery i testy.
-export const languages = {
-  pl: "Polski",
-} as const;
-
 export const defaultLang = "pl";
 
 export const ui = {
