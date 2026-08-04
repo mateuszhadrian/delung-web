@@ -834,3 +834,59 @@ więc tree-shaking usuwał go już wcześniej. Zysk jest w źródłach
 1 skipped, `test:e2e` **541 passed** / 467 skipped (6 profili),
 `test:visual` **203 passed** — **zero regeneracji baseline'ów**, zero
 nowych wpisów w allowliście axe.
+
+### PR B — `refactor/komentarze` (R14(A) + R15 + 7A + 7B)
+
+**Weszło:** 23 pliki, +78 / −75 linii. **Cały diff to komentarze** —
+sprawdzone maszynowo (`git diff` przefiltrowany z linii komentarza zwraca
+pusty zbiór); jedyny wyjątek to treść komunikatu błędu w helperze testów,
+który odsyłał do nieistniejącego mechanizmu snapa.
+
+- **R14(A)** — sześć configów przestaje deklarować ochronę testami,
+  której nie ma. Zamiast tego każdy wymienia **realnych** konsumentów
+  stałej (`home-scroll.ts` + `HomeHero.astro`; `kat-sheets.ts`;
+  `open-detail.ts` + `work-motion.ts` + `WorkIndexPage.astro`;
+  `onas-motion.ts`; skrypt Navbara). `contact-config.ts` **bez zmian** —
+  jego zdanie było prawdziwe (`tests/e2e/contact.spec.ts:16`).
+  `proces-config.ts` dostał jawne ostrzeżenie: stała nie ma ANI JEDNEGO
+  konsumenta, więc zmiana samej liczby nie zmienia niczego w wyniku —
+  próg trzeba poprawić w czterech `@media`. Po PR-ze C komentarze
+  `home`/`oferta`/`work` znów wymienią testy — tym razem zgodnie z prawdą.
+- **R15** — cztery pozycje z audytu przepisane w czasie przeszłym, plus
+  **sześć znalezionych przy okazji**: `BaseLayout.astro` („zweryfikujemy
+  pomiarem LHCI w Etapie 3"), `smoke.spec.ts`, `navigation.spec.ts` (2×),
+  `chrome.spec.ts` („baseline'y odświeżą się przy porcie widoków 4.2+").
+- **7A** — duchy skasowane. Poza listą audytu znalazły się trzy kolejne:
+  `?nosnap` i „okno snapa" w `scrollPageToStable` (w delung **nie ma
+  scroll-snapa na osi strony** — `scroll-snap-type` występuje wyłącznie
+  jako `x mandatory` na torach karuzel, sprawdzone `grep`-em), „Lenis
+  wyłączony" w `KategoriePage.astro` oraz **dwa w `overlay.ts`**: blokada
+  scrolla opisana jako „Lenis stop + body fixed" (Lenis wyszedł w D-Q1)
+  i konsumenci wskazani jako `Modal.astro`/`BottomSheet.astro` (oba
+  skasowane w 4.4). Plik jest w strefie no-go §2, więc poprawka objęła
+  **wyłącznie tekst komentarzy** — za zgodą Mateusza, po pokazaniu obu
+  cytatów. Wzmianki „BEZ GSAP" w `src/` zostają zgodnie z §7A.
+- **7B** — skrócone trzy narracje (wybór kroju w `global.css` 9 → 5 linii,
+  wyścig dekodowania zdjęć w `visual.ts` 9 → 7, śledztwo D-P6
+  w `opinie.ts` 10 → 7) z zachowaniem wniosku. `freeze.css` dostał
+  zdanie, którego tam brakowało, a które kosztowało czas w rundzie 3:
+  **ten arkusz nie zatrzymuje pętli rAF**, więc jeden zielony przebieg
+  nie jest dowodem przy zmianach w modułach ruchu (ryzyko §10.4 — teraz
+  ostrzega z pliku, nie tylko z dokumentu).
+
+**Pomiary:** JS w `dist/_astro` **bajt w bajt jak po PR A** (te same
+hashe), CSS 208 549 B bez zmian, `dist` 6 584 kB bez zmian. Komentarze
+nie wchodzą do bundle'a, więc inny wynik oznaczałby błąd.
+
+**Bramka lokalna:** `format:check`, `lint`, `typecheck`, `test:unit`
+67 passed, `test:e2e` **541 passed**, `test:visual` **203 passed** —
+zero regeneracji baseline'ów.
+
+**Flake do zapamiętania.** Pierwszy przebieg `test:e2e` na tym kodzie dał
+534 passed: trzy testy `kategorie.spec.ts` na `webkit-iphone-se` (karta
+kategorii — tap, X, swipe-down). Rozstrzygający jest czas: **14,8 min
+wobec 3,5 min** przy identycznych bajtach, czyli przeciążona maszyna,
+a nie regresja. Powtórka punktowa tych testów: 8 passed w 7,4 s;
+powtórka pełnego kompletu: 541 passed w 3,5 min. Wniosek na przyszłość —
+przy czerwonym przebiegu e2e **najpierw porównaj czas trwania z normą**,
+zanim zaczniesz szukać przyczyny w kodzie.
