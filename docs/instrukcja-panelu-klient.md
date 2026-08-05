@@ -112,9 +112,14 @@ wybierasz, **co to za pozycja**: **„Zdjęcie"** albo **„Film"**.
 > **Pierwsza pozycja galerii pokazuje się na liście realizacji** — to ją
 > ludzie zobaczą jako pierwszą. Daj tam najładniejsze, ogólne ujęcie.
 >
-> Z tego samego powodu **pierwsza pozycja nie może być filmem**. Jeśli
-> zaczniesz galerię od filmu, strona się nie zaktualizuje, a Mateusz dostanie
-> powiadomienie — wtedy wystarczy przesunąć film niżej.
+> Z tego samego powodu **pierwsza pozycja nie może być filmem**. Panel na to
+> pozwoli i powie, że zapisał — ale strona się nie zaktualizuje, a Mateusz
+> dostanie o tym powiadomienie. Naprawa zajmuje chwilę: przesuwasz film
+> niżej i zapisujesz jeszcze raz. **Nic nie ginie i nic się nie psuje** —
+> strona po prostu czeka z tą zmianą.
+
+> **Rodzaju pozycji nie da się zmienić po dodaniu.** Jeśli dodałeś „Zdjęcie",
+> a miał być „Film" — usuń tę pozycję i dodaj nową właściwego rodzaju.
 
 ![ZRZUT: sekcja „Galeria" z trzema dodanymi pozycjami, widoczne nazwy plików](media/cms-08-galeria.png)
 

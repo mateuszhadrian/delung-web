@@ -280,6 +280,13 @@ Konsekwencje, które musisz mieć w głowie:
 - **Nie da się mieć zdjęcia i filmu w jednej pozycji.** Rodzaj przesądza,
   jakie pola klient w ogóle zobaczy — to jest ta reguła, której wcześniej
   trzeba było pilnować głową („zasada pary"), a teraz pilnuje jej formularz.
+- **Rodzaju pozycji nie da się zmienić po dodaniu** (potwierdzone klikami
+  w panelu, 2026-08-05). Pomyłka = usunąć pozycję i dodać nową. Powiedz
+  o tym klientowi, bo inaczej będzie tego szukał.
+- **Panel NIE zablokuje zapisu z filmem na pierwszej pozycji.** Sveltia ma
+  walidację wyłącznie pojedynczych pól (wymagane / wzorzec) — żadnego hooka
+  na cały wpis (sprawdzone w binarium 0.170.0). Dlatego regułę egzekwuje
+  schemat, a panel jedynie ostrzega tekstem pod polem galerii.
 - **Pozycja nr 1 jest kaflem** widocznym na liście `/realizacje/` i w scenie
   na stronie głównej. Dlatego musi być zdjęciem (patrz akapit pod tabelą §4).
 - **Film nie ma własnego zdjęcia.** Miniaturę wycina sobie sam ze środka
@@ -865,7 +872,7 @@ każdą pozycję. Dopóki są otwarte, dokument jest szkicem.
 | 2 | Kiedy dokładnie panel prosi o klucz R2 i czy da się go zapamiętać | §3 |
 | 3 | Droga od zalogowania do pustego formularza nowej realizacji | §4 |
 | 4 | Jak nazywa się akcja zapisu i co panel pokazuje po zapisaniu | §4, §10 |
-| 5 | Jak wygląda dodawanie pozycji do listy („Galeria", „Parametry (specs)") i czy da się zmieniać ich kolejność | §4 |
+| 5 | ~~Dodawanie pozycji do listy i zmiana kolejności~~ — **ZAMKNIĘTE 2026-08-05**: pozycję dodaje się z wyborem rodzaju („Zdjęcie" / „Film"), kolejność zmienia się przeciąganiem, rodzaju dodanej pozycji zmienić się NIE da | §4 |
 | 6 | Jak wgrywa się plik do pola „Zdjęcie" (wybór z dysku, przeciągnięcie, biblioteka) | §5 |
 | 7 | Czy w bibliotekę mediów da się wejść „obok" pola — i jak to wygląda | §6 |
 | 8 | Jak wygląda lista wpisów, wejście w edycję i ostrzeżenie o niezapisanych zmianach | §8 |

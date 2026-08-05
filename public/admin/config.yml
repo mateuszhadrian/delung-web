@@ -86,6 +86,15 @@ collections:
         name: "gallery"
         widget: "list"
         label_singular: "Pozycja galerii"
+        # Panel NIE zablokuje zapisu z filmem na pierwszej pozycji: ma
+        # walidację wyłącznie pojedynczych pól (wymagane / wzorzec), bez
+        # żadnego hooka na cały wpis — sprawdzone w binarium 0.170.0.
+        # Regułę egzekwuje schemat Zod (build staje), więc jedyne, co panel
+        # może zrobić, to powiedzieć o niej ZANIM klient kliknie zapis.
+        hint: >-
+          Pierwsza pozycja to okładka widoczna na liście realizacji — musi
+          być zdjęciem. Film dodaj jako drugą lub dalszą pozycję. Rodzaju
+          dodanej pozycji nie da się zmienić: usuń ją i dodaj nową.
         min: 1 # schemat Zod wymaga ≥1 pozycji
         types:
           - label: "Zdjęcie"

@@ -520,8 +520,53 @@ wgrywania — lista może się jeszcze wydłużyć.
 
 | Ryzyko                                                                                          | Waga    | Co z tym robimy                                                                                          |
 | ----------------------------------------------------------------------------------------------- | ------- | ---------------------------------------------------------------------------------------------------------- |
-| UI wariantów listy w Sveltii 0.170 zachowuje się inaczej, niż zakłada projekt (np. brak zmiany typu istniejącej pozycji) | **wysoka** | obecność mechanizmu potwierdzona w binarium, ale **wygląd i ergonomia wymagają przeklikania** przed merge'em PR-a B |
+| ~~UI wariantów listy w Sveltii 0.170 zachowuje się inaczej, niż zakłada projekt~~                  | **ZAMKNIĘTE** | przeklikane 2026-08-05 — §10                                                                            |
 | Klient wpisze nieprawdziwą długość → klatka spoza filmu → 400 → pusty poster                      | średnia | zapis w obu instrukcjach; objaw widoczny okiem od razu po zapisie                                            |
 | Migracja psuje formatowanie JSON-ów i Sveltia pokazuje wpis inaczej                                | średnia | skrypt trzyma konwencję Sveltii; kontrola = otwarcie zmigrowanego wpisu w panelu                             |
 | Cichy błąd kadru po scaleniu pól (D-RP2)                                                          | niska   | zastane dane nie korzystały z dwóch kadrów; obejrzeć okiem po pierwszej sesji klienta                        |
 | M6 przeżyje podmianę klatki                                                                       | niska   | gotowy wariant `<img>` z D-RP6, wraca jako wąska zmiana                                                      |
+
+---
+
+## 10. Weryfikacja w panelu (Mateusz, 2026-08-05)
+
+Przeklikane w **trybie lokalnego repozytorium** Sveltii („Work with Local
+Repository", `showDirectoryPicker` — Chromium), czyli bez commitów na
+GitHub. To jest właściwy sposób testowania zmian schematu: zwykłe logowanie
+pisze wprost na `main` (`branch: main` w `config.yml`), więc zapis nowego
+kształtu na niezmergowanej gałęzi zatrzymałby build produkcji.
+
+| Co sprawdzone | Wynik |
+| --- | --- |
+| Panel rozumie zmigrowane wpisy (klucz `type`) | ✅ pozycje z podpisami, film rozpoznany |
+| Dodanie pozycji pyta o rodzaj („Zdjęcie" / „Film") | ✅ dwie opcje, pola tylko wybranego rodzaju |
+| Zmiana rodzaju **istniejącej** pozycji | ❌ **nie da się** — trzeba usunąć i dodać nową |
+| Zmiana kolejności pozycji | ✅ przeciąganiem |
+| **Co Sveltia zapisuje do JSON-a** | ✅ **dokładnie `"type": "photo"` / `"type": "video"`** — diff pokazał wyłącznie przestawienie pozycji, klucze nietknięte |
+| Strażnik pierwszej pozycji | ✅ film na pozycji 1 → `test:unit` czerwony, komunikat po polsku |
+
+**Brak możliwości zmiany rodzaju uznany za zaletę** (decyzja Mateusza):
+pozycja jest tym, czym została utworzona, więc nie ma stanu pośredniego,
+w którym pola jednego rodzaju zostają po drugim. Do obu instrukcji dopisane
+jako znany przypadek („usuń i dodaj nową").
+
+### Dlaczego panel nie blokuje zapisu z filmem na pierwszej pozycji
+
+Pytanie Mateusza po teście: skoro to błąd, czemu panel pozwala zapisać?
+
+Sprawdzone w binarium 0.170.0: Sveltia waliduje **wyłącznie pojedyncze
+pola** — `valueMissing` (wymagane) i `patternMismatch` (wzorzec regex).
+**Nie ma żadnego hooka walidacji całego wpisu**, więc reguła zależna od
+tego, co stoi na której pozycji listy, nie ma się gdzie zaczepić.
+
+Rozważona alternatywa (**odrzucona**): kod przestaje być wybredny i bierze
+za kafel pierwsze ZDJĘCIE znalezione gdziekolwiek w galerii, więc build
+nigdy nie staje. Odrzucone, bo zamienia błąd głośny i jednorazowy na cichy
+i powtarzalny: klient stawia film na początku, na liście pojawia się kafel
+z **innego zdjęcia** niż to, które widzi na górze formularza, i uczy się, że
+„strona wybiera sobie sama". Traci też ważność zdanie, które ma paść na
+szkoleniu — „pierwsza pozycja to okładka".
+
+Zostaje więc: schemat zatrzymuje build (produkcja stoi na ostatniej dobrej
+wersji, nic nie ginie, naprawa = przeciągnięcie pozycji), a panel **ostrzega
+zawczasu** tekstem `hint` pod polem galerii — jedynym środkiem, jaki tu ma.
