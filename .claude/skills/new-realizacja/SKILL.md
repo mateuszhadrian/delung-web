@@ -6,16 +6,19 @@ argument-hint: "[nazwa-realizacji]"
 
 Prowadzisz proces dodania realizacji „$ARGUMENTS" (jeśli brak nazwy — zapytaj).
 
-Schemat docelowy delung (od Etapu 2, `src/content.schema.ts`): `slug`,
-`order`, `title`, `category` (select — slugi z `src/lib/categories.ts`),
-`year`, `description`, `cover` (zdjęcie + opcjonalny kadr `position`),
-`gallery` (≥1 pozycja: zdjęcie + opcjonalnie kadr / wideo MP4 / `duration`),
-`specs` (pary etykieta+wartość, np. MATERIAŁY / BLAT / ZAKRES).
+Schemat delung po remoncie panelu (`src/content.schema.ts`,
+`docs/analiza-remont-panelu.md`): `slug`, `order`, `title`, `category`
+(select — slugi z `src/lib/categories.ts`), `year`, `description`,
+`gallery` (≥1 pozycja) i `specs` (pary etykieta+wartość).
+**Pola `cover` NIE MA** — kaflem jest pierwsza pozycja galerii.
+Pozycja galerii to WARIANT: `{type:"photo", image, position?}` albo
+`{type:"video", video, duration?, position?}` — nigdy oba naraz, a pierwsza
+pozycja musi być zdjęciem.
 
 ## 1. Zbierz materiały
 
 Tytuł, rok, kategoria (jedna ze slugów `categories.ts`), opis, zdjęcia
-(okładka + galeria), opcjonalnie klipy wideo (MP4 H.264+AAC, 1080p,
+(pierwsze = okładka na liście), opcjonalnie klipy wideo (MP4 H.264+AAC, 1080p,
 ≤ ~30 MB, przygotowane wg flow z Części C instrukcji — HandBrake preset),
 specs (etykiety wielkimi literami — konwencja designu).
 
@@ -38,8 +41,11 @@ Przypomnij checklistę (sam NIE edytuj JSON-ów — pisze je Sveltia):
 - zdjęcia wgrywać przez pola Image, wideo przez pole „Wideo MP4" w pozycji
   galerii (widget file — upload MP4 do R2 potwierdzony spike'iem Etapu 2;
   upload przez bibliotekę Assets poza polami NIE trafia do R2!);
-- wideo zawsze W PARZE ze zdjęciem tej samej pozycji galerii (zdjęcie =
-  poster klatki); `duration` (np. "0:24") opcjonalnie do badge'a play;
+- film to OSOBNA pozycja galerii rodzaju „Film" (nigdy pierwsza — pierwsza
+  jest kaflem i musi być zdjęciem); miniatura powstaje sama z klatki ze
+  środka klipu, więc pozycja z filmem NIE ma pola na zdjęcie;
+- `duration` (np. "0:24") steruje tą klatką ORAZ podpisem przy znaczku play
+  — ma być prawdziwe: zawyżone = klatka spoza klipu = pusta miniatura;
 - przy pierwszym uploadzie na nowym urządzeniu panel poprosi o R2 Secret
   Access Key (menedżer haseł);
 - slug małymi literami, bez spacji (idzie do URL i nazwy pliku);

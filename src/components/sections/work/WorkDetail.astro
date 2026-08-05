@@ -8,12 +8,13 @@
 // do hosta przy otwarciu; liczniki (REALIZACJA NN/NN, 01/0N) maluje
 // open-detail.ts po klonowaniu.
 //
-// Wideo: preload="none" + poster z imgAt() (obraz tej samej pozycji
-// galerii — reguła cms-realizacje), odtwarzane na tap w badge play;
-// `duration` z CMS na badge'u czasu (desktop, jak w designie).
+// Wideo: preload="none" + poster z videoFrameAt() — po remoncie panelu
+// pozycja z filmem NIE MA własnego zdjęcia, więc plakatem jest klatka
+// wycięta z samego filmu (środek liczony z `duration`). Odtwarzanie na tap
+// w kadr bez zmian; `duration` dalej służy też za badge czasu (desktop).
 // Kontrasty podbite pod pustą allowlistę axe (D-R8): --accent-ink
 // zamiast --gr, --faint zamiast alpha .45–.55.
-import { imgAt } from "@/lib/img";
+import { imgAt, videoFrameAt } from "@/lib/img";
 import { WORK_INDEX_PATH, CONTACT_PATH } from "@/lib/routes";
 import type { ViewProject } from "./work-data";
 
@@ -47,7 +48,7 @@ const pad = (n: number) => String(n).padStart(2, "0");
     {
       p.gallery.map((item, i) => (
         <div class="dt-slide" data-slide>
-          {item.video ? (
+          {item.type === "video" ? (
             <>
               {/* Bez `controls` i bez własnego znaku play (korekta
                   Mateusza): tap/klik w kadr odpala film w podglądzie
@@ -56,7 +57,7 @@ const pad = (n: number) => String(n).padStart(2, "0");
                   klipy realizacji to nieme b-rolle mebli (bez dialogów) */}
               <video
                 src={item.video}
-                poster={imgAt(item.image, "full")}
+                poster={videoFrameAt(item.video, item.duration)}
                 preload="none"
                 playsinline
                 style={
@@ -360,6 +361,12 @@ const pad = (n: number) => String(n).padStart(2, "0");
     letter-spacing: 0.18em;
     color: var(--faint);
     margin-bottom: 6px;
+    /* Kapitalik z makiety, niezależnie od tego, jak klient wpisze etykietę
+       w panelu (M5). Świadomie w CSS, nie w danych: to decyzja
+       typograficzna (waga 500 + letter-spacing), a czytnik ekranu ma
+       przeczytać oryginał, nie literowanie. Reguła bazowa obowiązuje na
+       obu progach — desktop nadpisuje tylko rozmiar, odstępy i kolor. */
+    text-transform: uppercase;
   }
   .dt-spec span {
     display: block;

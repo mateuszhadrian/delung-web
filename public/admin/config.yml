@@ -27,7 +27,7 @@ output:
   omit_empty_optional_fields: true
 
 # ── PL-only (decyzja #2 delung): zwykłe pola, bez obiektów {pl,en} ────────
-# Docelowy schemat delung (analiza §6.1). Zmiana schematu zawsze w TRZECH
+# Schemat po remoncie panelu (docs/analiza-remont-panelu.md). Zmiana zawsze w TRZECH
 # miejscach naraz (src/content.schema.ts / ten plik /
 # src/components/sections/work/*) — reguła cms-realizacje.
 # Opcje selecta „Kategoria" = slugi z src/lib/categories.ts (D2);
@@ -74,48 +74,65 @@ collections:
       - { label: "Rok realizacji", name: "year", widget: "string" }
       - { label: "Opis", name: "description", widget: "text" }
 
-      # ── Kafel na liście realizacji ──
-      - label: "Kafel (cover)"
-        name: "cover"
-        widget: "object"
-        fields:
-          - { label: "Zdjęcie", name: "image", widget: "image" }
-          - {
-              label: "Kadr (object-position, np. 50% 42%)",
-              name: "position",
-              widget: "string",
-              required: false,
-            }
-
-      # ── Galeria detalu: zdjęcia, opcjonalnie wideo (zdjęcie = poster) ──
-      - label: "Galeria"
+      # ── Galeria detalu ────────────────────────────────────────────────
+      # Osobnego pola „Kafel (cover)" NIE MA (remont panelu, D-RP2): kaflem
+      # realizacji jest PIERWSZA pozycja galerii — dlatego musi być zdjęciem
+      # (pilnuje tego schemat Zod, panel nie umie warunku „na tej pozycji").
+      # Pozycja to WARIANT: albo zdjęcie, albo film — nigdy oba naraz (D-RP1).
+      # Wariantami steruje `types` Sveltii; klucz `type` w JSON-ie dopisuje
+      # sam panel. „Zdjęcie" stoi pierwsze celowo: domyślny wybór ma być
+      # poprawny także na pozycji nr 1.
+      - label: "Galeria (pierwsza pozycja = kafel na liście)"
         name: "gallery"
         widget: "list"
         label_singular: "Pozycja galerii"
+        # Panel NIE zablokuje zapisu z filmem na pierwszej pozycji: ma
+        # walidację wyłącznie pojedynczych pól (wymagane / wzorzec), bez
+        # żadnego hooka na cały wpis — sprawdzone w binarium 0.170.0.
+        # Regułę egzekwuje schemat Zod (build staje), więc jedyne, co panel
+        # może zrobić, to powiedzieć o niej ZANIM klient kliknie zapis.
+        hint: >-
+          Pierwsza pozycja to okładka widoczna na liście realizacji — musi
+          być zdjęciem. Film dodaj jako drugą lub dalszą pozycję. Rodzaju
+          dodanej pozycji nie da się zmienić: usuń ją i dodaj nową.
         min: 1 # schemat Zod wymaga ≥1 pozycji
-        summary: "{{fields.image}}"
-        fields:
-          - { label: "Zdjęcie", name: "image", widget: "image" }
-          - {
-              label: "Kadr (object-position, np. 50% 42%)",
-              name: "position",
-              widget: "string",
-              required: false,
-            }
-          - {
-              # Plan A ze spike'a Etapu 2: widget file wgrywa MP4 do R2.
-              # Limity: H.264+AAC, 1080p, ≤ ~30 MB (reguła cms-realizacje).
-              label: "Wideo MP4 (opcjonalne — zdjęcie wyżej staje się posterem)",
-              name: "video",
-              widget: "file",
-              required: false,
-            }
-          - {
-              label: "Długość wideo (np. 0:24 — opis przy znaczku play)",
-              name: "duration",
-              widget: "string",
-              required: false,
-            }
+        types:
+          - label: "Zdjęcie"
+            name: "photo"
+            summary: "{{fields.image}}"
+            fields:
+              - { label: "Zdjęcie", name: "image", widget: "image" }
+              - {
+                  label: "Kadr (object-position, np. 50% 42%)",
+                  name: "position",
+                  widget: "string",
+                  required: false,
+                }
+          - label: "Film"
+            name: "video"
+            summary: "{{fields.video}}"
+            fields:
+              - {
+                  # Plan A ze spike'a Etapu 2: widget file wgrywa MP4 do R2.
+                  # Limity: H.264+AAC, 1080p, ≤ ~30 MB (reguła cms-realizacje).
+                  label: "Wideo MP4 (miniatura powstanie sama z klatki filmu)",
+                  name: "video",
+                  widget: "file",
+                }
+              - {
+                  # Podwójna rola: podpis przy znaczku play ORAZ środek filmu,
+                  # z którego wycinana jest miniatura. Puste = klatka z 1 s.
+                  label: "Długość wideo (np. 0:24 — podpis i środek miniatury)",
+                  name: "duration",
+                  widget: "string",
+                  required: false,
+                }
+              - {
+                  label: "Kadr (object-position, np. 50% 42%)",
+                  name: "position",
+                  widget: "string",
+                  required: false,
+                }
 
       # ── Tabela parametrów detalu ──
       - label: "Parametry (specs)"

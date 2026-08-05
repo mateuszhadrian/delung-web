@@ -26,11 +26,25 @@ paths:
 3. konsumenci: `src/components/sections/work/*`.
    Niespójność = build przechodzi lokalnie, a wpis z panelu wybucha w CI.
 
-- Schemat DOCELOWY (od Etapu 2, analiza §6.1): `slug`, `order`, `title`,
-  `category` (`select` — opcje 1:1 ze slugami/etykietami
-  `src/lib/categories.ts`; spójności pilnuje test kontraktu), `year`,
-  `description`, `cover {image, position?}`, `gallery[] {image, position?,
-video?, duration?}` (min 1), `specs[] {label, value}`.
+- Schemat AKTUALNY (po remoncie panelu, `docs/analiza-remont-panelu.md`):
+  `slug`, `order`, `title`, `category` (`select` — opcje 1:1 ze slugami/
+  etykietami `src/lib/categories.ts`; spójności pilnuje test kontraktu),
+  `year`, `description`, `gallery[]` (min 1), `specs[] {label, value}`.
+- **Pola `cover` NIE MA.** Kaflem realizacji na `/realizacje/` i w scenie na
+  stronie głównej jest **pierwsza pozycja galerii**; `viewProject()`
+  (`work-data.ts`) wylicza z niej `cover` dla komponentów.
+- **Pozycja galerii to WARIANT, nie suma pól** — albo zdjęcie, albo film:
+  - `{type: "photo", image, position?}`
+  - `{type: "video", video, duration?, position?}` — **bez `image`**
+    Wymusza to sam panel (`types`/`typeKey` Sveltii), więc klient nie może
+    wypełnić obu naraz. Dyskryminator `type` zapisuje Sveltia.
+- **Pierwsza pozycja musi być zdjęciem** (jest kaflem). Panel nie umie
+  warunku „na tej pozycji", więc łapie to dopiero `.superRefine` w Zodzie —
+  komunikat jest napisany dla klienta, nie dla programisty. Nie zamieniaj go
+  na domyślny tekst Zoda.
+- Miniatura filmu **nie jest osobnym plikiem**: powstaje z klatki filmu
+  (`videoFrameAt()` w `src/lib/img.ts` → `/cdn-cgi/media/mode=frame`).
+  Środek liczony z pola `duration` („0:24" → `time=12s`), brak/śmieć → 1 s.
 
 ## Media (Cloudflare R2)
 
@@ -45,9 +59,15 @@ video?, duration?}` (min 1), `specs[] {label, value}`.
   Cloudflare Image Transformations (`/cdn-cgi/image/...`). W dev endpoint
   nie istnieje → funkcja zwraca oryginał; NIE debuguj „złych rozmiarów"
   lokalnie.
-- Wideo BEZ transformacji — serwowane wprost z R2
-  (`<video preload="none" poster={imgAt(...)}>`; poster = obraz z tej
-  samej pozycji galerii). Limity: H.264+AAC, 1080p, ≤ ~30 MB/klip.
+- Wideo BEZ transformacji — sam plik serwowany wprost z R2
+  (`<video preload="none" poster={videoFrameAt(...)}>`). **Poster to klatka
+  z tego samego filmu** (Media Transformations, JPEG, cache 20 dni) — nie
+  ma już „zdjęcia-plakatu" w pozycji galerii. Limity pliku bez zmian:
+  H.264+AAC, 1080p, ≤ ~30 MB/klip.
+- Oba endpointy `/cdn-cgi/` (`image` i `media`) istnieją **wyłącznie na
+  produkcji** — lokalnie 404. `imgAt()` oddaje wtedy oryginał, `videoFrameAt()`
+  nie zwraca postera; kolektor problemów w testach (`tests/helpers/guards.ts`)
+  filtruje oba. NIE debuguj miniatur ani rozmiarów lokalnie.
 - Dostępności mediów NIE pilnuje żadne CI: schemat sprawdza tylko, że adres
   jest napisem. `tests/unit/media-r2.test.ts` (HEAD po każdym URL-u) biega
   wyłącznie z `CHECK_REMOTE_MEDIA=1` — ręcznie i w `/release-check`. Po

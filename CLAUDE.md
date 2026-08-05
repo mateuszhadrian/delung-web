@@ -410,6 +410,42 @@ treść/sekcje budowane od nowa wg `docs/design/`).
   niosą ryzyko wizualne. `BackButton`/`back-link.ts` zostają uśpione
   świadomie (D-CH8, status dopisany w plikach; koszt zmierzony: 307 B na
   stronę inline, bez dodatkowego żądania).
+- **Remont panelu `/admin` — WYKONANY** (2026-08-05, gałąź
+  `feat/remont-panelu`; decyzje D-RP1–D-RP10: `docs/analiza-remont-panelu.md`
+  — czytać PRZED pracą przy schemacie CMS): **pozycja galerii to WARIANT**
+  („Zdjęcie" ALBO „Film", nigdy oba — `types`/`typeKey` Sveltii; mechanizm
+  potwierdzony w binarium 0.170.0), czyli wykluczenie mediów wymusza sam
+  panel, a nie build; **pole `cover` SKASOWANE** — kaflem jest pierwsza
+  pozycja galerii, a `viewProject()` wylicza z niej `cover`, dzięki czemu
+  `WorkIndexCard`/`HomeRealizacje` zostały NIETKNIĘTE; **film nie ma już
+  zdjęcia-plakatu** — miniatura to klatka ze środka klipu (`videoFrameAt()`
+  obok `imgAt()` → `/cdn-cgi/media/mode=frame`; środek liczony z pola
+  „Długość wideo", brak/śmieć → 1 s; zmierzone: JPEG, cache 20 dni, `time`
+  poza długością klipu = 400 i pusta miniatura — jedyny cichy błąd, jaki
+  klient może tu popełnić); **pierwsza pozycja musi być zdjęciem** —
+  jedyna reguła, której panel nie wymusi (nie zna warunku „na tym miejscu
+  listy"), więc łapie ją `.superRefine` komunikatem napisanym dla klienta;
+  etykiety parametrów zawsze wielkimi literami (`text-transform` w CSS —
+  decyzja typograficzna, dane i czytniki ekranu nietknięte). Migracja treści
+  skryptem `scripts/migrate-realizacje-gallery.mjs` (świadomy wyjątek od
+  zasady twardej nr 2, za wyraźną zgodą Mateusza; idempotentny, `--dry`):
+  5 wpisów produkcyjnych + 5 fixture'owych; wpis klienta z filmem na
+  pierwszej pozycji rozbity na zdjęcie-kafel + film jako druga pozycja.
+  **Zero nowych baseline'ów** — i to nie przypadek: na preview endpointy
+  `/cdn-cgi/` nie istnieją, więc zdjęcia realizacji są pustymi kadrami
+  i przetasowanie plików jest dla testu wizualnego niewidzialne (widziałby
+  zmianę liczby kadrów albo geometrii). Kolektor problemów w testach
+  (`tests/helpers/guards.ts`) filtruje teraz oba endpointy `/cdn-cgi/`
+  (`image` i `media`) — wcześniej tylko `image`, przez co 404 miniatury
+  wywracał spec „bez błędów konsoli i 404". **Odłożone świadomie:**
+  diagnoza plakatu pokazującego jednolity ekran (desktop Chrome, D-RP9 —
+  NIE odtworzone ani w headless Chromium, ani w prawdziwym Chromie na
+  czystym profilu; obalone hipotezy: format AVIF i klonowanie kadrów;
+  wracamy, jeśli przeżyje podmianę na klatkę) oraz podbicie Sveltii
+  0.170.0 → ~0.180.0 (D-RP10, osobna gałąź, nigdy w dniu szkolenia).
+  **DO PRZEKLIKANIA przed merge'em:** ergonomia wariantów w panelu —
+  czy da się zmienić rodzaj istniejącej pozycji i jak wygląda lista, gdy
+  mieszają się zdjęcia z filmami.
 - Etap 7 — przed nami (umowa → przekazanie).
 
 ## Mapa projektu
@@ -440,7 +476,9 @@ treść/sekcje budowane od nowa wg `docs/design/`).
   Collections (`src/content/realizacje/*.json`; schema Zod:
   `src/content.schema.ts` — źródło prawdy, `content.config.ts` tylko ją
   importuje) + `work-config.ts` (WORK_DESKTOP_MIN_PX=1024, importują
-  testy) + `work-data.ts` (`viewProject`/`workRail`). Detal = JEDEN
+  testy) + `work-data.ts` (`viewProject`/`workRail`; `viewProject`
+  WYLICZA kafel z pierwszej pozycji galerii — pola `cover` nie ma od
+  remontu panelu). Detal = JEDEN
   overlay `#work-detail` (`WorkDetailOverlay.astro` + `open-detail.ts`
   na `overlay.ts`: klon z `<template>`, galeria, podgląd pełnoekranowy,
   projnav, wideo tap-toggle); ruch w `work-motion.ts` (motion-gate).

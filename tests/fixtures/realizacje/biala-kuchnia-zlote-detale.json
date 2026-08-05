@@ -5,28 +5,27 @@
   "category": "kuchnie",
   "year": "2023",
   "description": "Zadaniem w tym projekcie było maksymalne wykorzystanie wąskiej przestrzeni oraz ukrycie sprzętów AGD. Zastosowaliśmy tu systemy podnoszenia frontów oraz ukryte uchwyty wlotowe.",
-  "cover": {
-    "image": "https://media.delung.pl/realizacje/white-01.webp",
-    "position": "50% 52%"
-  },
   "gallery": [
     {
+      "type": "photo",
+      "image": "https://media.delung.pl/realizacje/white-01.webp",
+      "position": "50% 52%"
+    },
+    {
+      "type": "photo",
       "image": "https://media.delung.pl/realizacje/white-02.webp",
       "position": "62% 55%"
     },
     {
-      "image": "https://media.delung.pl/realizacje/white-03.webp",
-      "position": "50% 45%",
+      "type": "video",
       "video": "https://media.delung.pl/realizacje/spike-test.mp4",
-      "duration": "0:25"
+      "duration": "0:25",
+      "position": "50% 45%"
     },
     {
+      "type": "photo",
       "image": "https://media.delung.pl/realizacje/white-04.webp",
       "position": "50% 55%"
-    },
-    {
-      "image": "https://media.delung.pl/realizacje/white-01.webp",
-      "position": "50% 52%"
     }
   ],
   "specs": [

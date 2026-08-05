@@ -3,20 +3,28 @@
 // Tu zostają wyłącznie typy (PL-only — decyzja #2 delung) i normalizacja
 // wpisu do postaci konsumowanej przez komponenty.
 //
-// Docelowy schemat delung (analiza §6.1): cover + gallery (zdjęcia i wideo)
-// + specs; kategoria jako slug z src/lib/categories.ts (D2) — komponenty
-// dostają też gotową etykietę (categoryLabel).
+// Schemat po remoncie panelu (docs/analiza-remont-panelu.md): gallery + specs,
+// BEZ pola cover — kaflem jest pierwsza pozycja galerii. Kategoria jako slug
+// z src/lib/categories.ts (D2) — komponenty dostają też gotową etykietę
+// (categoryLabel).
 
 import { CATEGORIES, categoryLabel, type CategorySlug } from "@/lib/categories";
 
-// Pozycja galerii detalu; `video` (URL MP4 w R2) => zdjęcie pełni rolę
-// posteru, a kafel dostaje badge play (+ opcjonalny opis `duration`).
-interface WorkGalleryItem {
+// Pozycja galerii detalu to WARIANT: albo zdjęcie, albo film — nigdy oba
+// (D-RP1; panel wymusza to polami, schemat Zod dyskryminatorem `type`).
+// Film nie ma własnego zdjęcia: miniatura powstaje z klatki (videoFrameAt).
+export interface WorkGalleryPhoto {
+  type: "photo";
   image: string;
   position?: string;
-  video?: string;
-  duration?: string;
 }
+export interface WorkGalleryVideo {
+  type: "video";
+  video: string;
+  duration?: string;
+  position?: string;
+}
+export type WorkGalleryItem = WorkGalleryPhoto | WorkGalleryVideo;
 
 // Para tabeli parametrów detalu (MATERIAŁY / BLAT / ZAKRES / …).
 interface WorkSpec {
@@ -32,19 +40,37 @@ export interface WorkProject {
   category: CategorySlug;
   year: string;
   description: string;
-  cover: { image: string; position?: string };
   gallery: WorkGalleryItem[];
   specs: WorkSpec[];
 }
 
-// Postać widokowa: slug kategorii + gotowa etykieta do wyświetlenia.
+// Postać widokowa: slug kategorii + gotowa etykieta + WYLICZONY kafel.
 export type ViewProject = Omit<WorkProject, "order"> & {
   categoryLabel: string;
+  cover: { image: string; position?: string };
 };
 
 // Normalizacja wpisu do postaci konsumowanej przez komponenty.
+// `cover` NIE jest już polem wpisu (D-RP2) — liczymy go z pierwszej pozycji
+// galerii, żeby kafel siatki (WorkIndexCard) i scena realizacji na stronie
+// głównej (HomeRealizacje) dostały dokładnie ten sam kształt danych co przed
+// remontem i nie musiały się zmieniać.
 export function viewProject(p: WorkProject): ViewProject {
-  return { ...p, categoryLabel: categoryLabel(p.category) };
+  const first = p.gallery[0];
+  // Schemat gwarantuje zdjęcie na pierwszej pozycji (.superRefine), więc ta
+  // gałąź jest nieosiągalna dla treści, która przeszła walidację. Rzucamy
+  // zamiast cichego pustego kafla: gdyby ktoś ominął schemat (np. woła tę
+  // funkcję z ręcznie sklejonym obiektem), ma się dowiedzieć od razu.
+  if (first?.type !== "photo") {
+    throw new Error(
+      `Realizacja "${p.slug}": pierwsza pozycja galerii musi być zdjęciem (jest kaflem na liście).`,
+    );
+  }
+  return {
+    ...p,
+    categoryLabel: categoryLabel(p.category),
+    cover: { image: first.image, position: first.position },
+  };
 }
 
 // Pozycja szyny filtrów /realizacje/ (część 4.4, D-R1).

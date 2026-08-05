@@ -162,25 +162,38 @@ dokładnie te napisy.
 | 4 | „Kategoria" | **tak** (lista wyboru) | decyduje o filtrze i o tym, gdzie wpis się pokazuje (§7) |
 | 5 | „Rok realizacji" | **tak** | tekst, nie liczba — patrz niżej |
 | 6 | „Opis" | **tak** | akapit w detalu realizacji |
-| 7 | „Kafel (cover)" → „Zdjęcie" | **tak** | zdjęcie kafla na liście `/realizacje/` |
-| 8 | „Kafel (cover)" → „Kadr (object-position, np. 50% 42%)" | nie | puste = kadr wyśrodkowany (§5) |
-| 9 | „Galeria" | **tak, min. 1 pozycja** | zero pozycji = **build stoi** |
-| 9a | pozycja → „Zdjęcie" | **tak** | zdjęcie w galerii detalu; przy filmie pełni rolę plakatu |
-| 9b | pozycja → „Kadr (object-position, np. 50% 42%)" | nie | puste = kadr wyśrodkowany |
-| 9c | pozycja → „Wideo MP4 (opcjonalne — zdjęcie wyżej staje się posterem)" | nie | puste = zwykłe zdjęcie, bez ikonki kamery |
-| 9d | pozycja → „Długość wideo (np. 0:24 — opis przy znaczku play)" | nie | puste = film gra, tylko bez podpisu z czasem |
-| 10 | „Parametry (specs)" | **tak jako lista, ale może być pusta** | zero parametrów przechodzi walidację — po prostu nie ma tabelki |
-| 10a | parametr → „Etykieta (np. MATERIAŁY / BLAT / ZAKRES)" | **tak** | — |
-| 10b | parametr → „Wartość" | **tak** | — |
+| 7 | „Galeria (pierwsza pozycja = kafel na liście)" | **tak, min. 1 pozycja** | zero pozycji = **build stoi** |
+| 7a | pozycja typu **„Zdjęcie"** → „Zdjęcie" | **tak** | zdjęcie w galerii detalu; **pierwsza pozycja = kafel na liście** |
+| 7b | pozycja typu „Zdjęcie" → „Kadr (object-position, np. 50% 42%)" | nie | puste = kadr wyśrodkowany (§5) |
+| 7c | pozycja typu **„Film"** → „Wideo MP4 (miniatura powstanie sama z klatki filmu)" | **tak w tym wariancie** | pozycja typu Film bez pliku = **build stoi** |
+| 7d | pozycja typu „Film" → „Długość wideo (np. 0:24 — podpis i środek miniatury)" | nie | puste = miniatura z 1. sekundy i brak podpisu z czasem |
+| 7e | pozycja typu „Film" → „Kadr (object-position, np. 50% 42%)" | nie | kadruje **klatkę-miniaturę** tak samo jak zdjęcie |
+| 8 | „Parametry (specs)" | **tak jako lista, ale może być pusta** | zero parametrów przechodzi walidację — po prostu nie ma tabelki |
+| 8a | parametr → „Etykieta (np. MATERIAŁY / BLAT / ZAKRES)" | **tak** | na stronie **zawsze wielkimi literami**, niezależnie od tego, jak wpisana |
+| 8b | parametr → „Wartość" | **tak** | — |
+
+> **Zmiana z remontu panelu (2026-08-05):** osobnego pola **„Kafel (cover)"
+> już nie ma** — kaflem jest pierwsza pozycja galerii. Pozycja galerii jest
+> teraz **wariantem**: przy dodawaniu wybiera się „Zdjęcie" **albo** „Film",
+> i widać wyłącznie pola tego wariantu. Film **nie ma już własnego zdjęcia** —
+> miniatura powstaje automatycznie z klatki ze środka filmu.
+> Decyzje i uzasadnienia: `analiza-remont-panelu.md`.
 
 Kolumna „wymagane" pochodzi ze schematu Zod (`src/content.schema.ts`), nie
-z panelu — to schemat rozstrzyga, czy build przejdzie. Sprawdziłem obie
-strony: **`required: false` w panelu i `.optional()` w schemacie zgadzają
-się co do joty** dla wszystkich czterech pól opcjonalnych (`position`
-w kaflu, `position` / `video` / `duration` w galerii). Jedyna asymetria to
-domyślna wartość „Kolejność": panel podpowiada `10`, schemat w razie braku
-pola przyjąłby `0` — bez znaczenia w praktyce, bo panel zawsze to pole
-zapisuje.
+z panelu — to schemat rozstrzyga, czy build przejdzie. Pola opcjonalne
+(`position` w obu wariantach, `duration` w wariancie „Film") mają
+`required: false` w panelu i `.optional()` w schemacie — zgodnie.
+Jedyna asymetria to domyślna wartość „Kolejność": panel podpowiada `10`,
+schemat w razie braku pola przyjąłby `0` — bez znaczenia w praktyce, bo
+panel zawsze to pole zapisuje.
+
+**Jest dokładnie jedna reguła, której panel NIE wymusi:** pierwsza pozycja
+galerii musi być zdjęciem. Panel potrafi ograniczyć, jakie pola ma pozycja
+(stąd warianty), ale nie zna warunku „na tym konkretnym miejscu listy".
+Film wstawiony na pozycję nr 1 zapisze się bez protestu i **zatrzyma build**
+z komunikatem: _„Pierwsza pozycja galerii jest kaflem realizacji na liście —
+musi być zdjęciem. Przenieś film na dalszą pozycję."_ Naprawa to
+przeciągnięcie pozycji w panelu, nie zmiana w repo.
 
 ### 1. „Slug (adres, np. kuchnia-kaszmirowa)"
 
@@ -247,30 +260,47 @@ Pole wielowierszowe. Trafia do detalu realizacji jako akapit. Wzorzec
 z istniejących wpisów: dwa–trzy zdania o materiałach i tym, co było do
 zrobienia — bez marketingowego lania wody.
 
-### 7–8. „Kafel (cover)"
+### 7. „Galeria (pierwsza pozycja = kafel na liście)"
 
-Zdjęcie **z listy** `/realizacje/` — pierwsze, co widać. Osobne pole od
-galerii, ale w praktyce w czterech z pięciu istniejących wpisów kafel i
-pierwsza pozycja galerii to **ten sam plik** (i to samo kadrowanie). To
-dobra domyślna praktyka: nie mnóż plików bez potrzeby.
+**Minimum jedna pozycja** — pilnowane po obu stronach: panel ma `min: 1`,
+schemat `.min(1)`. Galeria bez pozycji zatrzyma build.
 
-„Kadr (object-position, …)" — patrz §5.
+Każda pozycja ma **rodzaj**, wybierany przy dodawaniu:
 
-### 9. „Galeria" (pozycja: „Pozycja galerii")
+```
+Pozycja galerii
+├── rodzaj „Zdjęcie"           ├── rodzaj „Film"
+│   ├── „Zdjęcie"        WYM.  │   ├── „Wideo MP4 (…)"      WYM.
+│   └── „Kadr (…)"       opc.  │   ├── „Długość wideo (…)"  opc.
+│                              │   └── „Kadr (…)"           opc.
+```
 
-**Minimum jedna pozycja** — i to jest pilnowane po obu stronach: panel ma
-`min: 1`, schemat `.min(1)`. Galeria bez pozycji zatrzyma build.
+Konsekwencje, które musisz mieć w głowie:
 
-Istniejące wpisy mają 3–5 pozycji. Podpisem pozycji na liście w panelu jest
-adres zdjęcia (`summary: "{{fields.image}}"`) — czyli po nazwie pliku
-poznajesz, która to pozycja.
+- **Nie da się mieć zdjęcia i filmu w jednej pozycji.** Rodzaj przesądza,
+  jakie pola klient w ogóle zobaczy — to jest ta reguła, której wcześniej
+  trzeba było pilnować głową („zasada pary"), a teraz pilnuje jej formularz.
+- **Rodzaju pozycji nie da się zmienić po dodaniu** (potwierdzone klikami
+  w panelu, 2026-08-05). Pomyłka = usunąć pozycję i dodać nową. Powiedz
+  o tym klientowi, bo inaczej będzie tego szukał.
+- **Panel NIE zablokuje zapisu z filmem na pierwszej pozycji.** Sveltia ma
+  walidację wyłącznie pojedynczych pól (wymagane / wzorzec) — żadnego hooka
+  na cały wpis (sprawdzone w binarium 0.170.0). Dlatego regułę egzekwuje
+  schemat, a panel jedynie ostrzega tekstem pod polem galerii.
+- **Pozycja nr 1 jest kaflem** widocznym na liście `/realizacje/` i w scenie
+  na stronie głównej. Dlatego musi być zdjęciem (patrz akapit pod tabelą §4).
+- **Film nie ma własnego zdjęcia.** Miniaturę wycina sobie sam ze środka
+  klipu — patrz §6.
+- Podpisem pozycji na liście w panelu jest adres pliku (zdjęcia albo filmu),
+  więc po nazwie poznajesz, która to pozycja.
 
-**Film jest polem wewnątrz pozycji galerii, nie osobną sekcją** — patrz §6.
+### 8. „Parametry (specs)"
 
-### 10. „Parametry (specs)"
-
-Lista par etykieta+wartość, tabelka w detalu. Konwencja z designu:
-**etykieta wielkimi literami**. Repertuar z istniejących wpisów:
+Lista par etykieta+wartość, tabelka w detalu. **Etykietę strona i tak pokaże
+wielkimi literami** — to kapitalik z makiety, wymuszony w CSS (remont panelu,
+M5), więc `blat` wpisany małą literą wyświetli się jako `BLAT`. W panelu i w
+pliku zostaje dokładnie to, co klient wpisał; zmienia się tylko wygląd.
+Repertuar z istniejących wpisów:
 
 ```
 MATERIAŁY        Płyta lakierowana w kolorze kaszmiru, fornir dąb
@@ -296,21 +326,22 @@ Tak wygląda plik, który panel zapisuje (`kuchnia-kaszmirowa.json`, skrót):
   "category": "kuchnie",
   "year": "2025",
   "description": "Ciepły kaszmir, fornirowana witryna z podświetleniem LED…",
-  "cover": {
-    "image": "https://media.delung.pl/realizacje/kashmir-01.webp",
-    "position": "50% 42%"
-  },
   "gallery": [
-    { "image": "https://media.delung.pl/realizacje/kashmir-01.webp", "position": "50% 42%" },
-    { "image": "https://media.delung.pl/realizacje/kashmir-02.webp", "position": "50% 50%" }
+    { "type": "photo", "image": "https://media.delung.pl/realizacje/kashmir-01.webp", "position": "50% 42%" },
+    { "type": "photo", "image": "https://media.delung.pl/realizacje/kashmir-02.webp", "position": "50% 50%" },
+    { "type": "video", "video": "https://media.delung.pl/realizacje/kashmir-clip.mp4", "duration": "0:24" }
   ],
   "specs": [{ "label": "MATERIAŁY", "value": "Płyta lakierowana…" }]
 }
 ```
 
+Klucz `type` dopisuje sam panel — to on rozróżnia rodzaj pozycji. Pierwsza
+pozycja (`kashmir-01.webp`) jest jednocześnie kaflem na liście; osobnego
+pola `cover` w pliku nie ma.
+
 Pola opcjonalne zostawione puste **nie pojawiają się** w pliku
-(`omit_empty_optional_fields: true`) — dlatego wpisy bez filmu nie mają
-w ogóle klucza `video`.
+(`omit_empty_optional_fields: true`) — dlatego pozycje bez kadru nie mają
+w ogóle klucza `position`.
 
 ---
 
@@ -375,10 +406,19 @@ Metoda bez zgadywania — trzy kroki:
 Pierwszą liczbę ruszaj rzadko — kadry na stronie są przycinane głównie
 w pionie. Wyjątek to jeden istniejący wpis z `62% 55%`.
 
-⚠️ Kadr kafla i kadr pozycji galerii to **osobne pola** — to samo zdjęcie
-w kaflu i w galerii może potrzebować **innych** wartości, bo kadr kafla jest
-poziomy, a galerii pionowy. W istniejących wpisach są takie same, bo kadry
-były dobierane raz — nie traktuj tego jako reguły.
+⚠️ **Pierwsza pozycja galerii ma teraz JEDEN kadr, a pracuje w trzech
+kształtach** (kafel mobile ~kwadrat, kafel desktop poziomy, galeria pionowa).
+Do remontu panelu były to dwa osobne pola; scaliliśmy je świadomie, bo
+w zastanych wpisach **ani razu** nie użyto dwóch różnych wartości (D-RP2
+w `analiza-remont-panelu.md`). Praktyczny wniosek: dobierając kadr dla
+pierwszej pozycji, sprawdź go **na liście i w detalu**, nie tylko w jednym
+miejscu. Gdyby realny materiał klienta zaczął tego wymagać, przywrócenie
+drugiego pola to zmiana na kilka minut — zgłoś to Mateuszowi zamiast
+walczyć z jedną wartością.
+
+Kadr działa też na **klatkę-miniaturę filmu** — pozycja typu „Film" ma
+własne pole „Kadr", bo miniatura jest przycinana do tego samego pionowego
+kadru co zdjęcia.
 
 ---
 
@@ -402,37 +442,39 @@ z telefonu — z telefonu **da się** dodać realizację ze zdjęciami, ale **ni
 da się** przygotować filmu. To trzeba powiedzieć wprost, żeby nie próbował
 wgrać surowego nagrania z iPhone'a przez pole filmu.
 
-### Zasada pary: film zawsze ze zdjęciem w tej samej pozycji
+### Film jest OSOBNĄ pozycją galerii, a miniatura robi się sama
 
-To najważniejsza rzecz w całym §6.
-
-Film **nie jest osobną pozycją galerii**. Jest **polem wewnątrz** pozycji,
-która ma już swoje zdjęcie — i to zdjęcie staje się **plakatem** (kadrem
-widocznym, zanim film ruszy). Mówi to sama etykieta pola:
-**„Wideo MP4 (opcjonalne — zdjęcie wyżej staje się posterem)"**.
+To najważniejsza rzecz w całym §6 — i **zmiana względem stanu sprzed remontu
+panelu**. Do 2026-08-05 obowiązywała „zasada pary": film był polem wewnątrz
+pozycji, która musiała mieć zdjęcie-plakat. **Tego już nie ma.**
 
 ```
-Pozycja galerii
-├── „Zdjęcie"                 ← WYMAGANE; przy filmie = plakat
-├── „Kadr (object-position…)" ← opcjonalne, kadruje też plakat
-├── „Wideo MP4 (…)"           ← opcjonalne
-└── „Długość wideo (…)"       ← opcjonalne, np. 0:24
+Pozycja galerii typu „Film"
+├── „Wideo MP4 (miniatura powstanie sama z klatki filmu)"  ← WYMAGANE
+├── „Długość wideo (…)"        ← opcjonalne, np. 0:24 — podpis I środek klatki
+└── „Kadr (object-position…)"  ← opcjonalne, kadruje miniaturę
 ```
 
 Konsekwencje:
 
-- Pozycja z filmem, ale bez zdjęcia — **nie przejdzie walidacji** (`image`
-  jest wymagane), więc build stanie.
+- **Nie wgrywa się już zdjęcia do filmu.** Pozycja typu „Film" w ogóle nie ma
+  pola na zdjęcie — miniaturę wycina Cloudflare z samego pliku wideo.
+- **Klatka jest brana ze ŚRODKA filmu**, a środek liczony z pola „Długość
+  wideo". `0:24` → klatka z 12. sekundy. Pole puste → klatka z 1. sekundy
+  (często rozmazany start ujęcia). To jest realny powód, żeby je wypełniać.
+- ⚠️ **Podawaj prawdziwą długość.** Wpisane `5:00` przy klipie 20-sekundowym
+  każe stronie prosić o klatkę ze 150. sekundy — Cloudflare odpowiada błędem,
+  a miniatura zostaje pusta. Nic poza nią się nie psuje, ale objaw jest cichy.
 - Film ładuje się dopiero na żądanie (`preload="none"`) — do tego czasu widać
-  plakat. Brzydki plakat = brzydki kafel przez cały czas, gdy nikt filmu nie
-  włączył. Zrzut ładnej klatki z filmu jest tu lepszy niż przypadkowe zdjęcie.
+  miniaturę.
 - Na stronie **nie ma paska odtwarzacza ani przycisku play** — jest ikonka
   kamery w rogu kadru, tap w kadr startuje film i otwiera podgląd
   pełnoekranowy, a w podglądzie tap przełącza pauzę. To celowa decyzja
   projektowa, nie brak — klientowi to pokaż, bo inaczej uzna, że film „nie
   działa".
-- „Długość wideo (np. 0:24 — opis przy znaczku play)" to **tylko podpis**.
-  Nie ucina filmu, nie steruje niczym. Pusta = brak podpisu.
+- **Film nie może być pierwszą pozycją** (pierwsza jest kaflem na liście) —
+  patrz §4. Przy filmie na pozycji nr 1 build staje z komunikatem wprost
+  mówiącym, co przesunąć.
 
 ### Dlaczego NIE wolno wgrywać przez bibliotekę mediów poza polami
 
@@ -503,11 +545,12 @@ sygnalizuje niezapisane zmiany przy wyjściu z formularza.
 Zanim wgrasz nowy plik, sprawdź, czy problemem nie jest **kadr** — połowa
 „złych zdjęć" to dobre zdjęcie źle przycięte (§5).
 
-Uwaga na współdzielone pliki: w istniejących wpisach ten sam plik bywa użyty
-**w kaflu i w pierwszej pozycji galerii**. Podmiana w jednym miejscu nie
-zmienia drugiego — a usunięcie „starego" pliku z R2 zepsuje to drugie
-miejsce. Przed sprzątaniem R2 zawsze sprawdź, czy adres nie występuje
-w pliku dwa razy (§9).
+Uwaga na współdzielone pliki: ten sam plik może być użyty w kilku pozycjach
+(albo w kilku wpisach). Podmiana w jednym miejscu nie zmienia pozostałych —
+a usunięcie „starego" pliku z R2 zepsuje te pozostałe. Przed sprzątaniem R2
+zawsze sprawdź, czy adres nie występuje więcej niż raz (§9). Po remoncie
+panelu ryzyko zmalało: kafel nie jest już osobnym polem powielającym adres
+pierwszego zdjęcia — to **jest** pierwsze zdjęcie.
 
 ---
 
@@ -643,9 +686,11 @@ Zweryfikowane w `ci.yml`, `prod-smoke.yml` i `content.config.ts`:
 | GitHub → Actions → `CI` → `quality` | to samo, tylko wolniej i przez przeglądarkę | gdy nie masz komputera z repo |
 | Cloudflare → Pages → `delung-web` → deploymenty | log builda, „Failed" przy zepsutym | gdy build stoi, a testy są zielone |
 
-Raport z `test:unit` wskazuje **plik i ścieżkę pola** (np. że
-`gallery` ma zero pozycji albo że brakuje `cover.image`) — a stąd już wprost
-wynika, które pole w panelu poprawić.
+Raport z `test:unit` wskazuje **plik i ścieżkę pola** (np. że `gallery` ma
+zero pozycji albo że brakuje `gallery[2].video`) — a stąd już wprost wynika,
+które pole w panelu poprawić. Wyjątkiem jest błąd pierwszej pozycji: tam
+komunikat jest napisany zdaniem po polsku, gotowym do przeczytania klientowi
+przez telefon.
 
 ### Naprawa — w panelu, nie w repo
 
@@ -655,7 +700,9 @@ jaki może zrobić klient, jest błędem wypełnienia formularza:
 | Objaw w raporcie | Co poprawić w panelu |
 | --- | --- |
 | `gallery` — za mało pozycji | dodać co najmniej jedną „Pozycję galerii" |
-| brak `cover.image` / `gallery[n].image` | wgrać zdjęcie do pola „Zdjęcie" |
+| **„Pierwsza pozycja galerii … musi być zdjęciem"** | przeciągnąć film niżej albo dodać zdjęcie na początek |
+| brak `gallery[n].image` | wgrać zdjęcie do pola „Zdjęcie" w tej pozycji |
+| brak `gallery[n].video` | wgrać plik do pola „Wideo MP4" (pozycja typu „Film" bez pliku) |
 | `category` — niedozwolona wartość | wybrać kategorię z listy |
 | brak `title` / `year` / `description` | wypełnić pole |
 | dwa wpisy, jeden slug | zmienić „Slug" w nowszym wpisie |
@@ -684,6 +731,7 @@ Ważne, żeby nie mieć fałszywego poczucia bezpieczeństwa:
 | zdjęcie skasowane z R2, adres został we wpisie | build zielony, na stronie dziura | tylko ręczne `CHECK_REMOTE_MEDIA=1` |
 | zdjęcie w HEIC | build zielony, obrazek się nie wyświetla | oko na stronie |
 | film 300 MB, bez faststart | build zielony, film ładuje się wieczność | oko na stronie |
+| **zawyżona „Długość wideo"** | build zielony, **miniatura filmu pusta** (Cloudflare odmawia klatki spoza klipu) | oko na stronie |
 | źle dobrany kadr | build zielony, ucięte zdjęcie | oko na stronie |
 | bzdura w opisie, literówka w tytule | build zielony | nikt |
 
@@ -724,14 +772,22 @@ Dodaj realizację `test-trening-01`, kategoria „Meble nietypowe" (dziś pusta
 
 ### Ćwiczenie 2 — wpis z filmem
 
-To samo, ale jedna pozycja galerii dostaje film przepuszczony przez
-HandBrake'a Twoim presetem. Ustaw też „Długość wideo".
+To samo, ale **dodajesz pozycję galerii rodzaju „Film"** (nie pierwszą!)
+z klipem przepuszczonym przez HandBrake'a Twoim presetem. Ustaw też
+„Długość wideo" — podaj prawdziwą.
 
 - **Ma się pojawić:** w galerii detalu ikonka kamery w rogu kadru; tap
   startuje film i otwiera podgląd pełnoekranowy; tap w podglądzie pauzuje.
-  Przed odtworzeniem widać zdjęcie z **tej samej** pozycji.
+  Przed odtworzeniem widać **klatkę ze środka filmu** — nie zdjęcie.
 - **Sprawdź świadomie:** czy film startuje szybko (faststart) i ile waży plik
   w R2. To jest ta liczba, którą będziesz cytował klientowi.
+- **Sprawdź świadomie nr 2:** wpisz na chwilę zawyżoną długość (np. `9:00`)
+  i zobacz pustą miniaturę, a potem popraw. To najbardziej prawdopodobna
+  pomyłka klienta przy filmie — musisz umieć rozpoznać ją po objawie.
+- **Sprawdź świadomie nr 3:** spróbuj wstawić film jako **pierwszą** pozycję.
+  Panel na to pozwoli, ale build stanie — zobacz komunikat w `pnpm test:unit`
+  i napraw przeciągnięciem pozycji. To ta sama lekcja co punkt 4 kryterium
+  gotowości, tylko tańsza.
 - **Cofnięcie:** jak wyżej — **koniecznie z filmem włącznie**. Film jest
   najdroższą rzeczą, jaką można zostawić w buckecie.
 
@@ -816,7 +872,7 @@ każdą pozycję. Dopóki są otwarte, dokument jest szkicem.
 | 2 | Kiedy dokładnie panel prosi o klucz R2 i czy da się go zapamiętać | §3 |
 | 3 | Droga od zalogowania do pustego formularza nowej realizacji | §4 |
 | 4 | Jak nazywa się akcja zapisu i co panel pokazuje po zapisaniu | §4, §10 |
-| 5 | Jak wygląda dodawanie pozycji do listy („Galeria", „Parametry (specs)") i czy da się zmieniać ich kolejność | §4 |
+| 5 | ~~Dodawanie pozycji do listy i zmiana kolejności~~ — **ZAMKNIĘTE 2026-08-05**: pozycję dodaje się z wyborem rodzaju („Zdjęcie" / „Film"), kolejność zmienia się przeciąganiem, rodzaju dodanej pozycji zmienić się NIE da | §4 |
 | 6 | Jak wgrywa się plik do pola „Zdjęcie" (wybór z dysku, przeciągnięcie, biblioteka) | §5 |
 | 7 | Czy w bibliotekę mediów da się wejść „obok" pola — i jak to wygląda | §6 |
 | 8 | Jak wygląda lista wpisów, wejście w edycję i ostrzeżenie o niezapisanych zmianach | §8 |
@@ -830,20 +886,28 @@ klienckiej i dopiero wtedy umawiaj szkolenie.
 
 ---
 
-## 14. Weryfikacja maszynowa (stan na 2026-08-04)
+## 14. Weryfikacja maszynowa (stan na 2026-08-05, po remoncie panelu)
 
 Co zostało sprawdzone poleceniem, nie z pamięci:
 
 **Kontrakt CMS i kategorie** — test porównuje opcje selecta w `config.yml`
-ze `src/lib/categories.ts` (1:1, z kolejnością) i waliduje każdy JSON schemą
-Zod:
+ze `src/lib/categories.ts` (1:1, z kolejnością), sprawdza, że galeria ma
+w panelu **dokładnie dwa warianty** (`photo`/`video`) i że pola `cover` już
+nie ma, waliduje każdy JSON schemą Zod, a osobno potwierdza — w obie
+strony — że **film na pierwszej pozycji jest odrzucany**:
 
 ```
 $ pnpm test:unit
  Test Files  8 passed | 1 skipped (9)
-      Tests  67 passed | 1 skipped (68)
-   Duration  316ms
+      Tests  78 passed | 1 skipped (79)
+   Duration  308ms
 ```
+
+**Zachowanie panelu i strony po remoncie** — pełna bramka na zmigrowanej
+treści: `pnpm test:e2e` 544 zielone (w tym kontrakt plakatu: adres postera
+musi być klatką `/cdn-cgi/media/mode=frame` z **tego samego** pliku, który
+jest odtwarzany) oraz `pnpm build:visual && pnpm test:visual` 203 zielone
+**bez ani jednego nowego baseline'u**.
 
 **Media w R2** — HEAD do każdego adresu `media.delung.pl` z JSON-ów:
 
@@ -865,6 +929,12 @@ i `prod-smoke.yml` (własny `pnpm build` przed czekaniem na deploy).
 w R2** — `media-r2.test.ts` odpala się wyłącznie ze zmienną
 `CHECK_REMOTE_MEDIA=1`, której nie ustawia ani `ci.yml`, ani
 `prod-smoke.yml`. To ręczny krok po sprzątaniu bucketa (§9).
+
+⚠️ Druga świadoma luka, nowa po remoncie: **nikt nie sprawdza, czy klatka
+filmu naprawdę się wycięła.** Endpoint `/cdn-cgi/media` istnieje wyłącznie na
+produkcji, więc lokalnie i na preview miniatur po prostu nie ma (to samo, co
+z rozmiarami obrazów). Zawyżona „Długość wideo" da pustą miniaturę przy
+zielonym buildzie — jedynym wykrywaczem jest oko na `delung.pl/realizacje/`.
 
 ---
 

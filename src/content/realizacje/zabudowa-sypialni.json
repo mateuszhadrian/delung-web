@@ -5,20 +5,19 @@
   "category": "szafy-garderoby",
   "year": "2024",
   "description": "Szafa na całą ścianę z tapicerowanym zagłówkiem w tej samej tkaninie. Wnętrze z szufladami cichego domyku i oświetleniem reagującym na otwarcie frontu.",
-  "cover": {
-    "image": "https://media.delung.pl/realizacje/sypialnia-01.webp",
-    "position": "50% 32%"
-  },
   "gallery": [
     {
+      "type": "photo",
       "image": "https://media.delung.pl/realizacje/sypialnia-01.webp",
       "position": "50% 32%"
     },
     {
+      "type": "photo",
       "image": "https://media.delung.pl/realizacje/sypialnia-02.webp",
       "position": "50% 50%"
     },
     {
+      "type": "photo",
       "image": "https://media.delung.pl/realizacje/sypialnia-03.webp",
       "position": "50% 50%"
     }

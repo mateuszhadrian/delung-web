@@ -88,8 +88,9 @@ export function useChromium1920Only(reason: string): void {
 }
 
 /** Kolektor problemów strony: console.error + pageerror + 404 (poza
- *  /cdn-cgi/image/ — endpoint istnieje tylko na produkcji Cloudflare,
- *  lokalne 404 obrazów realizacji to znany artefakt preview).
+ *  transformacjami Cloudflare — `/cdn-cgi/image/` dla obrazów i
+ *  `/cdn-cgi/media/` dla klatek-miniatur filmów; oba endpointy istnieją
+ *  WYŁĄCZNIE na produkcji, więc ich lokalne 404 to znany artefakt preview).
  *  Zwraca funkcję odczytu przefiltrowanej, zdeduplikowanej listy. */
 export function collectPageIssues(page: Page): () => string[] {
   const issues: string[] = [];
@@ -98,7 +99,7 @@ export function collectPageIssues(page: Page): () => string[] {
   });
   page.on("pageerror", (err) => issues.push(`pageerror: ${String(err)}`));
   page.on("response", (res) => {
-    if (res.status() === 404 && !res.url().includes("/cdn-cgi/image/")) {
+    if (res.status() === 404 && !/\/cdn-cgi\/(image|media)\//.test(res.url())) {
       issues.push(`404: ${res.url()}`);
     }
   });

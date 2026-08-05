@@ -5,20 +5,19 @@
   "category": "kuchnie",
   "year": "2025",
   "description": "Fornir orzechowy w połączeniu z matową czernią frontów i stalowymi detalami. Wyspa z ukrytym gniazdem i podnoszonym frontem.",
-  "cover": {
-    "image": "https://media.delung.pl/realizacje/orzech-01.webp",
-    "position": "50% 58%"
-  },
   "gallery": [
     {
+      "type": "photo",
       "image": "https://media.delung.pl/realizacje/orzech-01.webp",
       "position": "50% 58%"
     },
     {
+      "type": "photo",
       "image": "https://media.delung.pl/realizacje/orzech-02.webp",
       "position": "50% 50%"
     },
     {
+      "type": "photo",
       "image": "https://media.delung.pl/realizacje/orzech-03.webp",
       "position": "50% 50%"
     }
