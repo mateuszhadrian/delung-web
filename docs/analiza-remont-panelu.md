@@ -1,7 +1,7 @@
 # Remont ścieżki wgrywania treści przez panel `/admin`
 
-Status: **WYKONANE** (2026-08-05; zaakceptowane przez Mateusza, wdrożone
-w gałęzi `feat/remont-panelu`). Zakres: schemat kolekcji realizacji,
+Status: **WYKONANE I ZMERGOWANE** (2026-08-05, PR #50; wszystkie punkty
+listy Mateusza domknięte — M6 rozstrzygnięte po wdrożeniu, §11). Zakres: schemat kolekcji realizacji,
 pola panelu Sveltia, walidacja, miniatura wideo i to, co klient widzi na
 ekranie. Poprzedza Etap 7 (umowa i przekazanie) — instrukcje panelu są
 pozycją nr 2 checklisty tego etapu, więc rozjazd dokumentu z rzeczywistością
@@ -30,7 +30,7 @@ Dokumenty, które ten remont **koryguje**:
 | M3  | Miniatura filmu ma powstawać **automatycznie ze środkowej klatki**                                           | panel, strona                  |
 | M4  | Pozycja galerii to **albo zdjęcie, albo film** — wrzucenie filmu ma wykluczyć zdjęcie i odwrotnie             | panel                          |
 | M5  | Etykieta parametru ma się pokazywać na stronie **zawsze wielkimi literami**, cokolwiek wpisze klient          | strona                         |
-| M6  | Plakat wideo pokazujący jednolity ekran — **odłożone świadomie**, wracamy po M3                               | `/realizacje/`, desktop Chrome |
+| M6  | Plakat wideo pokazujący jednolity ekran — **ZAMKNIĘTE, przyczyna poza projektem** (§11)                       | `/realizacje/`, desktop Chrome |
 
 Mateusz zastrzegł, że po wdrożeniu przetestuje wgrywanie ponownie i lista
 może się jeszcze wydłużyć. Ten dokument opisuje rundę pierwszą.
@@ -42,7 +42,7 @@ może się jeszcze wydłużyć. Ten dokument opisuje rundę pierwszą.
 | A — miniatura wideo z klatki         | M3                             | wchodzi, i to jako **fundament**, nie ozdoba (patrz §3.4)     |
 | B — koniec pola „Kafel (cover)"      | M1                             | wchodzi                                                      |
 | C — pierwsza pozycja bez wideo       | M2                             | wchodzi                                                      |
-| D — plakat = jednolity ekran         | M6                             | **odłożone** decyzją Mateusza (D-RP9)                         |
+| D — plakat = jednolity ekran         | M6                             | **zamknięte** po wdrożeniu — nie nasz kod (§11)                |
 | —                                    | **M4** (XOR zdjęcia i filmu)   | **nowe** — najgłębsza zmiana schematu w całej rundzie          |
 | —                                    | **M5** (etykiety wielkimi)     | **nowe** — jedyna pozycja niezwiązana ze schematem            |
 
@@ -288,14 +288,12 @@ wyjątek od zasady twardej nr 2 (`src/content/realizacje/*.json` pisze
 wyłącznie Sveltia) — traktowany jak wyjątek: jeden commit, tylko migracja,
 opisany w PR-ze. Szczegóły i weryfikacja w §6.
 
-### D-RP9 — M6 (plakat) odłożony do czasu wdrożenia klatki
+### D-RP9 — M6 (plakat): ZAMKNIĘTE, przyczyna poza projektem
 
-Zgodnie z decyzją Mateusza. Po wdrożeniu D-RP4/D-RP6 poster przestaje być
-AVIF-em wyliczanym z osobnego zdjęcia, a staje się **JPEG-iem z klatki filmu**
-— zmienia się i format, i adres, i moment powstania. Jeśli objaw zniknie,
-temat jest zamknięty bez dochodzenia. Jeśli przeżyje, wracamy z materiałem
-dowodowym (zrzut z kolorem tła, wersja Chrome'a, powtarzalność, skutek
-twardego odświeżenia) i z gotowym wariantem `<img>` z D-RP6.
+Rozstrzygnięte po wdrożeniu, na produkcji — patrz **§11**. W skrócie: winny
+był **proces Chrome'a działający po podmianie plików przez aktualizację**
+(„Relaunch to update"). Restart przeglądarki naprawił objaw. Zero zmian
+w kodzie; wariant `<img>` z D-RP6 pozostaje nieużyty i nieuzasadniony.
 
 ### D-RP10 — podbicie Sveltii PO remoncie, osobną gałęzią
 
@@ -524,7 +522,7 @@ wgrywania — lista może się jeszcze wydłużyć.
 | Klient wpisze nieprawdziwą długość → klatka spoza filmu → 400 → pusty poster                      | średnia | zapis w obu instrukcjach; objaw widoczny okiem od razu po zapisie                                            |
 | Migracja psuje formatowanie JSON-ów i Sveltia pokazuje wpis inaczej                                | średnia | skrypt trzyma konwencję Sveltii; kontrola = otwarcie zmigrowanego wpisu w panelu                             |
 | Cichy błąd kadru po scaleniu pól (D-RP2)                                                          | niska   | zastane dane nie korzystały z dwóch kadrów; obejrzeć okiem po pierwszej sesji klienta                        |
-| M6 przeżyje podmianę klatki                                                                       | niska   | gotowy wariant `<img>` z D-RP6, wraca jako wąska zmiana                                                      |
+| ~~M6 przeżyje podmianę klatki~~                                                                   | **ZAMKNIĘTE** | przeżył, ale przyczyną był proces Chrome'a po aktualizacji — §11; zero zmian w kodzie              |
 
 ---
 
@@ -570,3 +568,61 @@ szkoleniu — „pierwsza pozycja to okładka".
 Zostaje więc: schemat zatrzymuje build (produkcja stoi na ostatniej dobrej
 wersji, nic nie ginie, naprawa = przeciągnięcie pozycji), a panel **ostrzega
 zawczasu** tekstem `hint` pod polem galerii — jedynym środkiem, jaki tu ma.
+
+---
+
+## 11. M6 — plakat wideo jako jednolita plansza (ZAMKNIĘTE, 2026-08-05)
+
+Objaw: w detalu realizacji, **wyłącznie w desktopowym Chrome**, zamiast
+miniatury filmu widać jednolitą planszę. Mobile i pozostałe przeglądarki —
+w porządku.
+
+**Przyczyna: Chrome z pobraną aktualizacją, czekającą na restart.** Pliki
+binarne przeglądarki zostały już podmienione pod działającym procesem;
+dekodowanie obrazów Chrome wykonuje w osobnym procesie usługowym, który po
+takiej podmianie potrafi przestać działać poprawnie. Restart („Relaunch to
+update") usunął objaw natychmiast. **Zero zmian w kodzie.**
+
+### Dlaczego warto to zapisać
+
+Bo droga do tej odpowiedzi prowadziła przez trzy hipotezy, z których każda
+brzmiała sensownie i **każda okazała się fałszywa** — a odrzucenie ich
+kosztowało pomiary, nie domysły:
+
+| Hipoteza | Dlaczego brzmiała sensownie | Jak upadła |
+| --- | --- | --- |
+| Format AVIF na `poster` | `format=auto` daje Chrome'owi AVIF-a, reszcie WebP/PNG — jedyna zmienna różnicująca przeglądarki | sonda z czterema wariantami (`auto`/AVIF, `webp`, klatka JPEG, kontrolny `<img>`): wszystkie namalowane |
+| Klonowanie kadrów (`cloneNode` z `<template>`) | detal buduje galerię klonami, a modal to jedyne miejsce z objawem | odtworzenie modala na produkcji: plakat na miejscu |
+| Cokolwiek w kodzie strony | objaw powtarzalny u Mateusza | ten sam adres, ta sama wersja Chrome'a, **inny profil** → maluje się |
+
+Rozstrzygnął dopiero pomiar rozrzutu pikseli kadru (jednolita plansza =
+odchylenie ~0) w prawdziwym Chromie na czystym profilu: **odchylenie 63,5,
+plakat pobrany (43 664 B, `200 image/jpeg`)**. Skoro ten sam kod i ta sama
+przeglądarka dawały poprawny wynik, zmienną mogło być już tylko środowisko —
+a wskazówka leżała na zrzucie ekranu Mateusza przez cały czas: przycisk
+**„Relaunch to update"** w prawym górnym rogu.
+
+### Lekcja na przyszłość
+
+1. **Zrzut ekranu niesie więcej niż objaw.** Pasek przeglądarki, wtyczki,
+   stan aktualizacji — patrz na całe okno, nie na sam błąd.
+2. **„Tylko w jednej przeglądarce" nie znaczy „przez tę przeglądarkę".**
+   Zanim zaczniesz obchodzić rzekomą różnicę silników, uruchom to samo
+   w czystym profilu tej samej przeglądarki — to najtańszy sposób oddzielenia
+   kodu od środowiska.
+3. **Pomiar zamiast oglądania.** Odchylenie standardowe pikseli kadru
+   rozstrzyga „namalowane czy nie" jednoznacznie i bez interpretacji zrzutu.
+4. To ten sam wzorzec, co znany błąd wyszarzonego przycisku w Sveltii:
+   **zepsuty stan aplikacji w przeglądarce, leczony restartem** — pierwszy
+   ruch diagnostyczny przy objawie „tylko u mnie i tylko tutaj".
+
+### Czy zostaje jakieś ryzyko
+
+Teoretyczne i bez ani jednego dowodu: adres plakatu kończy się na `.mp4`,
+a Chrome klasyfikuje to żądanie jako `video` (potwierdzone w Resource
+Timing: `initiatorType: "video"`), więc blokery filtrujące po typie mediów
+mogłyby je teoretycznie ubić u części odwiedzających. W incognito (bez
+rozszerzeń) i w normalnym oknie po restarcie miniatura działa tak samo, więc
+**nic tego nie potwierdza**. Wariant `<img>` w galerii + `<video>` dopiero
+w podglądzie zostaje opisany w D-RP6 jako gotowa odpowiedź, gdyby taki
+przypadek kiedyś zgłosił realny użytkownik. Do tego czasu — nie ruszamy.

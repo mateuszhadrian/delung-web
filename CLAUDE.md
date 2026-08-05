@@ -437,15 +437,25 @@ treść/sekcje budowane od nowa wg `docs/design/`).
   zmianę liczby kadrów albo geometrii). Kolektor problemów w testach
   (`tests/helpers/guards.ts`) filtruje teraz oba endpointy `/cdn-cgi/`
   (`image` i `media`) — wcześniej tylko `image`, przez co 404 miniatury
-  wywracał spec „bez błędów konsoli i 404". **Odłożone świadomie:**
-  diagnoza plakatu pokazującego jednolity ekran (desktop Chrome, D-RP9 —
-  NIE odtworzone ani w headless Chromium, ani w prawdziwym Chromie na
-  czystym profilu; obalone hipotezy: format AVIF i klonowanie kadrów;
-  wracamy, jeśli przeżyje podmianę na klatkę) oraz podbicie Sveltii
-  0.170.0 → ~0.180.0 (D-RP10, osobna gałąź, nigdy w dniu szkolenia).
-  **DO PRZEKLIKANIA przed merge'em:** ergonomia wariantów w panelu —
-  czy da się zmienić rodzaj istniejącej pozycji i jak wygląda lista, gdy
-  mieszają się zdjęcia z filmami.
+  wywracał spec „bez błędów konsoli i 404". **Panel przeklikany**
+  (§10 analizy): Sveltia zapisuje `type` dokładnie tak, jak zakłada schemat
+  (potwierdzone na diffie — to było ryzyko nr 1 całego remontu), rodzaju
+  dodanej pozycji NIE DA SIĘ zmienić (uznane za zaletę; opisane w obu
+  instrukcjach), a zapisu z filmem na pierwszej pozycji **panel nie
+  zablokuje** — Sveltia waliduje wyłącznie pojedyncze pola
+  (`valueMissing`/`patternMismatch`), bez żadnego hooka na cały wpis; stąd
+  `hint` pod polem galerii jako jedyne ostrzeżenie PRZED zapisem.
+  **M6 (plakat = jednolita plansza) ZAMKNIĘTE** (§11 analizy): objaw
+  przeżył podmianę na klatkę, ale przyczyną był **proces Chrome'a działający
+  po podmianie plików przez aktualizację** („Relaunch to update") — restart
+  naprawił, ZERO zmian w kodzie. Po drodze obalone trzy hipotezy (format
+  AVIF, klonowanie kadrów, kod strony); rozstrzygnął pomiar rozrzutu pikseli
+  kadru w prawdziwym Chromie na czystym profilu. Lekcja do zapamiętania:
+  **„tylko w jednej przeglądarce" ≠ „przez tę przeglądarkę"** — najpierw
+  czysty profil TEJ SAMEJ przeglądarki, i patrz na CAŁE okno zrzutu
+  (wskazówka leżała na pasku Chrome'a przez cały czas).
+  **Odłożone świadomie:** podbicie Sveltii 0.170.0 → ~0.180.0 (D-RP10,
+  osobna gałąź, nigdy w dniu szkolenia).
 - Etap 7 — przed nami (umowa → przekazanie).
 
 ## Mapa projektu

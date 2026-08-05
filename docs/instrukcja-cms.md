@@ -730,6 +730,7 @@ Ważne, żeby nie mieć fałszywego poczucia bezpieczeństwa:
 | --- | --- | --- |
 | zdjęcie skasowane z R2, adres został we wpisie | build zielony, na stronie dziura | tylko ręczne `CHECK_REMOTE_MEDIA=1` |
 | zdjęcie w HEIC | build zielony, obrazek się nie wyświetla | oko na stronie |
+| **nic z tego — obrazek nie pokazuje się TYLKO u jednej osoby / w jednej przeglądarce** | build zielony, u wszystkich innych dobrze | **to nie jest problem strony** — patrz niżej |
 | film 300 MB, bez faststart | build zielony, film ładuje się wieczność | oko na stronie |
 | **zawyżona „Długość wideo"** | build zielony, **miniatura filmu pusta** (Cloudflare odmawia klatki spoza klipu) | oko na stronie |
 | źle dobrany kadr | build zielony, ucięte zdjęcie | oko na stronie |
@@ -737,6 +738,30 @@ Ważne, żeby nie mieć fałszywego poczucia bezpieczeństwa:
 
 Wniosek operacyjny: **po każdej sesji klienta wejdź na `/realizacje/`
 i przeklikaj to, co dodał.** Automat pilnuje kształtu danych, nie sensu.
+
+### „U mnie się nie wyświetla, a u Ciebie tak" — kolejność sprawdzania
+
+Zdarzyło się realnie (2026-08-05): miniatura filmu jako jednolita plansza,
+**wyłącznie w desktopowym Chrome**, przy poprawnym obrazie wszędzie indziej.
+Winny okazał się **Chrome z pobraną aktualizacją czekającą na restart**
+(przycisk „Relaunch to update") — pliki przeglądarki zostały podmienione pod
+działającym procesem, a dekodowanie obrazów Chrome robi w osobnym procesie
+usługowym. Restart naprawił w sekundę. Pełna historia: `analiza-remont-panelu.md` §11.
+
+Zanim zaczniesz szukać w kodzie:
+
+1. **Zrestartuj przeglądarkę** — zwłaszcza gdy widać, że czeka aktualizacja.
+   To ten sam wzorzec, co wyszarzony przycisk wstawiania zasobu w Sveltii:
+   zepsuty stan aplikacji w przeglądarce, leczony restartem.
+2. **Otwórz w oknie prywatnym** (rozszerzenia wyłączone) — jeśli tam działa,
+   winne jest rozszerzenie, nie strona.
+3. **Sprawdź to samo na drugim urządzeniu.** Jeśli tam dobrze, to nie jest
+   problem strony i nie ma czego naprawiać w repo.
+4. Dopiero potem DevTools → Network i szukanie po stronie serwisu.
+
+Reguła, która oszczędza godziny: **„tylko w jednej przeglądarce" nie znaczy
+„przez tę przeglądarkę"**. Zanim uznasz to za różnicę silników, uruchom to
+samo w czystym profilu TEJ SAMEJ przeglądarki.
 
 ---
 

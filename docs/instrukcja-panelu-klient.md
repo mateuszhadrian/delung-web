@@ -259,7 +259,7 @@ Najczęstsze sytuacje i co warto powiedzieć przez telefon:
 | Panel nie wpuszcza / nie ma kodu z aplikacji | „nie mogę się zalogować" |
 | Panel prosi o jakiś klucz albo hasło do zdjęć | „panel prosi mnie o klucz" — to normalne na nowym urządzeniu, Mateusz to wpisuje |
 | Zapisałem, minęło 10 minut i nic się nie zmieniło | „zapisałem realizację, nie widać jej na stronie" |
-| Zdjęcie się nie wyświetla (puste miejsce) | „zdjęcie się nie pokazuje" — najczęściej format z iPhone'a, patrz początek instrukcji |
+| Zdjęcie się nie wyświetla (puste miejsce) | **najpierw zamknij i otwórz przeglądarkę od nowa** — jeśli nadal nic, powiedz „zdjęcie się nie pokazuje"; częsta przyczyna to format z iPhone'a, patrz początek instrukcji |
 | Film się nie włącza albo ładuje w nieskończoność | „film nie działa" — najczęściej plik nie przeszedł przez HandBrake'a |
 
 ---
