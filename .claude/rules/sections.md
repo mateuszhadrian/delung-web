@@ -38,8 +38,13 @@ wspólne odziedziczone z szablonu + gotchas sekcji, które przeżyły kopię
   bottom sheet (<1024) to czysty CSS przy `WORK_DESKTOP_MIN_PX`;
   zmiana progu przy otwartej nakładce zamyka ją (miejsce galerii w DOM
   jest per-próg — `open-detail.ts`).
+- Pozycja galerii to WARIANT: albo zdjęcie, albo film (remont panelu,
+  `.claude/rules/cms-realizacje.md`). Pierwsza pozycja jest KAFLEM
+  realizacji, więc musi być zdjęciem — `viewProject()` liczy z niej `cover`,
+  dzięki czemu `WorkIndexCard`/`HomeRealizacje` nie wiedzą o zmianie.
 - Galeria detalu delung (4.4): zdjęcia przez `imgAt()`, wideo
-  `<video preload="none" poster playsinline>` — BEZ `controls` i bez
+  `<video preload="none" poster playsinline>` — poster to **klatka ze środka
+  filmu** (`videoFrameAt()`), nie osobne zdjęcie. BEZ `controls` i bez
   własnego znaku play (korekta Mateusza): ikonka kamery w rogu kadru,
   tap w kadr galerii startuje film i otwiera podgląd pełnoekranowy
   (`[data-lightbox]`), w podglądzie tap = pauza↔play; wideo na zrzutach

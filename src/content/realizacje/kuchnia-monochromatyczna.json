@@ -5,20 +5,19 @@
   "category": "kuchnie",
   "year": "2024",
   "description": "Jeden odcień na całej zabudowie, ryflowany front wyspy i blat łączony na zamek. Pełne AGD dobrane i podłączone przez nas.",
-  "cover": {
-    "image": "https://media.delung.pl/realizacje/mono-01.webp",
-    "position": "50% 55%"
-  },
   "gallery": [
     {
+      "type": "photo",
       "image": "https://media.delung.pl/realizacje/mono-01.webp",
       "position": "50% 55%"
     },
     {
+      "type": "photo",
       "image": "https://media.delung.pl/realizacje/mono-02.webp",
       "position": "50% 45%"
     },
     {
+      "type": "photo",
       "image": "https://media.delung.pl/realizacje/mono-03.webp",
       "position": "50% 55%"
     }

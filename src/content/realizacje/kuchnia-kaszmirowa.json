@@ -5,24 +5,24 @@
   "category": "kuchnie",
   "year": "2025",
   "description": "Ciepły kaszmir, fornirowana witryna z podświetleniem LED i blat spiekowy. Cała zabudowa pod sufit, z ukrytymi uchwytami wlotowymi.",
-  "cover": {
-    "image": "https://media.delung.pl/realizacje/kashmir-01.webp",
-    "position": "50% 42%"
-  },
   "gallery": [
     {
+      "type": "photo",
       "image": "https://media.delung.pl/realizacje/kashmir-01.webp",
       "position": "50% 42%"
     },
     {
+      "type": "photo",
       "image": "https://media.delung.pl/realizacje/kashmir-02.webp",
       "position": "50% 50%"
     },
     {
+      "type": "photo",
       "image": "https://media.delung.pl/realizacje/kashmir-03.webp",
       "position": "50% 55%"
     },
     {
+      "type": "photo",
       "image": "https://media.delung.pl/realizacje/kashmir-04.webp",
       "position": "50% 50%"
     }

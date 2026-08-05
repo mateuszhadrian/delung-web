@@ -5,19 +5,22 @@
   "category": "kuchnie",
   "year": "2026",
   "description": "opis tej kuchni, co się w niej znajduje i wszystkich jej elementów",
-  "cover": {
-    "image": "https://media.delung.pl/realizacje/kuchnia-biala1.png"
-  },
   "gallery": [
     {
-      "image": "https://media.delung.pl/realizacje/kuchnia-biala1.png",
+      "type": "photo",
+      "image": "https://media.delung.pl/realizacje/kuchnia-biala1.png"
+    },
+    {
+      "type": "video",
       "video": "https://media.delung.pl/realizacje/kuchnia-zielona-vid.mp4",
       "duration": "0:10"
     },
     {
+      "type": "photo",
       "image": "https://media.delung.pl/realizacje/kuchnia-biala2.png"
     },
     {
+      "type": "photo",
       "image": "https://media.delung.pl/realizacje/kuchnia-biala3.png"
     }
   ],

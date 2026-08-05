@@ -49,7 +49,7 @@ Po zalogowaniu widzisz **listę swoich realizacji**.
 
 ---
 
-## Chcę dodać realizację — 8 kroków
+## Chcę dodać realizację — 7 kroków
 
 ### Krok 1. Zacznij nową realizację
 
@@ -96,47 +96,54 @@ co było do zrobienia, co w niej ciekawego.
 
 ![ZRZUT: wypełnione pola „Rok realizacji" i „Opis"](media/cms-05-opis.png)
 
-### Krok 5. Dodaj zdjęcie główne
+### Krok 5. Dodaj zdjęcia (i film, jeśli masz)
 
-Sekcja **„Kafel (cover)"**, pole **„Zdjęcie"** — to zdjęcie, które ludzie
-zobaczą na liście realizacji. Wybierz najładniejsze, ogólne ujęcie.
+Sekcja **„Galeria (pierwsza pozycja = kafel na liście)"** to wszystkie
+zdjęcia i filmy realizacji. **Musisz dodać co najmniej jedno zdjęcie.**
+W praktyce dobrze wygląda 3–5.
 
-![ZRZUT: wgrywanie pliku do pola „Zdjęcie" — moment wyboru zdjęcia z dysku lub z telefonu](media/cms-06-wgranie-zdjecia.png)
+Dodajesz je pojedynczo — każde to jedna **„Pozycja galerii"**. Przy dodawaniu
+wybierasz, **co to za pozycja**: **„Zdjęcie"** albo **„Film"**.
 
-![ZRZUT: sekcja „Kafel (cover)" z wgranym zdjęciem i pustym polem „Kadr"](media/cms-07-kafel.png)
+![ZRZUT: moment dodawania pozycji galerii — widoczny wybór rodzaju: „Zdjęcie" albo „Film"](media/cms-06-rodzaj-pozycji.png)
 
-Pole **„Kadr (object-position, np. 50% 42%)"** możesz na razie **zostawić
-puste** — wróć do niego dopiero, jeśli po zobaczeniu strony okaże się, że
-zdjęcie jest przycięte nie tak, jak chcesz. Wtedy patrz na koniec instrukcji:
-*„Zdjęcie jest ucięte"*.
-
-### Krok 6. Dodaj zdjęcia do galerii (i film, jeśli masz)
-
-Sekcja **„Galeria"** to zdjęcia, które widać po kliknięciu w realizację.
-**Musisz dodać co najmniej jedno.** W praktyce dobrze wygląda 3–5.
-
-Dodajesz je pojedynczo — każde to jedna **„Pozycja galerii"**.
+> ### ⭐ Pierwsze zdjęcie to okładka
+>
+> **Pierwsza pozycja galerii pokazuje się na liście realizacji** — to ją
+> ludzie zobaczą jako pierwszą. Daj tam najładniejsze, ogólne ujęcie.
+>
+> Z tego samego powodu **pierwsza pozycja nie może być filmem**. Jeśli
+> zaczniesz galerię od filmu, strona się nie zaktualizuje, a Mateusz dostanie
+> powiadomienie — wtedy wystarczy przesunąć film niżej.
 
 ![ZRZUT: sekcja „Galeria" z trzema dodanymi pozycjami, widoczne nazwy plików](media/cms-08-galeria.png)
 
-**Jeśli chcesz dodać film**, to najważniejsza rzecz w całej instrukcji:
+Pole **„Kadr (object-position, np. 50% 42%)"** możesz **zostawić puste** —
+wróć do niego dopiero, jeśli po zobaczeniu strony okaże się, że zdjęcie jest
+przycięte nie tak, jak chcesz. Wtedy patrz na koniec instrukcji:
+*„Zdjęcie jest ucięte"*.
 
-> ### 🎥 Film zawsze razem ze zdjęciem
->
-> Film **nie jest osobną pozycją**. Wchodzi **do środka pozycji, która ma
-> już zdjęcie** — i to zdjęcie robi za okładkę filmu (widać je, zanim film
-> ruszy).
->
-> W tej samej pozycji galerii wypełniasz:
->
-> 1. **„Zdjęcie"** — ładny kadr, najlepiej z tego filmu.
-> 2. **„Wideo MP4 (opcjonalne — zdjęcie wyżej staje się posterem)"** —
->    tu wgrywasz film **przepuszczony przez HandBrake'a** (nie surowy plik
->    z telefonu — jest za ciężki i strona będzie się wlokła).
-> 3. **„Długość wideo (np. 0:24 — opis przy znaczku play)"** — wpisz, ile
->    film trwa, np. `0:24`. Możesz pominąć.
+**Jeśli chcesz dodać film:**
 
-![ZRZUT: rozwinięta pozycja galerii z wypełnionymi polami „Zdjęcie", „Wideo MP4" i „Długość wideo"](media/cms-09-pozycja-z-filmem.png)
+> ### 🎥 Film to osobna pozycja — miniaturka zrobi się sama
+>
+> Dodaj pozycję rodzaju **„Film"**. Nie wgrywasz do niej żadnego zdjęcia —
+> obrazek, który widać przed odtworzeniem, strona **wycina sama z Twojego
+> filmu**, ze środka.
+>
+> Wypełniasz dwa pola:
+>
+> 1. **„Wideo MP4 (miniatura powstanie sama z klatki filmu)"** — tu wgrywasz
+>    film **przepuszczony przez HandBrake'a** (nie surowy plik z telefonu —
+>    jest za ciężki i strona będzie się wlokła).
+> 2. **„Długość wideo (np. 0:24 — podpis i środek miniatury)"** — wpisz, ile
+>    film **naprawdę** trwa, np. `0:24`.
+>
+> ⚠️ **Podaj prawdziwą długość.** Strona liczy z niej, z którego momentu wziąć
+> obrazek. Jeśli wpiszesz `5:00` przy filmie na pół minuty, obrazka nie będzie
+> wcale — zostanie puste miejsce.
+
+![ZRZUT: rozwinięta pozycja galerii rodzaju „Film" z polami „Wideo MP4" i „Długość wideo"](media/cms-09-pozycja-z-filmem.png)
 
 **Jak przygotować film (na komputerze):**
 
@@ -146,15 +153,16 @@ Dodajesz je pojedynczo — każde to jedna **„Pozycja galerii"**.
 4. Kliknij **Start** i poczekaj.
 5. Gotowy, mały plik `.mp4` wgraj w panelu do pola **„Wideo MP4…"**.
 
-Na stronie film **nie ma paska odtwarzacza** — w rogu zdjęcia jest mała
-ikonka kamery, a film włącza się po dotknięciu zdjęcia. Tak ma być.
+Na stronie film **nie ma paska odtwarzacza** — w rogu miniaturki jest mała
+ikonka kamery, a film włącza się po jej dotknięciu. Tak ma być.
 
-### Krok 7. Wypełnij parametry
+### Krok 6. Wypełnij parametry
 
 Sekcja **„Parametry (specs)"** — to tabelka pod opisem realizacji. Każdy
 wiersz to **„Etykieta (np. MATERIAŁY / BLAT / ZAKRES)"** i **„Wartość"**.
 
-Etykiety pisz **wielkimi literami**. Sprawdzony zestaw:
+Etykiety **strona i tak pokaże wielkimi literami**, więc nie musisz się tym
+przejmować — `blat` wyświetli się jako `BLAT`. Sprawdzony zestaw:
 
 | Etykieta | Wartość — przykład |
 | --- | --- |
@@ -168,7 +176,7 @@ Etykiety pisz **wielkimi literami**. Sprawdzony zestaw:
 
 Ta tabelka robi w portfolio duże wrażenie — warto ją wypełniać zawsze.
 
-### Krok 8. Zapisz i poczekaj
+### Krok 7. Zapisz i poczekaj
 
 Zapisz realizację.
 
@@ -288,10 +296,9 @@ materiale klienta.
 | `cms-03-nowy-wpis.png` | pusty formularz nowej realizacji, górna część |
 | `cms-04-kategoria.png` | rozwinięta lista „Kategoria" — wszystkie siedem pozycji naraz |
 | `cms-05-opis.png` | wypełnione „Rok realizacji" i „Opis" |
-| `cms-06-wgranie-zdjecia.png` | moment wgrywania pliku do pola „Zdjęcie" |
-| `cms-07-kafel.png` | sekcja „Kafel (cover)" ze zdjęciem i pustym „Kadr" |
-| `cms-08-galeria.png` | „Galeria" z trzema pozycjami |
-| `cms-09-pozycja-z-filmem.png` | rozwinięta pozycja galerii z „Zdjęcie" + „Wideo MP4" + „Długość wideo" |
+| `cms-06-rodzaj-pozycji.png` | moment dodawania pozycji galerii — wybór rodzaju „Zdjęcie" / „Film" |
+| `cms-08-galeria.png` | „Galeria" z trzema pozycjami (w tym jedną rodzaju „Film") |
+| `cms-09-pozycja-z-filmem.png` | rozwinięta pozycja rodzaju „Film": „Wideo MP4" + „Długość wideo" |
 | `cms-10-parametry.png` | „Parametry (specs)" z pięcioma wierszami |
 | `cms-11-zapis.png` | moment zapisu i to, co panel pokazuje zaraz po nim |
 | `cms-12-na-stronie.png` | efekt na `delung.pl/realizacje/` — kafelek + otwarty szczegół |
@@ -312,10 +319,10 @@ oddawaj instrukcji klientowi.
 | --- | --- | --- |
 | 1 | Ile kroków ma logowanie i co dokładnie widać po drodze | *Logowanie* |
 | 2 | Jak nazywa się akcja rozpoczęcia nowej realizacji — wstaw prawdziwą nazwę | Krok 1 |
-| 3 | Czy pola stoją w tej kolejności co w instrukcji | Kroki 2–7 |
-| 4 | Jak dodaje się kolejną pozycję do „Galerii" i „Parametrów" — opisz jednym zdaniem | Kroki 6–7 |
+| 3 | Czy pola stoją w tej kolejności co w instrukcji | Kroki 2–6 |
+| 4 | **Jak wygląda wybór rodzaju pozycji („Zdjęcie" / „Film") i czy da się zmienić rodzaj już dodanej pozycji** | Krok 5 |
 | 5 | Jak wgrywa się plik: z dysku, przeciągnięciem, czy przez wspólną bibliotekę | Krok 5 |
-| 6 | Jak nazywa się akcja zapisu i co panel pokazuje po zapisaniu | Krok 8 |
+| 6 | Jak nazywa się akcja zapisu i co panel pokazuje po zapisaniu | Krok 7 |
 | 7 | Czy panel pyta o potwierdzenie przy usuwaniu | *Chcę usunąć realizację* |
 | 8 | Czy panel da się sensownie obsłużyć na telefonie — jeśli nie, dopisz to wprost | cały dokument |
 | 9 | Realny czas od zapisu do zmiany na stronie (zmierz dwa razy) — popraw „2 minuty", jeśli wychodzi inaczej | cały dokument |

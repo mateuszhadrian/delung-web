@@ -30,7 +30,11 @@ interface Entry {
   order: number;
   title: string;
   category: string;
-  gallery: { image: string; video?: string; duration?: string }[];
+  // Pozycja galerii to wariant (D-RP1): albo zdjęcie, albo film — nigdy oba.
+  gallery: (
+    | { type: "photo"; image: string }
+    | { type: "video"; video: string; duration?: string }
+  )[];
 }
 const DIR = fileURLToPath(
   new URL("../../src/content/realizacje", import.meta.url),
@@ -49,7 +53,9 @@ const CATS_EMPTY = CATEGORIES.filter(
 );
 const countOf = (slug: string) =>
   ENTRIES.filter((e) => e.category === slug).length;
-const VIDEO_ENTRY = ENTRIES.find((e) => e.gallery.some((g) => g.video));
+const VIDEO_ENTRY = ENTRIES.find((e) =>
+  e.gallery.some((g) => g.type === "video"),
+);
 
 usePreviewGuard();
 
@@ -419,7 +425,11 @@ test.describe("detal desktop: modal, galeria, projnav", () => {
   }) => {
     test.skip(!VIDEO_ENTRY, "brak wpisu z wideo w kolekcji");
     const entry = VIDEO_ENTRY!;
-    const videoIdx = entry.gallery.findIndex((g) => g.video);
+    const videoIdx = entry.gallery.findIndex((g) => g.type === "video");
+    const videoItem = entry.gallery[videoIdx] as {
+      video: string;
+      duration?: string;
+    };
     await gotoReady(page, PATH);
     const card = page.locator(`.re-grid [data-work-slug="${entry.slug}"]`);
     await card.scrollIntoViewIfNeeded();
@@ -432,14 +442,20 @@ test.describe("detal desktop: modal, galeria, projnav", () => {
     // bez `controls` i bez własnego znaku play (korekta Mateusza) —
     // ewentualny znak może dodać wyłącznie sama przeglądarka
     expect(await video.getAttribute("controls")).toBeNull();
-    // rozmiary obrazów WYŁĄCZNIE przez imgAt() — na preview (build prod)
-    // poster idzie przez /cdn-cgi/image/ (lokalnie 404 — znany artefakt)
-    expect(await video.getAttribute("poster")).toMatch(/^\/cdn-cgi\/image\//);
+    // Po remoncie panelu pozycja z filmem NIE MA własnego zdjęcia — plakatem
+    // jest klatka wycięta z samego filmu przez videoFrameAt() (D-RP4).
+    // Na preview (build prod) endpoint 404-uje lokalnie — znany artefakt.
+    const poster = await video.getAttribute("poster");
+    expect(poster).toMatch(
+      /^\/cdn-cgi\/media\/mode=frame,time=\d+s,width=\d+\//,
+    );
+    // klatka pochodzi Z TEGO SAMEGO pliku, który jest odtwarzany
+    expect(poster).toContain(videoItem.video);
 
     // dojazd do kadru z wideo: ikonka kamery + czas trwania na kadrze
     await detail.locator(`[data-dashes] [data-shot="${videoIdx}"]`).click();
     await expect(detail.locator("[data-gal] [data-cam]")).toBeVisible();
-    if (entry.gallery[videoIdx].duration) {
+    if (videoItem.duration) {
       await expect(detail.locator("[data-gal] .dt-time")).toBeVisible();
     }
 
