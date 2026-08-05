@@ -1,0 +1,40 @@
+{
+  "slug": "kuchnia-zmigrodzka",
+  "order": 10,
+  "title": "Kuchnia Żmigrodzka",
+  "category": "kuchnie",
+  "year": "2025",
+  "description": "Bardzo fajna kuchnia cała z Kaszmiru, generalnie sztos",
+  "gallery": [
+    {
+      "type": "photo",
+      "image": "https://media.delung.pl/realizacje/IMG_2690.jpeg"
+    },
+    {
+      "type": "video",
+      "video": "https://media.delung.pl/realizacje/IMG_2688-1.mp4"
+    },
+    {
+      "type": "photo",
+      "image": "https://media.delung.pl/realizacje/IMG_2689.jpeg"
+    },
+    {
+      "type": "photo",
+      "image": "https://media.delung.pl/realizacje/IMG_2691.jpeg"
+    }
+  ],
+  "specs": [
+    {
+      "label": "blat",
+      "value": "twardy jak skała"
+    },
+    {
+      "label": "zawiasy",
+      "value": "Blum"
+    },
+    {
+      "label": "rolety",
+      "value": "Apple Panadonic"
+    }
+  ]
+}
