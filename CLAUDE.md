@@ -454,8 +454,28 @@ treść/sekcje budowane od nowa wg `docs/design/`).
   **„tylko w jednej przeglądarce" ≠ „przez tę przeglądarkę"** — najpierw
   czysty profil TEJ SAMEJ przeglądarki, i patrz na CAŁE okno zrzutu
   (wskazówka leżała na pasku Chrome'a przez cały czas).
-  **Odłożone świadomie:** podbicie Sveltii 0.170.0 → ~0.180.0 (D-RP10,
-  osobna gałąź, nigdy w dniu szkolenia).
+- **Podbicie Sveltii 0.170.0 → 0.178.0 — WYKONANE** (2026-08-06; domyka
+  D-RP10, przebieg i pomiary: `docs/analiza-remont-panelu.md` §12): zmiana to
+  **jedna linia** w `public/admin/index.html` (panel wisi na jsDelivr — nie ma
+  lockfile'a ani zależności npm). Wzięta wersja z dwudniowym stażem zamiast
+  najnowszej 0.180.0 wydanej tego samego dnia; różnica udokumentowana między
+  nimi to DWIE LOKALIZACJE, więc nie tracimy nic. Jedyna zmiana łamiąca
+  w całym paśmie (v0.174.0: Google Fonts → Fontsource) dotyczy **wyłącznie
+  stron z CSP** — **CSP nie mamy** ani w repo, ani w nagłówkach produkcji
+  (sprawdzone dwoma pomiarami). Sonda w binarium (technika z §2.5): wystąpienia
+  `hasVariableTypes`/`typeKey`/`rangeUnderflow`/`showDirectoryPicker` oraz
+  `valueMissing`/`patternMismatch` **identyczne** — czyli warianty listy stoją,
+  a ustalenie „panel nie zablokuje filmu na pierwszej pozycji" obowiązuje dalej.
+  Jedyna różnica (`cloudflare_r2` 5 → 14) to w całości nowe tłumaczenia
+  etykiety klucza R2; to samo tłumaczy bundle 1 972 914 → 2 480 375 B (+26 %,
+  bez wpływu na LHCI — mierzy strony serwisu, nie `/admin`). Regresja
+  przeklikana w trybie lokalnego repozytorium: **klucze `type` po zapisie
+  nietknięte**, diff osiem linii bez pól-śmieci, formater bajtowo w tym samym
+  stylu — czyli przebudowa edytora listy z v0.176.0 („Improved the list editor
+  UX", jedyna pozycja changelogu przeoczona przy wstępnym przeglądzie) NIE
+  ruszyła formatu zapisu. Przy okazji domknięte pytanie otwarte z remontu:
+  **`hint` pod polem galerii się renderuje**. Upload do R2 = jedyny punkt poza
+  zasięgiem trybu lokalnego, weryfikowany po merge'u na produkcji.
 - Etap 7 — przed nami (umowa → przekazanie).
 
 ## Mapa projektu
