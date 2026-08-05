@@ -57,7 +57,8 @@ git log --oneline -3
 - Media w R2 sprawdzi
   `CHECK_REMOTE_MEDIA=1 pnpm exec vitest run tests/unit/media-r2.test.ts`.
 - Sprawdź na dev/preview: kafelek na liście, filtr kategorii, detal
-  (Modal desktop / BottomSheet mobile), odtworzenie wideo na tap.
+  (JEDEN overlay `#work-detail` — modal ≥1024, bottom sheet poniżej),
+  odtworzenie wideo na tap.
 - Przy USUWANIU realizacji przypomnij: Sveltia nie kasuje plików z R2 —
   osierocone media sprząta się ręcznie w dashboardzie R2 (przy wideo
   szczególnie ważne).

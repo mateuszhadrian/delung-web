@@ -1,6 +1,7 @@
 // Dostępność mediów R2: HEAD do każdego URL-a media.delung.pl z JSON-ów
-// realizacji. Zewnętrzna sieć = flaky ⇒ test NIE biega na PR-ach; odpala się
-// wyłącznie z CHECK_REMOTE_MEDIA=1 (CI na main, /release-check).
+// realizacji. Zewnętrzna sieć = flaky ⇒ test nie biega w CI W OGÓLE (ani na
+// PR-ach, ani na main — żaden workflow nie ustawia zmiennej); odpala się
+// wyłącznie z CHECK_REMOTE_MEDIA=1: ręcznie i w /release-check.
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
