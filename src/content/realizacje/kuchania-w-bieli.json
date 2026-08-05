@@ -1,0 +1,38 @@
+{
+  "slug": "Kuchania w bieli",
+  "order": 10,
+  "title": "Kuchnia w bieli",
+  "category": "kuchnie",
+  "year": "2026",
+  "description": "Nowoczesna elegancja w kontrastowym wydaniu. W tej realizacji postawiliśmy na ponadczasowe połączenie bieli z wyrazistymi, czarnymi detalami. Gładkie fronty bezbłędnie komponują się z blatem i panelem ściennym o strukturze jasnego marmuru.",
+  "cover": {
+    "image": "https://media.delung.pl/realizacje/kuchnia-zielona1.png"
+  },
+  "gallery": [
+    {
+      "image": "https://media.delung.pl/realizacje/kuchnia-zielona1.png"
+    },
+    {
+      "image": "https://media.delung.pl/realizacje/kuchnia-zielona2.png"
+    },
+    {
+      "image": "https://media.delung.pl/realizacje/zdjęcie-zielona3.png",
+      "video": "https://media.delung.pl/realizacje/kuchnia-zielona-vid.mp4",
+      "duration": "0:10"
+    }
+  ],
+  "specs": [
+    {
+      "label": "MATERIAŁY",
+      "value": "Płyta lakierowana mat, tkanina tapicerska"
+    },
+    {
+      "label": "BLAT",
+      "value": "Marmur"
+    },
+    {
+      "label": "SYSTEMY / OKUCIA",
+      "value": "Szuflady wewnętrzne Blum, pantograf"
+    }
+  ]
+}
