@@ -102,7 +102,7 @@ realnym przejściu.
    (zmienne `GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET`, custom domain
    `auth.delung.pl`). To Twoja interwencja, nie klienta.
 5. **Panel wygląda na pusty / nie ładuje się.** `public/admin/index.html`
-   wciąga Sveltię z jsDelivr z **przypiętą** wersją (dziś `0.170.0`). Awaria
+   wciąga Sveltię z jsDelivr z **przypiętą** wersją (dziś `0.178.0`). Awaria
    CDN albo wycofanie wersji = pusty ekran. Nie podbijaj wersji „na szybko"
    przy kliencie na linii — to świadoma zmiana + test `/admin`.
 
@@ -985,4 +985,9 @@ Dla Ciebie — dodatkowo:
    (reguła `.claude/rules/cms-realizacje.md`). Niespójność przechodzi
    lokalnie i wybucha w CI przy pierwszym wpisie z panelu.
 8. **Nie podbijaj wersji Sveltii** (`public/admin/index.html`, dziś
-   `0.170.0`) bez przetestowania `/admin` — i nigdy w dniu szkolenia.
+   `0.178.0`) bez przetestowania `/admin` — i nigdy w dniu szkolenia.
+   Sposób testowania bez ryzyka dla produkcji: **tryb lokalnego
+   repozytorium** („Work with Local Repository" na ekranie logowania).
+   `config.yml` ma `branch: main`, więc panel odpalony na localhoscie
+   i tak commituje WPROST NA PRODUKCJĘ — procedura w
+   `docs/analiza-remont-panelu.md` §10 i §12.

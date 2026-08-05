@@ -302,6 +302,9 @@ tej, w której warianty listy zostały zweryfikowane w binarium. Podbicie do
 ~0.180.0 to osobna gałąź, osobne przeklikanie `/admin` i **nigdy w dniu
 szkolenia klienta**.
 
+> **WYKONANE** (2026-08-06): podbito do **0.178.0** — przebieg, pomiary
+> i wynik regresji w §12.
+
 ---
 
 ## 4. Jak to wygląda po zmianie — trzy miejsca naraz
@@ -626,3 +629,110 @@ rozszerzeń) i w normalnym oknie po restarcie miniatura działa tak samo, więc
 **nic tego nie potwierdza**. Wariant `<img>` w galerii + `<video>` dopiero
 w podglądzie zostaje opisany w D-RP6 jako gotowa odpowiedź, gdyby taki
 przypadek kiedyś zgłosił realny użytkownik. Do tego czasu — nie ruszamy.
+
+---
+
+## 12. Podbicie Sveltii 0.170.0 → 0.178.0 (D-RP10 ZAMKNIĘTE, 2026-08-06)
+
+Zakres zmiany w kodzie: **jedna linia** w `public/admin/index.html` (tag
+`<script>` z jsDelivr). Nie ma lockfile'a ani zależności npm — panel wisi na
+CDN-ie. Cała wartość tej sesji leżała więc w weryfikacji, nie w edycji.
+
+### Dlaczego 0.178.0, a nie najnowsza
+
+W chwili podbicia najnowsza była **0.180.0, wydana tego samego dnia**. Przy
+tempie ~28 wydań miesięcznie łatka `.1` po świeżym wydaniu bywa szybko, więc
+wzięliśmy wersję z **dwudniowym stażem**. Kosztowało to dokładnie tyle, ile
+udokumentowano między 0.178.0 a 0.180.0: **dwie lokalizacje** (arabska,
+turecka). Żadnej naprawy, żadnej funkcji.
+
+### Co sprawdzono PRZED dotknięciem panelu
+
+| Sonda | Wynik |
+| --- | --- |
+| CSP w repo (`grep`, `public/_headers`, meta w `index.html`) | **brak** |
+| CSP w nagłówkach produkcji (`curl -I https://delung.pl/admin/`) | **brak** |
+| Fonty po starcie panelu | pobierane z `cdn.jsdelivr.net/fontsource/…` |
+| Panel wstaje na 0.178.0 | ✅ zero błędów konsoli, `config.yml` sparsowany |
+
+Jedyna zmiana łamiąca w całym paśmie (v0.174.0: **Google Fonts → Fontsource**,
+ze skutkiem wyłącznie dla stron z CSP) **nas nie dotyczy** — i to jest wynik
+z dwóch niezależnych pomiarów, nie z lektury changelogu.
+
+### Sonda w binarium — powtórzenie techniki z §2.5
+
+Oba pliki z jsDelivr, zliczone wystąpienia mechanizmów, na których stoi nasz
+panel:
+
+| Symbol | 0.170.0 | 0.178.0 |
+| --- | --- | --- |
+| `hasVariableTypes` (warianty pozycji listy) | 3 | 3 |
+| `typeKey` | 6 | 6 |
+| `rangeUnderflow` (walidacja `min`) | 7 | 7 |
+| `valueMissing` / `patternMismatch` | 9 / 5 | 9 / 5 |
+| `showDirectoryPicker` (tryb lokalny) | 3 | 3 |
+| `cloudflare_r2` | 5 | **14** |
+
+Jedyna różnica — `cloudflare_r2` — okazała się po obejrzeniu kontekstów
+**w całości nowymi tłumaczeniami** etykiety „Secret Access Key" (chorwacki,
+ukraiński, rosyjski, bułgarski…). Definicja usługi i logika autoryzacji są
+strukturalnie te same. To samo tłumaczy wzrost bundla: **1 972 914 →
+2 480 375 B (+26 %)**, czyli panel wczytuje się zauważalnie dłużej na słabym
+łączu. Bez wpływu na budżety LHCI — te mierzą strony serwisu, nie `/admin`.
+
+Niezmienione `valueMissing`/`patternMismatch` znaczą też, że ustalenie z §10
+**obowiązuje dalej**: nadal nie ma hooka walidacji całego wpisu, więc filmu na
+pierwszej pozycji panel nie zablokuje, a `hint` pozostaje jedynym ostrzeżeniem
+PRZED zapisem.
+
+### Regresja przeklikana w panelu (Mateusz, 2026-08-06)
+
+Znowu w **trybie lokalnego repozytorium**, z tego samego powodu co przy
+remoncie: `config.yml` ma `branch: main`, więc zwykłe logowanie pisze wprost
+na produkcję.
+
+| Co sprawdzone | Wynik |
+| --- | --- |
+| Panel wstaje, lista realizacji | ✅ 6 wpisów |
+| Film rozpoznany jako wariant „Film" | ✅ bez pola na zdjęcie |
+| **`hint` pod polem galerii się renderuje** | ✅ **domyka pytanie otwarte z 0.170.0** |
+| Dodanie pozycji pyta o rodzaj | ✅ „Zdjęcie" / „Film", pola tylko wybranego |
+| Zmiana kolejności przeciąganiem | ✅ |
+| **Co Sveltia zapisuje do JSON-a** | ✅ **klucze `type` nietknięte** |
+| `test:unit` + `build` na zapisanym wpisie | ✅ zielone |
+
+Punkt krytyczny — diff po zapisie (zmiana roku + przestawienie pozycji
+galerii) miał **osiem zmienionych linii i ani jednej więcej**: przeniesione
+całe obiekty bez przetasowania pól w środku, zero pól-śmieci (czyli
+`omit_empty_optional_fields` dalej działa), formater bajtowo w tym samym
+stylu. To domyka ryzyko nr 1 tego podbicia: **przebudowa edytora listy
+z v0.176.0 („Improved the list editor UX") nie ruszyła formatu zapisu.**
+
+> Ta jedna pozycja changelogu jest jedynym miejscem, w którym wstępny przegląd
+> wydań się mylił — tabela w `sveltia-bump-prompt.md` mówiła „warianty listy:
+> żadnych zmian". Formalnie `types`/`typeKey` faktycznie nikt nie ruszał, ale
+> **edytor listy owszem**. Przy kolejnym podbiciu czytaj changelog pod kątem
+> widgetów, nie tylko nazw opcji configu.
+
+### Czego tryb lokalny NIE pokrywa
+
+**Uploadu do R2** — pole `image`/`file` w trybie lokalnego repozytorium
+zapisuje plik do drzewa roboczego, nie do bucketa. Weryfikacja tego punktu
+odbywa się **po merge'u, na produkcji**, wpisem testowym (procedura
+sprzątania: `instrukcja-cms.md` §9, kontrola `CHECK_REMOTE_MEDIA=1`).
+
+### Drobiazgi do wiedzy diagnostycznej
+
+- Sveltia loguje w konsoli `A new version (0.180.0) is available…`, gdy
+  przypięta wersja jest starsza od najnowszej. **Tylko konsola** — klient nie
+  zobaczy żadnego banera w UI. Nie myl tego z awarią.
+- Sprawdzenie wersji leci żądaniem do `unpkg.com`, a status backendu do
+  `githubstatus.com`. Oba dotyczą wyłącznie `/admin` (noindex, poza ścieżką
+  odwiedzającego), więc polityki prywatności nie ruszają.
+
+### Wycofanie
+
+Przywrócenie numeru wersji w jednej linii, PR, merge — panel wraca do 0.170.0
+w ~2 minuty od merge'a. **Żadne dane nie są zagrożone**: wersja panelu nie ma
+wpływu ani na treść zapisaną w repo, ani na pliki w R2. To jest powód, dla
+którego ta zmiana była bezpieczna mimo pozornie dużego skoku numeru.
