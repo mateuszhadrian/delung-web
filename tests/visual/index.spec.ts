@@ -8,13 +8,13 @@
 // Kafle realizacji na preview to beżowe placeholdery (lokalny 404 mediów
 // R2 — media żyją na media.delung.pl; spójne z baseline'ami work-index).
 import { expect, test, type Page } from "@playwright/test";
-import { usePreviewGuard } from "../helpers/guards";
+import { useVisualFixtureGuard } from "../helpers/guards";
 import { scrollPageTo, scrollPageToStable, settle } from "../helpers/scroll";
 import { prepareSweep } from "../helpers/visual";
 
 const PATH = "/";
 
-usePreviewGuard();
+useVisualFixtureGuard();
 
 /** Dojeżdża do sekcji, czeka aż reveale i pętle ruchu usiądą, zrzuca element.
  *  Mikro-scroll przed zrzutem = wymuszenie re-rasteryzacji warstwy sticky

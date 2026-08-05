@@ -7,13 +7,13 @@
 // znane 404 (/cdn-cgi/image istnieje tylko na produkcji) — kafle renderują
 // tło #e5e1da deterministycznie.
 import { expect, test, type Page } from "@playwright/test";
-import { usePreviewGuard } from "../helpers/guards";
+import { useVisualFixtureGuard } from "../helpers/guards";
 import { settle } from "../helpers/scroll";
 import { prepareSweep } from "../helpers/visual";
 
 const PATH = "/realizacje/";
 
-usePreviewGuard();
+useVisualFixtureGuard();
 
 async function prepare(page: Page) {
   await prepareSweep(page, PATH);
