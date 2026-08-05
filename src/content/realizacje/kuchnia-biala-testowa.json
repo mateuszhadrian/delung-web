@@ -1,0 +1,38 @@
+{
+  "slug": "kuchnia-biala-testowa",
+  "order": 1,
+  "title": "Kuchnia Biała Testowa",
+  "category": "kuchnie",
+  "year": "2026",
+  "description": "opis tej kuchni, co się w niej znajduje i wszystkich jej elementów",
+  "cover": {
+    "image": "https://media.delung.pl/realizacje/kuchnia-biala1.png"
+  },
+  "gallery": [
+    {
+      "image": "https://media.delung.pl/realizacje/kuchnia-biala1.png",
+      "video": "https://media.delung.pl/realizacje/kuchnia-zielona-vid.mp4",
+      "duration": "0:10"
+    },
+    {
+      "image": "https://media.delung.pl/realizacje/kuchnia-biala2.png"
+    },
+    {
+      "image": "https://media.delung.pl/realizacje/kuchnia-biala3.png"
+    }
+  ],
+  "specs": [
+    {
+      "label": "parametr 1",
+      "value": "odnośnie parametru 1"
+    },
+    {
+      "label": "parametr 2",
+      "value": "i tutaj jakieś rzeczy"
+    },
+    {
+      "label": "blat",
+      "value": "bardzo ładny"
+    }
+  ]
+}
