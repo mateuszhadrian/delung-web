@@ -48,7 +48,10 @@ video?, duration?}` (min 1), `specs[] {label, value}`.
 - Wideo BEZ transformacji — serwowane wprost z R2
   (`<video preload="none" poster={imgAt(...)}>`; poster = obraz z tej
   samej pozycji galerii). Limity: H.264+AAC, 1080p, ≤ ~30 MB/klip.
-- Tagi: max 3 (pilnuje Zod i UI) — nie zwiększaj bez zmiany UI.
+- Dostępności mediów NIE pilnuje żadne CI: schemat sprawdza tylko, że adres
+  jest napisem. `tests/unit/media-r2.test.ts` (HEAD po każdym URL-u) biega
+  wyłącznie z `CHECK_REMOTE_MEDIA=1` — ręcznie i w `/release-check`. Po
+  sprzątaniu bucketa odpal go sam.
 
 ## Autoryzacja panelu
 
