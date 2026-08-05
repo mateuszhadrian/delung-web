@@ -1,5 +1,15 @@
 // Strażniki wspólne dla testów Playwright.
+import { readdirSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import { test, type Page } from "@playwright/test";
+
+/** Ile wpisów ma zamrożony zestaw testów wizualnych (tests/fixtures/realizacje). */
+const FIXTURE_DIR = fileURLToPath(
+  new URL("../fixtures/realizacje", import.meta.url),
+);
+const FIXTURE_ENTRIES = readdirSync(FIXTURE_DIR).filter((f) =>
+  f.endsWith(".json"),
+).length;
 
 /** Strażnik preview: testy biegają na buildzie produkcyjnym (pnpm preview),
  *  NIGDY na dev serverze. Astro dev wstrzykuje klienta Vite — wykrywamy go
@@ -29,6 +39,40 @@ export function usePreviewGuard(): void {
   test.beforeAll(async ({ browser }) => {
     const page = await browser.newPage();
     await assertPreview(page);
+    await page.close();
+  });
+}
+
+/** Strażnik zamrożonej treści: baseline'y wizualne realizacji stoją na
+ *  tests/fixtures/realizacje, więc `dist` pod testem MUSI pochodzić
+ *  z `pnpm build:visual`. Zwykły `pnpm build` wciąga treść produkcyjną
+ *  (pisze ją klient przez panel) i każdy zrzut siatki, szyny, liczników,
+ *  sceny na stronie głównej i detalu rozjeżdża się co do piksela. Bez tego
+ *  strażnika objawem jest pixel-diff, z nim — jedno czytelne zdanie. */
+export async function assertVisualFixture(page: Page): Promise<void> {
+  const res = await page.request.get("/realizacje/");
+  if (!res.ok()) return; // brak strony diagnozuje assertPreview
+  const html = await res.text();
+  // Jeden <template data-work-detail="slug"> na wpis kolekcji.
+  const entries = (html.match(/data-work-detail=/g) ?? []).length;
+  if (entries !== FIXTURE_ENTRIES) {
+    throw new Error(
+      `Testy wizualne wymagają buildu na zamrożonej treści: /realizacje/ ma ` +
+        `${entries} wpisów, a tests/fixtures/realizacje ma ${FIXTURE_ENTRIES}. ` +
+        `Odpal: pnpm build:visual && pnpm test:visual (zwykły pnpm build ` +
+        `wciąga treść z panelu i rozjeżdża baseline'y).`,
+    );
+  }
+}
+
+/** Rejestruje `beforeAll` z obydwoma strażnikami wizualnymi (preview +
+ *  zamrożona treść) — dla speców, których zrzuty zależą od kolekcji
+ *  realizacji. */
+export function useVisualFixtureGuard(): void {
+  test.beforeAll(async ({ browser }) => {
+    const page = await browser.newPage();
+    await assertPreview(page);
+    await assertVisualFixture(page);
     await page.close();
   });
 }

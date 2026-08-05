@@ -7,19 +7,33 @@ liczby szablonu nie obowiązują.
 
 ## Co zmieniasz → co uruchamiasz
 
-| Zmiana                                                        | Warstwa (komenda)                    |
-| ------------------------------------------------------------- | ------------------------------------ |
-| `src/content.schema.ts` / `content.config.ts` / nowy wpis CMS | `pnpm test:unit` (kontrakt CMS)      |
-| `src/i18n/**`, `src/lib/img.ts`, `src/lib/contact-form.ts`    | `pnpm test:unit`                     |
-| `src/scripts/**`, navbar, Work/overlaye, kontakt              | `pnpm test:e2e`                      |
-| Każda zmiana wyglądu                                          | `pnpm build && pnpm test:visual`     |
-| Przed release                                                 | pełne `pnpm test` + `/release-check` |
+| Zmiana                                                        | Warstwa (komenda)                       |
+| ------------------------------------------------------------- | --------------------------------------- |
+| `src/content.schema.ts` / `content.config.ts` / nowy wpis CMS | `pnpm test:unit` (kontrakt CMS)         |
+| `src/i18n/**`, `src/lib/img.ts`, `src/lib/contact-form.ts`    | `pnpm test:unit`                        |
+| `src/scripts/**`, navbar, Work/overlaye, kontakt              | `pnpm test:e2e`                         |
+| Każda zmiana wyglądu                                          | `pnpm build:visual && pnpm test:visual` |
+| Przed release                                                 | pełne `pnpm test` + `/release-check`    |
 
 ## Zasady twarde
 
 - Testy wizualne WYŁĄCZNIE na preview (webServer configu, port 4399 — na
   4321 często wisi dev do telefonu). Helper `assertPreview` wykrywa
   `/@vite/client` i przerywa — nie obchodź go.
+- Testy wizualne stoją na **ZAMROŻONEJ treści realizacji**
+  (`tests/fixtures/realizacje` — 5 wpisów, 2 kategorie, 1 pozycja z wideo),
+  bo baseline to obraz: realizacja dodana/usunięta/przestawiona w panelu
+  rozjeżdżałaby zrzuty siatki, szyny filtrów, liczników, sceny realizacji na
+  stronie głównej i detalu — czyli blokowała WSZYSTKIE PR-y do czasu
+  regeneracji baseline'ów (zdarzyło się realnie, 2026-08-05). Stąd
+  `pnpm build:visual` (przestawia `REALIZACJE_DIR` w `content.config.ts`)
+  zamiast `pnpm build`; strażnik `assertVisualFixture` porównuje liczbę
+  wpisów w `dist` z fixture i przerywa z instrukcją zamiast pixel-diffa.
+  **Fixture jest niezależny od treści produkcyjnej** — nie synchronizuj go
+  z `src/content/realizacje` i nie „aktualizuj" po zmianach klienta; zmieniaj
+  wyłącznie wtedy, gdy zrzut ma świadomie pokazać inny UKŁAD (wtedy = nowe
+  baseline'y w tym samym PR). Testy e2e funkcjonalne fixture'u NIE używają:
+  czytają treść produkcyjną dynamicznie i są na jej zmiany odporne.
 - Baseline'y (`tests/visual/__screenshots__/`, commitowane): DWA komplety
   per plik — `*-darwin.png` (lokalnie: `pnpm test:visual:update`) i
   `*-linux.png` (ręcznie wyzwalany workflow `update-visual-baselines.yml`,

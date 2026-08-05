@@ -1,0 +1,48 @@
+{
+  "slug": "zabudowa-sypialni",
+  "order": 3,
+  "title": "Zabudowa sypialni z tapicerowaną ścianą",
+  "category": "szafy-garderoby",
+  "year": "2024",
+  "description": "Szafa na całą ścianę z tapicerowanym zagłówkiem w tej samej tkaninie. Wnętrze z szufladami cichego domyku i oświetleniem reagującym na otwarcie frontu.",
+  "cover": {
+    "image": "https://media.delung.pl/realizacje/sypialnia-01.webp",
+    "position": "50% 32%"
+  },
+  "gallery": [
+    {
+      "image": "https://media.delung.pl/realizacje/sypialnia-01.webp",
+      "position": "50% 32%"
+    },
+    {
+      "image": "https://media.delung.pl/realizacje/sypialnia-02.webp",
+      "position": "50% 50%"
+    },
+    {
+      "image": "https://media.delung.pl/realizacje/sypialnia-03.webp",
+      "position": "50% 50%"
+    }
+  ],
+  "specs": [
+    {
+      "label": "MATERIAŁY",
+      "value": "Płyta lakierowana mat, tkanina tapicerska"
+    },
+    {
+      "label": "FRONTY",
+      "value": "Bezuchwytowe, otwierane na docisk"
+    },
+    {
+      "label": "SYSTEMY / OKUCIA",
+      "value": "Szuflady wewnętrzne Blum, pantograf"
+    },
+    {
+      "label": "ZAKRES",
+      "value": "Projekt, produkcja, montaż, tapicerka"
+    },
+    {
+      "label": "ROK REALIZACJI",
+      "value": "2024"
+    }
+  ]
+}
