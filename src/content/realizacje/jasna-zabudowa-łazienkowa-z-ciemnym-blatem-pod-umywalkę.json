@@ -1,0 +1,40 @@
+{
+  "slug": "Jasna-zabudowa-łazienkowa-z-ciemnym-blatem-pod-umywalkę",
+  "order": 8,
+  "title": "Jasna zabudowa łazienkowa z ciemnym blatem pod umywalkę",
+  "category": "zabudowy-lazienkowe",
+  "year": "2024",
+  "description": "Łazienka, która stanowi kwintesencję nowoczesnego designu i funkcjonalności. W tym projekcie postawiliśmy na eleganckie połączenie jasnej zabudowy meblowej z ciemnym, charakternym blatem, tworząc przestrzeń pełną kontrastów i unikalnego charakteru.",
+  "gallery": [
+    {
+      "type": "photo",
+      "image": "https://media.delung.pl/realizacje/Jasna zabudowa łazienkowa z ciemnym blatem zdjęcie 1.png"
+    },
+    {
+      "type": "photo",
+      "image": "https://media.delung.pl/realizacje/Jasna zabudowa łazienkowa z ciemnym blatem zdjęcie 2.png"
+    }
+  ],
+  "specs": [
+    {
+      "label": "BLAT",
+      "value": "Konglomerat kwarcowy, dekor \"Grigio Scuro\" (grubość 20 mm) – Technistone"
+    },
+    {
+      "label": "FRONTY MEBLOWE",
+      "value": "Płyta MDF lakierowana (wykończenie: półmat), kolor RAL 9003 – Kronospan"
+    },
+    {
+      "label": "ZAWIASY",
+      "value": "System zawiasów ukrytych z cichym domykiem – BLUM CLIP top BLUMOTION"
+    },
+    {
+      "label": "SYSTEM SZUFLAD",
+      "value": "Prowadnice pełnego wysuwu o udźwigu do 30 kg – Hettich AvanTech YOU"
+    },
+    {
+      "label": "UCHWYTY",
+      "value": "Aluminiowe uchwyty krawędziowe, wykończenie \"czarny mat\" – Zobal"
+    }
+  ]
+}
