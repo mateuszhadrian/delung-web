@@ -1,0 +1,49 @@
+{
+  "slug": "zabudowa-kuchenna-z-kontrastowym-ciemnym-blatem",
+  "order": 6,
+  "title": "Zabudowa kuchenna z kontrastowym ciemnym blatem",
+  "category": "kuchnie",
+  "year": "2025",
+  "description": "Powyższa realizacja to doskonały dowód na to, że nowoczesny minimalizm nie musi być chłodny. Dzięki starannie dobranym materiałom, ukrytym sprzętom AGD (jak zlicowana z blatem płyta indukcyjna) oraz ciepłym akcentom z drewna, udało nam się stworzyć kuchnię, która jest w 100% funkcjonalna, a przy tym stanowi piękną, reprezentacyjną wizytówkę domu.",
+  "gallery": [
+    {
+      "type": "photo",
+      "image": "https://media.delung.pl/realizacje/Zabudowa kuchenna z kontrastowym ciemnym blatem zdjęcie 1.png"
+    },
+    {
+      "type": "photo",
+      "image": "https://media.delung.pl/realizacje/Zabudowa kuchenna z kontrastowym ciemnym blatem zdjęcie 2.png"
+    },
+    {
+      "type": "video",
+      "video": "https://media.delung.pl/realizacje/Zabudowa kuchenna z kontrastowym ciemnym blatem.mp4",
+      "duration": "0:24"
+    },
+    {
+      "type": "photo",
+      "image": "https://media.delung.pl/realizacje/Zabudowa kuchenna z kontrastowym ciemnym blatem zdjęcie 3.png"
+    }
+  ],
+  "specs": [
+    {
+      "label": "BLAT",
+      "value": "Konglomerat kwarcowy Silestone (grubość 20 mm, dekor: Marengo)"
+    },
+    {
+      "label": "ZAWIASY",
+      "value": "Blum CLIP top BLUMOTION (ze zintegrowanym cichym domykiem)"
+    },
+    {
+      "label": "SYSTEM SZUFLAD",
+      "value": "Blum LEGRABOX (prowadnice pełnego wysuwu, udźwig do 40 kg)"
+    },
+    {
+      "label": "FRONTY",
+      "value": "Płyta MDF lakierowana (kolor: RAL 9003 Signal White, wysoki połysk)"
+    },
+    {
+      "label": "OŚWIETLENIE",
+      "value": "Profil wpuszczany z taśmą LED Häfele Loox (barwa neutralna 4000K)"
+    }
+  ]
+}
