@@ -90,6 +90,7 @@ const projects = entries
                   : undefined
               }
               data-par="0.11"
+              data-par-d="0.06"
             />
             <span class="rc-scrim" aria-hidden="true" />
             <span class="rc-idx" aria-hidden="true">
@@ -250,7 +251,10 @@ const projects = entries
   .rc img {
     position: absolute;
     left: 0;
-    /* zapas na parallax (data-par) — jak w eksporcie */
+    /* Zapas na parallax (data-par) — jak w eksporcie. Reguła obowiązuje
+       PONIŻEJ progu desktop: kafel ma tam najwyżej 560 px, więc ruch
+       0,11 × 560 = 62 px mieści się w 76 px zapasu (zmierzone: 15–19 px
+       marginesu). Desktopowa scena przypięta ma własny zapas — niżej. */
     top: -76px;
     width: 100%;
     height: calc(100% + 152px);
@@ -559,13 +563,35 @@ const projects = entries
       border-radius: 0;
       transition: clip-path 1s cubic-bezier(0.76, 0, 0.24, 1);
     }
+    /* Zapas na parallax w scenie przypiętej (D-U1). Poprzednia wersja
+       kasowała zapas do zera (`top: 0; height: 100%`), ZOSTAWIAJĄC ruch
+       `data-par` — a kafel ma tu wysokość całego okna, więc 0,11 znaczyło
+       ±99 px przy 1440×900. Efekt: kremowe tło kafla (#e5e1da) odsłonięte
+       na 88 px nad zdjęciem przy wjeżdżaniu w sekcję i pod zdjęciem przy
+       wyjeżdżaniu (przy 1920×1080 — 107 px).
+       Warunek pokrycia: zapas ≥ przesunięcie. Ruch na desktopie zmniejszony
+       do 0,06 (`data-par-d`), czyli wymagana skala to 1 + 2 × 0,06 = 1,12;
+       biorę 1,14, co daje 1 % wysokości kafla marginesu. Zapasem jest KADR
+       (zoom w obu osiach), bo w przypiętej scenie przesunięcie i tak jest
+       zerowe przez cały czas jej stania — ruch widać wyłącznie na wjeździe
+       i wyjeździe, więc taniej kupić zapas ruchem niż kadrem.
+       `max-width` jest KONIECZNE: preflight Tailwinda ma `img { max-width:
+       100% }`, bez tego szerokość zostaje przycięta do kafla i zapas
+       powstaje tylko w pionie (zmierzone — beżowy pas z prawej strony).
+       `transition` zostaje: zmierzone opóźnienie rysowanej pozycji względem
+       celu to ≤8,5 px przy przewijaniu 24 px/klatkę i NIGDY nie wychodzi
+       poza zapas, a przy natywnym scrollu daje wygładzenie (jak lerp `--p`
+       navbara). Martwa reguła hover-zoom (`.re-cards:hover .rc img
+       { transform: scale(1.04) }`) skasowana — parPaint pisze `transform`
+       inline w każdej klatce, więc arkusz nie miał szans (potwierdzone
+       pomiarem: po najechaniu bez przewijania transform nie drgnął). */
     :global(html.js-motion) .rc img {
-      top: 0;
-      height: 100%;
+      left: -7%;
+      top: -7%;
+      max-width: none;
+      width: 114%;
+      height: 114%;
       transition: transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-    :global(html.js-motion) .re-cards:hover .rc img {
-      transform: scale(1.04);
     }
     :global(html.js-motion) .rc-scrim,
     :global(html.js-motion) .rc-idx,

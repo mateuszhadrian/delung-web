@@ -292,6 +292,86 @@ test.describe("scena realizacji: opis nie jest przycinany (D-T3)", () => {
   });
 });
 
+// ── Parallax kafli realizacji: zdjęcie zawsze pokrywa kafel (D-U1) ───────
+// Zgłoszenie: przy wjeżdżaniu w sekcję nad zdjęciem widać kremowy pas (tło
+// kafla), przy wyjeżdżaniu — pod zdjęciem. Przyczyna: desktopowy override
+// kasował zapas na parallax do zera, ZOSTAWIAJĄC ruch `data-par`.
+// Decyzje: docs/analiza-parallax-realizacje.md.
+//
+// Ten test jest tu JEDYNĄ ochroną przed regresją — nie testy wizualne.
+// Baseline'y powstają na preview, gdzie endpoint /cdn-cgi/image nie istnieje,
+// więc kafle realizacji są pustymi ramkami: pixel-diff nie widzi ani kadru,
+// ani odsłoniętego tła. Sonda poniżej mierzy sam UKŁAD, więc jest od stanu
+// dekodowania obrazów niezależna.
+test.describe("scena realizacji: zdjęcie zawsze pokrywa kafel (D-U1)", () => {
+  /** Największy pas kafla NIEPOKRYTY zdjęciem, w całym przejeździe przez
+   *  sekcję, dla każdego z trzech kafli. Wartość dodatnia = odsłonięte tło. */
+  const najwiekszaSzczelina = async (page: Page) =>
+    page.evaluate(async () => {
+      const sec = document.querySelector<HTMLElement>("[data-home-re]")!;
+      const kafle = [...document.querySelectorAll<HTMLElement>(".rc")];
+      const H = window.innerHeight;
+      const gora = window.scrollY + sec.getBoundingClientRect().top;
+      const dol = window.scrollY + sec.getBoundingClientRect().bottom;
+      const klatka = () =>
+        new Promise((r) =>
+          requestAnimationFrame(() => requestAnimationFrame(r)),
+        );
+      let max = -Infinity;
+      for (let y = Math.max(0, gora - H); y <= dol + 40; y += 24) {
+        window.scrollTo(0, y);
+        await klatka();
+        for (const kafel of kafle) {
+          const k = kafel.getBoundingClientRect();
+          const img = kafel.querySelector("img")!.getBoundingClientRect();
+          // kafel poza oknem: parallax się tam nie przemalowuje (parPaint
+          // pomija hosty poza viewportem), więc odczyt byłby nieaktualny
+          if (k.height < 1 || k.bottom < 0 || k.top > H) continue;
+          max = Math.max(max, img.top - k.top, k.bottom - img.bottom);
+        }
+      }
+      return max;
+    });
+
+  test("kremowe tło kafla nie odsłania się na żadnej pozycji scrolla", async ({
+    page,
+  }) => {
+    await gotoReady(page, PATH);
+    await settle(page, 300);
+    // Zmierzone po naprawie: −7,5 px (1280×560) do −13,3 px (1920×1080)
+    // na desktopie i −14,8/−19,0 px na profilach mobilnych. Przed naprawą
+    // desktop dawał +58…+114 px.
+    expect(await najwiekszaSzczelina(page)).toBeLessThanOrEqual(0);
+  });
+
+  test("zapas pokrywa ruch także przy niskim oknie desktopowym", async ({
+    page,
+  }, testInfo) => {
+    test.skip(
+      testInfo.project.name !== "chromium-1920",
+      "sweep wysokości — jeden profil desktop (test sam zmienia rozmiar okna)",
+    );
+    // Kafel sceny przypiętej ma wysokość okna, więc ruch parallaxu skaluje
+    // się z nim razem — zapas jest procentowy i musi nadążać na każdej
+    // wysokości. Pasmo 1024–1280 px i niskie okna to miejsca, w których ta
+    // scena psuła się już dwa razy (D-Q5, D-T3).
+    for (const [w, h] of [
+      [1024, 900],
+      [1152, 720],
+      [1280, 560],
+      [1440, 600],
+    ]) {
+      await page.setViewportSize({ width: w, height: h });
+      await gotoReady(page, PATH);
+      await settle(page, 250);
+      expect(
+        await najwiekszaSzczelina(page),
+        `odsłonięte tło kafla przy ${w}×${h}`,
+      ).toBeLessThanOrEqual(0);
+    }
+  });
+});
+
 test.describe("scena realizacji: link „Więcej” (D-Q6)", () => {
   test.skip(
     ({ isMobile }) => !!isMobile,

@@ -68,6 +68,7 @@ const vpH = () => window.__vph || svhProbe.offsetHeight || window.innerHeight;
 const pars = qa("[data-par]");
 function parPaint() {
   const H = vpH();
+  const mobile = mqMobile.matches;
   for (const el of pars) {
     // Host = najbliższy [data-par-host] (hero mobile — <img> siedzi
     // w <picture>, a punktem odniesienia ma być sekcja), inaczej rodzic.
@@ -76,7 +77,16 @@ function parPaint() {
     const r = host.getBoundingClientRect();
     if (r.bottom < 0 || r.top > H) continue;
     const p = clamp01((H - r.top) / (H + r.height));
-    const amt = parseFloat(el.getAttribute("data-par") || "0.1");
+    // `data-par-d` = osobny ruch NA DESKTOPIE (D-U1). Ten sam ułamek znaczy
+    // po obu stronach progu zupełnie inną liczbę pikseli: kafel realizacji
+    // ma na desktopie wysokość całego okna (900+ px), a na mobile najwyżej
+    // 560 px — i to samo 0,11 raz mieści się w zapasie, a raz odsłania tło
+    // kafla. Element bez tego atrybutu zachowuje się jak dotąd.
+    const amt = parseFloat(
+      (!mobile && el.getAttribute("data-par-d")) ||
+        el.getAttribute("data-par") ||
+        "0.1",
+    );
     el.style.transform =
       `translate3d(0,${((0.5 - p) * 2 * amt * r.height).toFixed(1)}px,0)` +
       ` scale(${el.getAttribute("data-par-scale") || 1})`;
