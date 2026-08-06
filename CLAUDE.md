@@ -476,6 +476,28 @@ treść/sekcje budowane od nowa wg `docs/design/`).
   ruszyła formatu zapisu. Przy okazji domknięte pytanie otwarte z remontu:
   **`hint` pod polem galerii się renderuje**. Upload do R2 = jedyny punkt poza
   zasięgiem trybu lokalnego, weryfikowany po merge'u na produkcji.
+- **Naprawa parallaxu w scenie realizacji — WYKONANA** (2026-08-06; decyzje
+  D-U1–D-U4: `docs/analiza-parallax-realizacje.md` — KOREKTA ustaleń 4.2
+  o parallaxie tej sceny): desktopowy override `:global(html.js-motion) .rc
+img` kasował zapas z reguły bazowej do zera (`top: 0; height: 100%`),
+  ZOSTAWIAJĄC ruch `data-par="0.11"` — a w przypiętej scenie kafel ma
+  wysokość całego okna, więc odsłaniał kremowe tło kafla na **do 107 px**
+  (1920×1080) nad zdjęciem przy wjeżdżaniu w sekcję i pod nim przy
+  wyjeżdżaniu. Zapasem jest teraz **KADR** (zoom 1,14 w obu osiach) przy
+  ruchu zmniejszonym na desktopie do 0,06 — nowy atrybut **`data-par-d`**
+  czytany przez `parPaint` tylko powyżej progu (wstecznie zgodny: element
+  bez niego zachowuje się jak dotąd). Wybór wariantu = decyzja Mateusza
+  z dwóch zbudowanych i zmierzonych; odrzucony zapas procentowy
+  (`height: 124%`) przycinał kadr mocniej, bo zostawiał ruch 0,11. Pułapka
+  warta zapamiętania: **preflight Tailwinda ma `img { max-width: 100% }`**,
+  więc bez `max-width: none` zapas powstaje tylko w pionie. Poboczne:
+  hover-zoom kafla był MARTWY (styl inline z `parPaint` bije arkusz) —
+  skasowany; `transition` na nadpisywanym transformie zostaje (zmierzone:
+  opóźnienie ≤8,5 px, nigdy poza zapasem — wygładza parallax jak lerp `--p`
+  navbara). **Zero nowych baseline'ów** — i to nie przypadek: na preview
+  `/cdn-cgi/image` nie istnieje, kafle realizacji są pustymi ramkami, więc
+  pixel-diff tej klasy usterki NIE WIDZI. Strażnikiem jest sonda układu
+  w `tests/e2e/index.spec.ts` (weryfikacja „łapie regresję" w obie strony).
 - Etap 7 — przed nami (umowa → przekazanie).
 
 ## Mapa projektu

@@ -33,6 +33,15 @@ wspólne odziedziczone z szablonu + gotchas sekcji, które przeżyły kopię
 - Track karuzeli mobile wymaga `scroll-snap-stop: always` (bez tego szybki
   swipe przeskakuje kilka kafli naraz). Atrybuty `data-lenis-prevent*`
   odeszły razem z biblioteką (D-Q1, `.claude/rules/scroll.md`).
+- **Parallax musi mieć zapas ≥ ruch** (D-U1,
+  `docs/analiza-parallax-realizacje.md`): element z `data-par` przesuwa się
+  o `data-par × wysokość hosta`, więc obraz musi wystawać poza kadr co
+  najmniej o tyle — zapasem jest albo skala (`s ≥ 1 + 2 × data-par`), albo
+  wysokość (`top: -amt%` / `height: (100+2·amt)%`). Zmieniasz wysokość
+  kafla albo override zdjęcia? Przelicz zapas. Na desktopie ruch bywa
+  osobny (`data-par-d`), bo ten sam ułamek znaczy tam inną liczbę pikseli.
+  **Testy wizualne tego NIE pilnują** — kafle realizacji są na preview
+  pustymi ramkami; strażnikiem jest sonda układu w `tests/e2e/index.spec.ts`.
 - Detal realizacji (od 4.4): JEDEN overlay `#work-detail` na szkielecie
   `overlay.ts` (`WorkDetailOverlay.astro`) — wariant modal (≥1024) ↔
   bottom sheet (<1024) to czysty CSS przy `WORK_DESKTOP_MIN_PX`;
