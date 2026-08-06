@@ -1,0 +1,49 @@
+{
+  "slug": "Minimalistyczne-meble-na-wymiar-z-drewnianymi-akcentami",
+  "order": 1,
+  "title": "Minimalistyczne meble na wymiar z drewnianymi akcentami",
+  "category": "kuchnie",
+  "year": "2025",
+  "description": "Kuchnia z minimalistycznymi meblami na wymiar z drewnianymi akcentami. Przygotowane w ścisłej konsultacji z projektantem i klientem. Najwyższej jakości materiały i perfekcja  wykonania każdego najmniejszego detalu.",
+  "gallery": [
+    {
+      "type": "photo",
+      "image": "https://media.delung.pl/realizacje/Minimalistyczne meble na wymiar z drewnianymi akcentami zdjecie 1.png"
+    },
+    {
+      "type": "video",
+      "video": "https://media.delung.pl/realizacje/Minimalistyczne meble na wymiar z drewnianymi akcentami.mp4",
+      "duration": "0:28"
+    },
+    {
+      "type": "photo",
+      "image": "https://media.delung.pl/realizacje/Minimalistyczne meble na wymiar z drewnianymi akcentami zdjecie 2.png"
+    },
+    {
+      "type": "photo",
+      "image": "https://media.delung.pl/realizacje/Minimalistyczne meble na wymiar z drewnianymi akcentami zdjecie 3.png"
+    }
+  ],
+  "specs": [
+    {
+      "label": "BLAT",
+      "value": "Płyta laminowana Dąb Halifax (Egger)"
+    },
+    {
+      "label": "ZAWIASY",
+      "value": "Zintegrowany cichy domyk (BLUM Clip Top Blumotion)"
+    },
+    {
+      "label": "SYSTEM SZUFLAD",
+      "value": "Prowadnice z pełnym wysuwem i dociągiem (Hettich AvanTech YOU)"
+    },
+    {
+      "label": "FRONTY MATOWE",
+      "value": "Płyta MDF lakierowana, powłoka anti-fingerprint (PerfectSense)"
+    },
+    {
+      "label": "OŚWIETLENIE ROBOCZE",
+      "value": "Zintegrowany profil LED, barwa neutralna 4000K (Häfele Loox)"
+    }
+  ]
+}
