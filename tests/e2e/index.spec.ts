@@ -6,11 +6,19 @@ import { expect, test, type Page } from "@playwright/test";
 import { HOME_DESKTOP_MIN_PX } from "../../src/components/sections/home/home-config";
 import { expectBreakpointFlip } from "../helpers/breakpoint";
 import { usePreviewGuard } from "../helpers/guards";
+import { realizacjeFiles } from "../helpers/realizacje";
 import { gotoReady, scrollPageTo, settle } from "../helpers/scroll";
 
 usePreviewGuard();
 
 const PATH = "/";
+
+// Scena realizacji renderuje karty z kolekcji, a panel pozwala usunąć
+// wszystkie wpisy (i strona to przeżywa — zostaje pusty blok). Bez wpisów
+// mierzone niżej kontrakty D-Q5/D-T3/D-Q6/D-U1 nie mają czego mierzyć;
+// sygnałem o pustej treści jest kontrakt CMS w tests/unit/cms-contract.test.ts.
+const BRAK_REALIZACJI = realizacjeFiles().length === 0;
+const POWOD_BRAKU = "brak realizacji w kolekcji — scena nie ma treści";
 
 /** Geometria hero: wysokość sekcji + położenie i wymiar zdjęcia WZGLĘDEM
  *  sekcji. Sam rozmiar sekcji nie wystarcza — objaw zgłoszony przez
@@ -113,6 +121,7 @@ test.describe("scena realizacji: niskie okno (D-Q5)", () => {
     ({ isMobile }) => !!isMobile,
     "scena przypięta istnieje tylko na desktopie",
   );
+  test.skip(BRAK_REALIZACJI, POWOD_BRAKU);
 
   /** Najmniejszy odstęp między dolną krawędzią linku „Więcej" (dla KAŻDEGO
    *  z trzech wpisów zajawki — opisy idą z CMS-a i różnią się długością)
@@ -216,6 +225,7 @@ test.describe("scena realizacji: opis nie jest przycinany (D-T3)", () => {
     ({ isMobile }) => !!isMobile,
     "scena przypięta istnieje tylko na desktopie",
   );
+  test.skip(BRAK_REALIZACJI, POWOD_BRAKU);
 
   /** Ile pikseli opisu wypada poza swój boks — dla KAŻDEGO z trzech wpisów
    *  (opisy idą z CMS-a i różnią się długością). */
@@ -304,6 +314,8 @@ test.describe("scena realizacji: opis nie jest przycinany (D-T3)", () => {
 // ani odsłoniętego tła. Sonda poniżej mierzy sam UKŁAD, więc jest od stanu
 // dekodowania obrazów niezależna.
 test.describe("scena realizacji: zdjęcie zawsze pokrywa kafel (D-U1)", () => {
+  test.skip(BRAK_REALIZACJI, POWOD_BRAKU);
+
   /** Największy pas kafla NIEPOKRYTY zdjęciem, w całym przejeździe przez
    *  sekcję, dla każdego z trzech kafli. Wartość dodatnia = odsłonięte tło. */
   const najwiekszaSzczelina = async (page: Page) =>
@@ -377,23 +389,33 @@ test.describe("scena realizacji: link „Więcej” (D-Q6)", () => {
     ({ isMobile }) => !!isMobile,
     "karta opisu z linkiem istnieje tylko w scenie desktopowej",
   );
+  test.skip(BRAK_REALIZACJI, POWOD_BRAKU);
 
-  /** Przewija scenę tak, żeby aktywny był wpis o podanym indeksie. */
+  /** Przewija scenę tak, żeby aktywny był wpis o podanym indeksie. Postęp
+   *  sceny dzieli się na TYLE części, ile realnie jest kart — przy krótszej
+   *  kolekcji dzielnik 3 celowałby w karty, których nie ma. */
   async function ustawWpis(page: Page, i: number) {
     const y = await page.evaluate((idx) => {
       const sec = document.querySelector<HTMLElement>("[data-home-re]")!;
+      const kart = document.querySelectorAll("[data-recards] .rc").length || 1;
       const zakres = sec.offsetHeight - window.innerHeight;
-      return Math.round(sec.offsetTop + zakres * ((idx + 0.5) / 3));
+      return Math.round(sec.offsetTop + zakres * ((idx + 0.5) / kart));
     }, i);
     await scrollPageTo(page, y);
     await settle(page, 400);
   }
 
+  // Zajawka pokazuje min(3, liczba wpisów) — panel pozwala mieć ich mniej.
   for (const i of [0, 1, 2]) {
     test(`wpis ${i + 1}: link jest klikalny i otwiera detal TEJ realizacji`, async ({
       page,
     }) => {
       await gotoReady(page, PATH);
+      const kart = await page.locator("[data-recards] .rc").count();
+      test.skip(
+        i >= kart,
+        `kolekcja ma ${kart} realizacji — brak wpisu ${i + 1}`,
+      );
       await ustawWpis(page, i);
 
       const stan = await page.evaluate(() => {

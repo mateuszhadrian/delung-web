@@ -5,28 +5,30 @@
 // Dodatkowo: opcje selecta „Kategoria" w public/admin/config.yml muszą być
 // 1:1 ze slugami/etykietami z src/lib/categories.ts (D2 — jedno źródło
 // prawdy; schemat Zod importuje slugi wprost, panel ma je wpisane w YAML).
-import { readdirSync, readFileSync } from "node:fs";
-import { join } from "node:path";
+import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
 import { realizacjaSchema } from "../../src/content.schema";
 import { CATEGORIES } from "../../src/lib/categories";
+import { readRealizacja, realizacjeFiles } from "../helpers/realizacje";
 
-const DIR = fileURLToPath(
-  new URL("../../src/content/realizacje", import.meta.url),
-);
-
-const files = readdirSync(DIR).filter((name) => name.endsWith(".json"));
+// Katalog może nie istnieć — patrz komentarz w helperze. Zero wpisów zapala
+// TYLKO asercję niżej; reszta pliku (kontrakty schematu i panelu) biega dalej.
+const files = realizacjeFiles();
 
 describe("kontrakt CMS: src/content/realizacje/*.json", () => {
   it("katalog zawiera co najmniej jeden wpis", () => {
-    expect(files.length).toBeGreaterThan(0);
+    expect(
+      files.length,
+      "Brak realizacji w src/content/realizacje. Strona zbuduje się i wdroży " +
+        "bez nich, ale lista będzie pusta, a scena na stronie głównej — pustym " +
+        "blokiem. Dodaj co najmniej jedną realizację w panelu /admin.",
+    ).toBeGreaterThan(0);
   });
 
   it.each(files)("%s: poprawny JSON zgodny ze schemą", (name) => {
-    const raw = readFileSync(join(DIR, name), "utf8");
-    const data: unknown = JSON.parse(raw);
+    const data: unknown = readRealizacja(name);
     const result = realizacjaSchema.safeParse(data);
     expect(
       result.success,
@@ -83,9 +85,7 @@ describe("kontrakt CMS: src/content/realizacje/*.json", () => {
 
   it("slugi wpisów są unikalne", () => {
     const slugs = files.map(
-      (name) =>
-        (JSON.parse(readFileSync(join(DIR, name), "utf8")) as { slug: string })
-          .slug,
+      (name) => readRealizacja<{ slug: string }>(name).slug,
     );
     expect(new Set(slugs).size).toBe(slugs.length);
   });

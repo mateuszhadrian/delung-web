@@ -498,6 +498,22 @@ img` kasował zapas z reguły bazowej do zera (`top: 0; height: 100%`),
   `/cdn-cgi/image` nie istnieje, kafle realizacji są pustymi ramkami, więc
   pixel-diff tej klasy usterki NIE WIDZI. Strażnikiem jest sonda układu
   w `tests/e2e/index.spec.ts` (weryfikacja „łapie regresję" w obie strony).
+- **Testy odporne na treść z panelu — WYKONANE** (2026-08-06, po realnym
+  incydencie na main): klient usunął w panelu wszystkie realizacje, co
+  skasowało CAŁY katalog `src/content/realizacje` (git nie trzyma pustych
+  katalogów) — trzy pliki testowe wołały `readdirSync` przy ładowaniu modułu,
+  więc `quality` i `prod-smoke` poszły na czerwono z `ENOENT` PRZED
+  uruchomieniem jakiegokolwiek testu. Build i deploy działały bez zarzutu
+  (produkcja stała z pustą listą), czyli czerwień była wyłącznie testowa —
+  ale przy required checks blokowała WSZYSTKIE merge'e, co przed przekazaniem
+  klientowi jest pułapką. Wpisy czyta się teraz wyłącznie przez
+  `tests/helpers/realizacje.ts`, a testy zależne od ich liczby robią
+  `test.skip` z jawnym powodem (mobilna szyna filtrów pyta o realną wysokość
+  siatki, nie o liczbę wpisów). Zmierzone: 0 wpisów → e2e w całości zielone
+  i JEDEN czerwony test (kontrakt „katalog zawiera co najmniej jeden wpis",
+  komunikat napisany dla człowieka); 1 wpis → wszystko zielone (wcześniej
+  7 czerwonych); 6 wpisów → 551 ✓ jak dotąd. Reguły: `.claude/rules/testing.md`
+  i `.claude/rules/cms-realizacje.md`.
 - Etap 7 — przed nami (umowa → przekazanie).
 
 ## Mapa projektu

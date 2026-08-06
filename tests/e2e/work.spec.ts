@@ -3,20 +3,25 @@
 // kafle otwierają detal w JEDNYM overlayu #work-detail (część 4.4 —
 // modal ≥1024 / bottom sheet <1024 w CSS, open-detail.ts). Pełne pokrycie
 // detalu (galeria, projnav, wideo) biega w work-index.spec.ts.
-import { readdirSync } from "node:fs";
-import { fileURLToPath } from "node:url";
 import { expect, test } from "@playwright/test";
 import { usePreviewGuard } from "../helpers/guards";
+import { HOME_MAX, realizacjeFiles } from "../helpers/realizacje";
 import { gotoReady, scrollPageTo } from "../helpers/scroll";
 
-const ENTRY_COUNT = readdirSync(
-  fileURLToPath(new URL("../../src/content/realizacje", import.meta.url)),
-).filter((f) => f.endsWith(".json")).length;
+const ENTRY_COUNT = realizacjeFiles().length;
 
 // Strona główna kapuje listę do 3 (pełna lista: /realizacje/).
-const HOME_COUNT = Math.min(3, ENTRY_COUNT);
+const HOME_COUNT = Math.min(HOME_MAX, ENTRY_COUNT);
 
 usePreviewGuard();
+
+// Panel pozwala usunąć wszystkie realizacje i strona to przeżywa (pusta scena),
+// więc brak wpisów NIE jest awarią kodu — sygnałem jest kontrakt CMS
+// w tests/unit/cms-contract.test.ts, a nie wywrotka całego zestawu e2e.
+test.skip(
+  ENTRY_COUNT === 0,
+  "brak realizacji w kolekcji — zajawka nie ma czego pokazać",
+);
 
 test("zajawka pokazuje max 3 realizacje", async ({ page }) => {
   await gotoReady(page);
