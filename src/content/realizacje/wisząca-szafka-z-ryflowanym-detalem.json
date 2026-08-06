@@ -1,0 +1,49 @@
+{
+  "slug": "wisząca-szafka-z-ryflowanym-detalem",
+  "order": 5,
+  "title": "Wisząca szafka z ryflowanym detalem",
+  "category": "szafy-garderoby",
+  "year": "2023",
+  "description": "To, co najbardziej wyróżnia tę realizację, to nieoczywista, dwupoziomowa bryła, która przyciąga wzrok kontrastem faktur. Górna sekcja szafki zachwyca gładką, perfekcyjnie matową powierzchnią, podczas gdy dolny moduł został wykończony niezwykle modnym, przestrzennym frezowaniem. Całość utrzymana jest w ciepłym, ponadczasowym odcieniu zgaszonego beżu (kaszmiru), który doskonale koresponduje z naturalnym drewnem na podłodze.",
+  "gallery": [
+    {
+      "type": "photo",
+      "image": "https://media.delung.pl/realizacje/Wisząca szafka z ryflowanym detalem zdjęcie 1.png"
+    },
+    {
+      "type": "video",
+      "video": "https://media.delung.pl/realizacje/Wisząca szafka z ryflowanym detalem.mp4",
+      "duration": "0:08"
+    },
+    {
+      "type": "photo",
+      "image": "https://media.delung.pl/realizacje/Wisząca szafka z ryflowanym detalem zdjęcie 2.png"
+    },
+    {
+      "type": "photo",
+      "image": "https://media.delung.pl/realizacje/Wisząca szafka z ryflowanym detalem zdjęcie 3.png"
+    }
+  ],
+  "specs": [
+    {
+      "label": "PROWADNICE",
+      "value": "Blum Movento z systemem Tip-On Blumotion"
+    },
+    {
+      "label": "FRONTY",
+      "value": "MDF lakierowany (głęboki mat) z frezowaniem ryflowanym"
+    },
+    {
+      "label": "KORPUS",
+      "value": "Płyta laminowana Egger U702 ST9 (Kaszmir)"
+    },
+    {
+      "label": "ZAWIASY",
+      "value": "Hettich Sensys 110° z cichym domykiem"
+    },
+    {
+      "label": "SYSTEM OTWIERANIA",
+      "value": "Bezuchwytowy (Push-to-open)"
+    }
+  ]
+}
