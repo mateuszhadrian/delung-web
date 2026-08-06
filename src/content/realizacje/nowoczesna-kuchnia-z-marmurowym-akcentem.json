@@ -1,0 +1,48 @@
+{
+  "slug": "nowoczesna-kuchnia-z-marmurowym-akcentem",
+  "order": 4,
+  "title": "Nowoczesna kuchnia z marmurowym akcentem",
+  "category": "kuchnie",
+  "year": "2024",
+  "description": "Kuchnia, która redefiniuje pojęcie elegancji w nowoczesnym wydaniu. Projekt powstał z myślą o miłośnikach minimalizmu, którzy cenią sobie jednocześnie luksusowe wykończenia i wysoką funkcjonalność. Głównym założeniem było stworzenie przestrzeni jasnej, przestronnej i ponadczasowej.",
+  "gallery": [
+    {
+      "type": "photo",
+      "image": "https://media.delung.pl/realizacje/Nowoczesna kuchnia z marmurowym akcentem zdjęcie 1.png"
+    },
+    {
+      "type": "photo",
+      "image": "https://media.delung.pl/realizacje/Nowoczesna kuchnia z marmurowym akcentem zdjęcie 2.png"
+    },
+    {
+      "type": "video",
+      "video": "https://media.delung.pl/realizacje/Nowoczesna kuchnia z marmurowym akcentem.mp4"
+    },
+    {
+      "type": "photo",
+      "image": "https://media.delung.pl/realizacje/Nowoczesna kuchnia z marmurowym akcentem zdjęcie 3.png"
+    }
+  ],
+  "specs": [
+    {
+      "label": "BLAT",
+      "value": "Materiały: Konglomerat kwarcowy (grubość 20 mm); Silestone – Calacatta Gold"
+    },
+    {
+      "label": "FRONTY ZABUDOWY",
+      "value": "Płyta MDF lakierowana (wykończenie: głęboki mat); Egger – PerfectSense U708 PM"
+    },
+    {
+      "label": "OKUCIA I SYSTEMY SZUFLAD",
+      "value": "Prowadnice ukryte z systemem cichego domyku; Blum – LEGRABOX / TIP-ON"
+    },
+    {
+      "label": "PANEL PRZYŚCIENNY (BACKSPLASH)",
+      "value": "Spiek kwarcowy o strukturze naturalnego kamienia; Dekton – Rem (Kolekcja Natural)"
+    },
+    {
+      "label": "OŚWIETLENIE ROBOCZE",
+      "value": "Wpuszczany profil aluminiowy z taśmą LED (barwa neutralna 4000K); Häfele – System Loox5"
+    }
+  ]
+}
