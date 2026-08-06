@@ -214,52 +214,88 @@ test.describe("scena realizacji: niskie okno (D-Q5)", () => {
   });
 });
 
-// ── Opis w scenie realizacji: koniec przycinania (D-T3) ──────────────────
-// Zgłoszenie: opis nad linkiem „Więcej" bywał ucięty. Pomiar pokazał, że
-// ucięcie NIE zależało od wysokości okna (stałe 10 px przy 1152 px szerokości
-// niezależnie od tego, czy pod opisem zostawało 280 px, czy 16 px wolnego
-// miejsca) — pudełko opisu miało wysokość zgadywaną z `vw`. Decyzje:
-// docs/analiza-poprawki-3.md.
-test.describe("scena realizacji: opis nie jest przycinany (D-T3)", () => {
+// ── Opis w scenie realizacji: nigdy ucięty w pół zdania (D-T3 + D-U5) ────
+// Zgłoszenie z rundy 3: opis nad linkiem „Więcej" bywał ucięty, a ucięcie NIE
+// zależało od wysokości okna (pudełko miało wysokość zgadywaną z `vw`) — to
+// naprawiło D-T3 i tamta przyczyna jest martwa.
+// KOREKTA D-U5: przy realnych opisach klienta (214–370 znaków wobec 120–176
+// w treści, na której kalibrowano scenę) przy niskim oknie miejsca po prostu
+// NIE MA i żadna kalibracja tego nie zmieni. Obietnica zmienia się więc
+// z „nigdy nie ucina" na „nigdy nie ucina w pół zdania": przy pełnym oknie
+// (900 px) opis jest cały, niżej kończy się wielokropkiem, nigdy nie nachodzi
+// na link i nigdy nie urywa się w połowie wiersza.
+// Decyzje: docs/analiza-poprawki-3.md, docs/analiza-parallax-realizacje.md.
+test.describe("scena realizacji: opis nie urywa się w pół zdania (D-U5)", () => {
   test.skip(
     ({ isMobile }) => !!isMobile,
     "scena przypięta istnieje tylko na desktopie",
   );
   test.skip(BRAK_REALIZACJI, POWOD_BRAKU);
 
-  /** Ile pikseli opisu wypada poza swój boks — dla KAŻDEGO z trzech wpisów
-   *  (opisy idą z CMS-a i różnią się długością). */
-  const przyciecie = async (page: Page) => {
+  /** Stan opisu KAŻDEGO z trzech wpisów zajawki (opisy idą z CMS-a
+   *  i różnią się długością). */
+  const opisy = async (page: Page) => {
     await page.addStyleTag({
       content: "*{transition:none!important;animation:none!important}",
     });
-    return page.evaluate(() => {
-      let max = 0;
-      document.querySelectorAll<HTMLElement>("[data-retx]").forEach((tx) => {
+    return page.evaluate(() =>
+      [...document.querySelectorAll<HTMLElement>("[data-retx]")].map((tx) => {
         tx.style.opacity = "1";
         tx.style.transform = "none";
         const p = tx.querySelector<HTMLElement>("p:not(.re-meta)")!;
-        max = Math.max(max, p.scrollHeight - p.clientHeight);
-      });
-      return max;
-    });
+        const link = tx.querySelector<HTMLElement>("a[data-work-more]")!;
+        const limit = parseInt(getComputedStyle(p).webkitLineClamp, 10);
+        return {
+          // czy tekst jest dłuższy, niż pokazane miejsce
+          skrocony: p.scrollHeight > p.clientHeight + 1,
+          // limit linii = gwarancja wielokropka zamiast ucięcia w pół wiersza
+          limit: Number.isFinite(limit) ? limit : 0,
+          // czy akapit nie wchodzi na link „Więcej"
+          zachodziNaLink: Math.round(
+            p.getBoundingClientRect().bottom - link.getBoundingClientRect().top,
+          ),
+        };
+      }),
+    );
   };
 
-  // Szerokości, na których bug był widoczny (1024–1280), plus kontrola wyżej.
-  // Profile testowe mają 1920 i 1366 px, więc bez tego przemiatania regresja
-  // przechodziłaby niezauważona.
+  // Szerokości, na których bug D-T3 był widoczny (1024–1280), plus kontrola
+  // wyżej. Profile testowe mają 1920 i 1366 px, więc bez tego przemiatania
+  // regresja przechodziłaby niezauważona.
   for (const w of [1024, 1152, 1280, 1366, 1440, 1920]) {
-    test(`opis mieści się w całości przy szerokości ${w} px`, async ({
+    test(`opis kończy się wielokropkiem, nie w pół zdania (${w} px)`, async ({
       page,
     }) => {
       for (const h of [900, 800, 720]) {
         await page.setViewportSize({ width: w, height: h });
         await gotoReady(page, PATH);
-        await settle(page, 200);
-        expect(
-          await przyciecie(page),
-          `opis ucięty przy ${w}×${h}`,
-        ).toBeLessThanOrEqual(0);
+        await settle(page, 250);
+        for (const [i, o] of (await opisy(page)).entries()) {
+          const gdzie = `wpis ${i + 1} przy ${w}×${h}`;
+          if (o.skrocony) {
+            expect(
+              o.limit,
+              `${gdzie}: skrócony bez limitu linii`,
+            ).toBeGreaterThanOrEqual(2);
+          }
+          expect(
+            o.zachodziNaLink,
+            `${gdzie}: opis wchodzi na link „Więcej"`,
+          ).toBeLessThanOrEqual(0);
+        }
+      }
+    });
+  }
+
+  // Przy pełnym oknie opis ma być CAŁY — skracanie jest awaryjnym zaworem na
+  // niskie okna, nie normalnym stanem strony.
+  for (const w of [1366, 1920]) {
+    test(`przy oknie ${w}×900 opis jest w całości`, async ({ page }) => {
+      await page.setViewportSize({ width: w, height: 900 });
+      await gotoReady(page, PATH);
+      await settle(page, 250);
+      for (const [i, o] of (await opisy(page)).entries()) {
+        expect(o.skrocony, `wpis ${i + 1} skrócony przy ${w}×900`).toBe(false);
       }
     });
   }
