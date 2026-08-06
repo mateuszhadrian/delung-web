@@ -1,0 +1,49 @@
+{
+  "slug": "jasne-zaslony-w-sypialni-z-oknem-narozznym",
+  "order": 2,
+  "title": "Jasne zasłony w sypialni z oknem narożnym",
+  "category": "dekoracje-okienne",
+  "year": "2025",
+  "description": "Naszym zadaniem było zaaranżowanie okien w przestronnej, nowoczesnej sypialni narożnej. Klientowi zależało na zachowaniu maksymalnej ilości naturalnego światła przy jednoczesnym zapewnieniu poczucia prywatności. Kluczowym elementem było eleganckie i jednolite przesłonięcie dużej powierzchni przeszkleń, w tym problematycznego narożnika, bez efektu optycznego \"ciężaru\".",
+  "gallery": [
+    {
+      "type": "photo",
+      "image": "https://media.delung.pl/realizacje/Jasne zasłony w sypialni z oknem narożnym zdjęcie 1.png"
+    },
+    {
+      "type": "video",
+      "video": "https://media.delung.pl/realizacje/Jasne zasłony w sypialni z oknem narożnym.mp4",
+      "duration": "0:06"
+    },
+    {
+      "type": "photo",
+      "image": "https://media.delung.pl/realizacje/Jasne zasłony w sypialni z oknem narożnym zdjęcie 2.png"
+    },
+    {
+      "type": "photo",
+      "image": "https://media.delung.pl/realizacje/Jasne zasłony w sypialni z oknem narożnym zdjęcie 3.png"
+    }
+  ],
+  "specs": [
+    {
+      "label": "System zawieszenia",
+      "value": "Szyna sufitowa aluminiowa KS (Forest)"
+    },
+    {
+      "label": "Tkanina zasłonowa",
+      "value": "Welur typu Dimout 80%, kolekcja \"Moonlight\" (Ridex)"
+    },
+    {
+      "label": "Tkanina firanowa",
+      "value": "Woal gładki z obciążnikiem ołowianym (Eurofirany)"
+    },
+    {
+      "label": "Rodzaj marszczenia",
+      "value": "System Wave (fala) – odległość 8 cm"
+    },
+    {
+      "label": "Sterowanie",
+      "value": "Napęd elektryczny Somfy Glydea Ultra 60e RTS"
+    }
+  ]
+}
