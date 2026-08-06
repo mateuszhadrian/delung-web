@@ -1,0 +1,49 @@
+{
+  "slug": "nowoczesna-szafa-na-wymiar-z-wiszącym-biurkiem-i-oświetleniem-LED",
+  "order": 3,
+  "title": "Nowoczesna szafa na wymiar z wiszącym biurkiem i oświetleniem LED",
+  "category": "szafy-garderoby",
+  "year": "2024",
+  "description": "Minimalizm, funkcjonalność i ciepło naturalnego drewna. Połączyliśmy pojemną szafę ubraniową z ergonomicznym kącikiem do pracy. Fronty w matowej szarości (kaszmir) zestawiliśmy z korpusem w kolorze dębu naturalnego, uzyskując nowoczesny, ale przytulny efekt.",
+  "gallery": [
+    {
+      "type": "photo",
+      "image": "https://media.delung.pl/realizacje/Nowoczesna szafa na wymiar z wiszącym biurkiem i oświetleniem LED zdjęcie 1.png"
+    },
+    {
+      "type": "video",
+      "video": "https://media.delung.pl/realizacje/Nowoczesna szafa na wymiar z wiszącym biurkiem i oświetleniem LED.mp4",
+      "duration": "0:12"
+    },
+    {
+      "type": "photo",
+      "image": "https://media.delung.pl/realizacje/Nowoczesna szafa na wymiar z wiszącym biurkiem i oświetleniem LED zdjęcie 2.png"
+    },
+    {
+      "type": "photo",
+      "image": "https://media.delung.pl/realizacje/Nowoczesna szafa na wymiar z wiszącym biurkiem i oświetleniem LED zdjęcie 3.png"
+    }
+  ],
+  "specs": [
+    {
+      "label": "Zawiasy",
+      "value": "Blum CLIP top BLUMOTION (zintegrowany cichy domyk)"
+    },
+    {
+      "label": "System szuflad",
+      "value": "Hettich AvanTech YOU (prowadnice pełnego wysuwu)"
+    },
+    {
+      "label": "Fronty i korpus",
+      "value": "Płyta laminowana Egger (dekor: Dąb Halifax Naturalny)"
+    },
+    {
+      "label": "System otwierania",
+      "value": "Bezuchwytowy (Blum TIP-ON) / Uchwyty krawędziowe Zobal"
+    },
+    {
+      "label": "Oświetlenie",
+      "value": "Taśma LED COB 4000K w profilu wpuszczanym Lumines"
+    }
+  ]
+}
