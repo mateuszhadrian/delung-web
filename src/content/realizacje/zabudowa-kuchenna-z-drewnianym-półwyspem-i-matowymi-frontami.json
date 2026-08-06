@@ -1,0 +1,49 @@
+{
+  "slug": "Zabudowa-kuchenna-z-drewnianym-półwyspem-i-matowymi-frontami",
+  "order": 7,
+  "title": "Zabudowa kuchenna z drewnianym półwyspem i matowymi frontami",
+  "category": "kuchnie",
+  "year": "2024",
+  "description": "Realizacja, w której surowy minimalizm spotyka się z przytulnym charakterem naturalnych materiałów. Głównym założeniem tego projektu było stworzenie przestrzeni reprezentacyjnej, która idealnie wpisze się w koncepcję otwartej strefy dziennej, nie tracąc przy tym nic ze swojej codziennej funkcjonalności.",
+  "gallery": [
+    {
+      "type": "photo",
+      "image": "https://media.delung.pl/realizacje/Zabudowa kuchenna z drewnianym półwyspem i matowymi frontami zdjęcie 1.png"
+    },
+    {
+      "type": "photo",
+      "image": "https://media.delung.pl/realizacje/Zabudowa kuchenna z drewnianym półwyspem i matowymi frontami zdjęcie 2.png"
+    },
+    {
+      "type": "photo",
+      "image": "https://media.delung.pl/realizacje/Zabudowa kuchenna z drewnianym półwyspem i matowymi frontami zdjęcie 3.png"
+    },
+    {
+      "type": "video",
+      "video": "https://media.delung.pl/realizacje/Zabudowa kuchenna z drewnianym półwyspem i matowymi frontami.mp4",
+      "duration": "0:27"
+    }
+  ],
+  "specs": [
+    {
+      "label": "BLAT",
+      "value": "Płyta laminowana Dąb Halifax (Egger)"
+    },
+    {
+      "label": "ZAWIASY",
+      "value": "Zintegrowany cichy domyk (BLUM Clip Top Blumotion)"
+    },
+    {
+      "label": "SYSTEM SZUFLAD",
+      "value": "Prowadnice z pełnym wysuwem i dociągiem (Hettich AvanTech YOU)"
+    },
+    {
+      "label": "FRONTY MATOWE",
+      "value": "Płyta MDF lakierowana, powłoka anti-fingerprint (PerfectSense)"
+    },
+    {
+      "label": "OŚWIETLENIE ROBOCZE",
+      "value": "Zintegrowany profil LED, barwa neutralna 4000K (Häfele Loox)"
+    }
+  ]
+}
