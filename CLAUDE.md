@@ -514,6 +514,21 @@ img` kasował zapas z reguły bazowej do zera (`top: 0; height: 100%`),
   komunikat napisany dla człowieka); 1 wpis → wszystko zielone (wcześniej
   7 czerwonych); 6 wpisów → 551 ✓ jak dotąd. Reguły: `.claude/rules/testing.md`
   i `.claude/rules/cms-realizacje.md`.
+- **Opis realizacji w scenie na stronie głównej — WIELOKROPEK ZAMIAST
+  URWANIA** (2026-08-06, D-U5: `docs/analiza-parallax-realizacje.md` §8 —
+  KOREKTA obietnicy D-T3): po wrzuceniu przez klienta 8 realizacji strażnik
+  z rundy 3 zapalił się na całym przemiataniu. Przyczyną NIE był jeden za
+  długi wpis: scena jest kalibrowana na opisy 120–176 znaków (tyle ma fixture
+  testów wizualnych), a klient pisze 214–370 — przy oknie 720 px nie mieści
+  się nawet ten najkrótszy. Zamiast kalibracji zmieniła się OBIETNICA:
+  „opis nigdy nie jest przycinany" → „opis nigdy nie urywa się w pół zdania".
+  Limit linii (`-webkit-line-clamp`) liczy `fitReDesc()` w `home-scroll.ts`
+  z wysokości realnie przydzielonej akapitowi przez flex — **w JS, bo CSS
+  tego nie policzy** (w `calc()` nie wolno dzielić długości przez długość);
+  wołane z `refresh()`, nigdy w pętli scrolla. `overflow: hidden` zostaje
+  ostatnim zaworem, więc gwarancja D-Q5 stoi. Zmierzone: przy 900 px wysokości
+  okna żaden opis nie jest skracany (render jak dotąd), przy 720 px wszystkie
+  kończą się wielokropkiem. Baseline'y bez zmian (fixture poniżej limitu).
 - Etap 7 — przed nami (umowa → przekazanie).
 
 ## Mapa projektu
