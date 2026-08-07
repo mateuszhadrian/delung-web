@@ -8,6 +8,10 @@ name: Prod smoke
 on:
   push:
     branches: [main]
+  # Ręczne odpalenie: smoke bywa czerwony przez wyścig z deployem Cloudflare
+  # (dokument już nowy, chunk JS jeszcze zwraca stronę 404 jako text/html),
+  # a przy awarii Actions push w ogóle nie tworzy biegu.
+  workflow_dispatch:
 jobs:
   smoke:
     runs-on: ubuntu-latest

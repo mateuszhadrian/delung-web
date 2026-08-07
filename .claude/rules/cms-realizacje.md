@@ -17,6 +17,15 @@ paths:
   zabroniona (jest hook-guard); pliki są w `.prettierignore` — Sveltia ma
   własny formater (tablice zawsze wielolinijkowe).
 
+- **Nazwa pliku wpisu = pole „Slug", zawsze przepuszczone przez ASCII**
+  (`slug: { encoding: ascii, clean_accents: true }` w `config.yml`). Bez tego
+  tekst wklejony przez klienta z telefonu potrafi trafić do nazwy pliku
+  w formie ROZŁOŻONEJ (NFD) — wygląda identycznie, ale na macOS git widzi
+  wtedy ten sam plik dwa razy (śledzony pod NFD, nieśledzony pod NFC).
+  **Nigdy `git add .` / `git add -A` w tym repo** — dodałoby obie ścieżki
+  i na Linuksie powstałyby duplikaty wpisów. Zmiana pola „Slug" w panelu
+  PRZEMIANOWUJE plik (Sveltia robi operację `move`), więc to jest droga
+  naprawy starych nazw; pliki w R2 zostają nietknięte.
 - **Zero wpisów to stan dopuszczalny** (klient może usunąć wszystko w panelu):
   build przechodzi, Cloudflare deployuje, `/realizacje/` pokazuje „00 Z 00",
   a scena na stronie głównej jest pustym blokiem. Uwaga: usunięcie ostatniego

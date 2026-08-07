@@ -3,6 +3,12 @@ on:
   push:
     branches: [main]
   pull_request:
+  # Ręczne odpalenie z zakładki Actions. Powód: przy awarii GitHuba webhooki
+  # bywają odrzucane (2026-08-06: „processing approximately 15% of webhooks"),
+  # więc push i otwarcie PR-a NIE tworzą biegu — a odrzuconych zdarzeń GitHub
+  # nie odtwarza. Bez tego wyzwalacza jedynym sposobem na kopnięcie checków
+  # jest zamknięcie i otwarcie PR-a albo pusty commit.
+  workflow_dispatch:
 jobs:
   quality:
     runs-on: ubuntu-latest
