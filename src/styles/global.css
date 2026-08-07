@@ -75,3 +75,12 @@ html {
     --col: 1520px;
   }
 }
+
+/* Nakładki (overlay.ts): obszar przewijalny sheeta nie oddaje przewijania
+   przeglądarce. Bez tego mocniejszy gest w dół na przewiniętej do góry
+   treści uruchamiał na Androidzie odświeżenie strony zamiast zamknąć sheet
+   (runda 4). Drugą połową naprawy jest przejęcie gestu w overlay.ts. */
+[data-overlay-scroll],
+[data-overlay-panel] {
+  overscroll-behavior: contain;
+}
