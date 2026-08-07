@@ -12,6 +12,7 @@ import {
   WORK_INDEX_PATH,
 } from "../../src/lib/routes";
 import { collectPageIssues, usePreviewGuard } from "../helpers/guards";
+import { readRealizacje } from "../helpers/realizacje";
 import { gotoReady, settle } from "../helpers/scroll";
 
 usePreviewGuard();
@@ -131,6 +132,31 @@ test.describe("kategorie mobile", () => {
     await foot.click();
     await expect(page).toHaveURL(new RegExp(`${CONTACT_PATH}?$`));
     await expect(page.locator("#contact .kt-form")).toBeAttached();
+  });
+
+  test("CTA realizacji istnieje TYLKO w kategoriach, które mają wpisy", async ({
+    page,
+  }) => {
+    // Runda 4: przycisk prowadzi na przefiltrowaną listę, więc w kategorii
+    // bez wpisów obiecywałby pustą stronę. Oczekiwanie liczymy z tej samej
+    // treści co build (kolekcja), nie z listy zaszytej w teście.
+    const zWpisami = new Set(
+      readRealizacje<{ category: string; order: number }>().map(
+        (e) => e.category,
+      ),
+    );
+    await gotoReady(page, KATEGORIE_PATH);
+    for (const c of OFERTA_CATEGORIES) {
+      const cta = page.locator(`#kat-${c.slug} .dt-more a`);
+      if (zWpisami.has(c.slug)) {
+        await expect(cta).toHaveAttribute(
+          "href",
+          `${WORK_INDEX_PATH}#${c.slug}`,
+        );
+      } else {
+        await expect(cta).toHaveCount(0);
+      }
+    }
   });
 
   test("CTA finałowe prowadzi do kontaktu", async ({ page }) => {
