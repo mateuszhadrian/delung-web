@@ -72,7 +72,9 @@ test("realizacje: detal otwarty (sheet mobile / modal 1920)", async ({
   const detail = await openFirstDetail(page);
   await expect(detail).toHaveScreenshot("work-detail-open.png", {
     // maska na wideo w galerii, gdyby pierwszy projekt je miał
-    mask: [detail.locator("video")],
+    // maska obejmuje też podłożoną klatkę (.dt-poster) — to ten sam kadr
+    // filmu co poster, więc na zrzucie jest równie niedeterministyczny
+    mask: [detail.locator("video"), detail.locator(".dt-poster")],
   });
 });
 
@@ -91,7 +93,7 @@ test("realizacje: podgląd pełnoekranowy galerii (sheet mobile / 1920)", async 
   await expect(lb).toBeVisible();
   await settle(page, 600);
   await expect(lb).toHaveScreenshot("work-detail-fullscreen.png", {
-    mask: [lb.locator("video")],
+    mask: [lb.locator("video"), lb.locator(".dt-poster")],
   });
 });
 
@@ -128,6 +130,8 @@ test("realizacje: kadr wideo w detalu (maska) — tylko 1920", async ({
   await detail.locator(`[data-dashes] [data-shot="${idx}"]`).click();
   await settle(page, 700);
   await expect(detail).toHaveScreenshot("work-detail-video.png", {
-    mask: [detail.locator("video")],
+    // maska obejmuje też podłożoną klatkę (.dt-poster) — to ten sam kadr
+    // filmu co poster, więc na zrzucie jest równie niedeterministyczny
+    mask: [detail.locator("video"), detail.locator(".dt-poster")],
   });
 });

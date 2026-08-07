@@ -464,6 +464,17 @@ test.describe("detal desktop: modal, galeria, projnav", () => {
     // dojazd do kadru z wideo: ikonka kamery + czas trwania na kadrze
     await detail.locator(`[data-dashes] [data-shot="${videoIdx}"]`).click();
     await expect(detail.locator("[data-gal] [data-cam]")).toBeVisible();
+    // podpowiedź w drugim rogu kadru — treść zależy od progu (duplikaty
+    // per-breakpoint w SSR), więc sprawdzamy wariant widoczny na tym profilu
+    const hint = detail.locator("[data-gal] [data-cam-hint]");
+    await expect(hint).toBeVisible();
+    const wide = page.viewportSize()!.width >= WORK_DESKTOP_MIN_PX;
+    // useInnerText: oba warianty siedzą w DOM, o wyborze decyduje @media —
+    // textContent skleiłby je w jeden napis
+    await expect(hint).toHaveText(
+      wide ? "Kliknij, aby obejrzeć" : "Stuknij, aby obejrzeć",
+      { useInnerText: true },
+    );
     if (videoItem.duration) {
       await expect(detail.locator("[data-gal] .dt-time")).toBeVisible();
     }
@@ -480,8 +491,9 @@ test.describe("detal desktop: modal, galeria, projnav", () => {
     expect(await lbVideo.evaluate((v: HTMLVideoElement) => v.paused)).toBe(
       false,
     );
-    // grający film chowa ikonkę kamery
+    // grający film chowa ikonkę kamery — i podpowiedź razem z nią
     await expect(lb.locator("[data-cam]")).toBeHidden();
+    await expect(lb.locator("[data-cam-hint]")).toBeHidden();
 
     // tap w grający film = pauza (ikonka wraca), kolejny tap = play
     await lbVideo.click();
@@ -489,6 +501,7 @@ test.describe("detal desktop: modal, galeria, projnav", () => {
       true,
     );
     await expect(lb.locator("[data-cam]")).toBeVisible();
+    await expect(lb.locator("[data-cam-hint]")).toBeVisible();
     await lbVideo.click();
     expect(await lbVideo.evaluate((v: HTMLVideoElement) => v.paused)).toBe(
       false,
@@ -615,6 +628,75 @@ test.describe("detal mobile: bottom sheet, karuzela, gesty", () => {
     await expect(detail).toBeHidden();
   });
 
+  test("etykiety parametrów są zielone jak na desktopie (runda 4)", async ({
+    page,
+  }) => {
+    // Zrzuty wizualne tego NIE pilnują: sheet ma 96svh, a tabela parametrów
+    // leży poniżej jego kadru — pixel-diff jej nie widzi.
+    await gotoReady(page, PATH);
+    const detail = await openDetail(page, await revealFirstCard(page));
+    const etykieta = detail.locator(".dt-spec b").first();
+    await expect(etykieta).toHaveCount(1);
+    const [kolor, oczekiwany] = await Promise.all([
+      etykieta.evaluate((el) => getComputedStyle(el).color),
+      // liczony z tokenu, nie z literału — zmiana palety ma iść razem
+      page.evaluate(() => {
+        const s = document.createElement("span");
+        s.style.color = "var(--accent-ink)";
+        document.body.appendChild(s);
+        const c = getComputedStyle(s).color;
+        s.remove();
+        return c;
+      }),
+    ]);
+    expect(kolor).toBe(oczekiwany);
+  });
+
+  test("swipe-down w TREŚCI zamyka, gdy sheet jest przewinięty na górę", async ({
+    page,
+  }) => {
+    // Runda 4: dotąd gest łapał się tylko na kreseczce, a mocniejszy ruch
+    // w treści odświeżał stronę zamiast zamknąć sheet.
+    await gotoReady(page, PATH);
+    const detail = await openDetail(page, await revealFirstCard(page));
+    const body = detail.locator("[data-overlay-scroll]");
+    expect(await body.evaluate((el) => el.scrollTop)).toBe(0);
+
+    const box = await detail.locator(".dt-txt").boundingBox();
+    expect(box).not.toBeNull();
+    const x = box!.x + box!.width / 2;
+    const y = box!.y + box!.height / 2;
+    await page.mouse.move(x, y);
+    await page.mouse.down();
+    for (let i = 1; i <= 10; i++) await page.mouse.move(x, y + i * 25);
+    await page.mouse.up();
+
+    await expect(detail).toBeHidden();
+  });
+
+  test("swipe-down w treści NIE zamyka, gdy sheet jest przewinięty niżej", async ({
+    page,
+  }) => {
+    await gotoReady(page, PATH);
+    const detail = await openDetail(page, await revealFirstCard(page));
+    const body = detail.locator("[data-overlay-scroll]");
+    await body.evaluate((el) => el.scrollTo({ top: 220, behavior: "instant" }));
+    await expect
+      .poll(async () => body.evaluate((el) => el.scrollTop))
+      .toBeGreaterThan(0);
+
+    const box = await detail.locator(".dt-about").boundingBox();
+    expect(box).not.toBeNull();
+    const x = box!.x + box!.width / 2;
+    const y = box!.y + 10;
+    await page.mouse.move(x, y);
+    await page.mouse.down();
+    for (let i = 1; i <= 10; i++) await page.mouse.move(x, y + i * 25);
+    await page.mouse.up();
+
+    await expect(detail).toBeVisible();
+  });
+
   test("tap w scrim (pas nad sheetem) zamyka", async ({ page }) => {
     await gotoReady(page, PATH);
     const detail = await openDetail(page, await revealFirstCard(page));
@@ -729,6 +811,116 @@ test.describe("filtry: powrót na początek listy (D-T2)", () => {
     // zmiany filtru przez użytkownika
     expect(await page.evaluate(() => Math.round(window.scrollY))).toBe(0);
   });
+});
+
+// ── Szyna filtrów: wybrana kategoria dojeżdża na środek (runda 4) ────────
+// Zgłoszenie: na mobile trzeba było ręcznie przewijać pasek, żeby zobaczyć,
+// co jest wybrane. Centrujemy WYŁĄCZNIE scrollem paska — jego wygląd i układ
+// zostają nietknięte, a przy krańcach listy dojeżdżamy tylko do krawędzi.
+test.describe("szyna filtrów: centrowanie wybranej kategorii (mobile)", () => {
+  test.skip(({ isMobile }) => !isMobile, "pasek poziomy istnieje na mobile");
+  test.skip(
+    CATS_WITH.length < 3,
+    "za mało kategorii z wpisami, by pasek się przewijał",
+  );
+
+  /** Odchyłka środka przycisku od środka paska (px) + czy pasek stoi na
+   *  krawędzi swojego zakresu przewijania. */
+  const pomiar = (page: Page, slug: string) =>
+    page.evaluate((s) => {
+      const rail = document.querySelector<HTMLElement>("[data-rail]")!;
+      const btn = rail.querySelector<HTMLElement>(`button[data-f="${s}"]`)!;
+      const r = rail.getBoundingClientRect();
+      const b = btn.getBoundingClientRect();
+      const max = rail.scrollWidth - rail.clientWidth;
+      return {
+        odchylka: Math.round(b.left + b.width / 2 - (r.left + r.width / 2)),
+        naKrawedzi: rail.scrollLeft <= 1 || rail.scrollLeft >= max - 1,
+        wCalosciWidoczny: b.left >= r.left - 1 && b.right <= r.right + 1,
+        przewijalny: max > 1,
+      };
+    }, slug);
+
+  test("kategoria ze środka listy ląduje na środku ekranu", async ({
+    page,
+  }) => {
+    await gotoReady(page, PATH);
+    const srodkowa = CATS_WITH[Math.floor(CATS_WITH.length / 2)];
+    await page.locator(`[data-rail] button[data-f="${srodkowa.slug}"]`).click();
+    await page.waitForTimeout(700); // płynny przejazd paska
+    const m = await pomiar(page, srodkowa.slug);
+    test.skip(
+      !m.przewijalny,
+      "pasek mieści się w całości — nie ma co centrować",
+    );
+    expect(Math.abs(m.odchylka)).toBeLessThanOrEqual(4);
+  });
+
+  test("skrajna kategoria dojeżdża tylko do krawędzi paska", async ({
+    page,
+  }) => {
+    await gotoReady(page, PATH);
+    const ostatnia = CATS_WITH[CATS_WITH.length - 1];
+    await page.locator(`[data-rail] button[data-f="${ostatnia.slug}"]`).click();
+    await page.waitForTimeout(700);
+    const m = await pomiar(page, ostatnia.slug);
+    test.skip(
+      !m.przewijalny,
+      "pasek mieści się w całości — nie ma co centrować",
+    );
+    // nie da się wyśrodkować bez pustego pasa, więc pasek staje na krawędzi,
+    // a przycisk MUSI być widoczny w całości
+    expect(m.naKrawedzi).toBe(true);
+    expect(m.wCalosciWidoczny).toBe(true);
+  });
+});
+
+// ── Przyklejona kolumna nagłówka mieści się w oknie (runda 4) ────────────
+// Zgłoszenie: przy komplecie kategorii kafel „SZUKASZ CZEGOŚ PODOBNEGO?"
+// wyjeżdżał poza ekran (zmierzone: 1366×768 z 8 pozycjami — brakowało
+// 152 px). Ratunek jest dwustopniowy (opis → ciaśniejsza szyna), a liczy go
+// JS, bo CSS nie zna warunku „treść wyższa niż okno".
+test("kolumna nagłówka mieści telefon nawet przy komplecie kategorii", async ({
+  page,
+}, testInfo) => {
+  test.skip(
+    testInfo.project.name !== "chromium-1920",
+    "sonda układu — jeden profil desktop (test sam zmienia rozmiar okna)",
+  );
+  await gotoReady(page, PATH);
+  for (const [w, h] of [
+    [1440, 900],
+    [1280, 800],
+    [1366, 768],
+  ]) {
+    await page.setViewportSize({ width: w, height: h });
+    const nadmiar = await page.evaluate(async () => {
+      const head = document.querySelector<HTMLElement>(".re-head")!;
+      const rail = document.querySelector<HTMLElement>("[data-rail]")!;
+      const phone = document.querySelector<HTMLElement>(".re-phone")!;
+      // antyscraping D-CH5: kafel startuje `hidden` i odsłania go dopiero
+      // wypełnienie slotów — w teście odsłaniamy go sami
+      phone.hidden = false;
+      // dokładamy pozycje do kompletu „Wszystkie + 7 kategorii"
+      const wzor = rail.querySelector("button")!;
+      while (rail.children.length < 8)
+        rail.appendChild(wzor.cloneNode(true) as HTMLElement);
+      window.dispatchEvent(new Event("resize"));
+      await new Promise((r) =>
+        requestAnimationFrame(() => requestAnimationFrame(r)),
+      );
+      const hdr =
+        parseFloat(
+          getComputedStyle(document.documentElement).getPropertyValue(
+            "--hdr-h",
+          ),
+        ) || 80;
+      return Math.round(
+        head.getBoundingClientRect().height - (window.innerHeight - hdr),
+      );
+    });
+    expect(nadmiar, `okno ${w}×${h}`).toBeLessThanOrEqual(0);
+  }
 });
 
 // ── kontrakt progu (R14) ──

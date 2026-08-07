@@ -52,8 +52,15 @@ wspólne odziedziczone z szablonu + gotchas sekcji, które przeżyły kopię
   realizacji, więc musi być zdjęciem — `viewProject()` liczy z niej `cover`,
   dzięki czemu `WorkIndexCard`/`HomeRealizacje` nie wiedzą o zmianie.
 - Galeria detalu delung (4.4): zdjęcia przez `imgAt()`, wideo
-  `<video preload="none" poster playsinline>` — poster to **klatka ze środka
-  filmu** (`videoFrameAt()`), nie osobne zdjęcie. BEZ `controls` i bez
+  `<video preload="none" poster playsinline>` — miniaturą jest **klatka ze
+  środka filmu** (`videoFrameAt()`), nie osobne zdjęcie. Klatka idzie
+  DWOMA drogami: `<img class="dt-poster">` pod `<video>` i atrybut `poster`
+  (ten sam URL = jedno pobranie). **Nie kasuj tego `<img>` jako duplikatu**:
+  przy `preload="none"` Chromium nie pobiera plakatu NIGDY — zmierzone na
+  produkcji (Firefox 7/7, WebKit 1/1, Chromium 0/7), a `preload="metadata"`
+  tego nie zmienia. Kadr wideo na zrzutach wizualnych jest pod maską —
+  `.dt-poster` też musi tam być (ta sama geometria, więc baseline bez zmian).
+  BEZ `controls` i bez
   własnego znaku play (korekta Mateusza): ikonka kamery w rogu kadru,
   tap w kadr galerii startuje film i otwiera podgląd pełnoekranowy
   (`[data-lightbox]`), w podglądzie tap = pauza↔play; wideo na zrzutach
