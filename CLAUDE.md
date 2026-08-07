@@ -529,6 +529,22 @@ img` kasował zapas z reguły bazowej do zera (`top: 0; height: 100%`),
   ostatnim zaworem, więc gwarancja D-Q5 stoi. Zmierzone: przy 900 px wysokości
   okna żaden opis nie jest skracany (render jak dotąd), przy 720 px wszystkie
   kończą się wielokropkiem. Baseline'y bez zmian (fixture poniżej limitu).
+- **Panel: nazwy plików wpisów zawsze ASCII + ręczne odpalanie workflow —
+  WYKONANE** (2026-08-07, PR #57 konfiguracja, #58 przemianowanie trzech
+  plików): nazwa pliku realizacji powstaje z ręcznie wypełnianego pola
+  „Slug", więc niesie to, co klient wklei — tekst z telefonu bywa zapisany
+  w formie ROZŁOŻONEJ (NFD), przez co macOS pokazuje ten sam plik dwa razy
+  (śledzony pod NFD, nieśledzony pod NFC), a `git add .` zrobiłby z tego dwa
+  wpisy na Linuksie. `slug: {encoding: ascii, clean_accents: true}`
+  w `config.yml` transliteruje polskie znaki (Sveltia ma wbudowaną tablicę)
+  i wycina resztę — dotyczy WYŁĄCZNIE nazwy pliku. Zweryfikowane na wpisie
+  dodanym po zmianie: nazwa czysta. **Poprawienie pola „Slug" w panelu NIE
+  przemianowuje pliku** (Sveltia ustala ścieżkę przy tworzeniu wpisu) —
+  trzy stare nazwy przemianowane ręcznie w repo (nazwy plików nie używa nic:
+  oba konsumenty kolekcji czytają `e.data`). Oba workflow dostały
+  `workflow_dispatch` po sześciogodzinnej awarii Actions (2026-08-06:
+  przepuszczano ~15 % webhooków, więc push i otwarcie PR-a nie tworzyły
+  biegu, a odrzuconych zdarzeń GitHub nie odtwarza).
 - Etap 7 — przed nami (umowa → przekazanie).
 
 ## Mapa projektu
