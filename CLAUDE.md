@@ -545,6 +545,45 @@ img` kasował zapas z reguły bazowej do zera (`top: 0; height: 100%`),
   `workflow_dispatch` po sześciogodzinnej awarii Actions (2026-08-06:
   przepuszczano ~15 % webhooków, więc push i otwarcie PR-a nie tworzyły
   biegu, a odrzuconych zdarzeń GitHub nie odtwarza).
+- **Runda poprawek nr 4 (przed Etapem 7) — WYKONANA** (2026-08-07; decyzje
+  D-W1–D-W8: `docs/analiza-poprawki-4.md` — czytać RAZEM z analizami widoków,
+  bo koryguje D-RP4, rozszerza D-U1 i zmienia zasięg gestu z D-OK5/D-R3):
+  zakres zbierany od Mateusza w trakcie sesji, każda diagnoza z pomiaru sondą
+  spoza repo. **Preflight Tailwinda (`img { max-width: 100% }`) dławił
+  szerokości > 100% w CZTERECH miejscach** — hero desktop odsłaniał czarny pas
+  do 43,2 px (zmienny, bo każdy kadr ma inny `transform-origin`), kafle
+  zajawki oferty 30,8 px, kafle zespołu `/o-nas/` 17,4 px; naprawa to
+  `max-width: none` (tła bannerów mobile 12,3 px ZOSTAWIONE świadomie —
+  rozmyte pod tintem, zero kontrastu). **Miniatura filmu nie istniała
+  w Chrome — także na produkcji**: przy `preload="none"` Chromium nie pobiera
+  atrybutu `poster` w ogóle (zmierzone 0/7 wobec Firefoksa 7/7 i WebKita 1/1;
+  `preload="metadata"` NIE pomaga), więc klatka idzie teraz DWOMA drogami —
+  jako `<img class="dt-poster">` pod `<video>` i jako `poster` (ten sam URL =
+  jedno pobranie; galeria żyje w `<template>`, więc zero kosztu dla listy).
+  Podpowiedź „Kliknij/Stuknij, aby obejrzeć" na kadrze wideo (oba warianty
+  w SSR, przełącza `@media`; gaśnie TĄ SAMĄ regułą co ikonka kamery, atrybut
+  osobny `data-cam-hint` — inaczej asercje `[data-cam]` łapałyby dwa
+  elementy). **Swipe-down działa w całej treści sheeta, gdy jest ona
+  przewinięta na samą górę** (`overlay.ts` przejmuje gest po progu 8 px
+  i tylko gdy ruch idzie bardziej w dół niż w bok — inaczej pozioma karuzela
+  galerii zamykałaby sheet), a `overscroll-behavior: contain` ubija
+  pull-to-refresh, który dotąd odświeżał stronę zamiast zamknąć sheet;
+  podgląd pełnoekranowy ma wyjątek `[data-overlay-nodrag]` (własny gest).
+  CTA „…realizacje z kategorii" znika w kategoriach bez wpisów
+  (`categoriesWithWork()` w `work-data.ts` — jedno źródło prawdy obok
+  `workRail()`; zmierzone: karty 5 z 6, panele 10 z 12). Zapas na parallax
+  w hero `/o-nas/` (40 → −12 px; 13% z każdej strony, bo przy minimalnych 11%
+  margines wychodził 4 px). **Przyklejona kolumna `/realizacje/` zacieśnia
+  się dwustopniowo** (opis → odstępy szyny), żeby kafel „SZUKASZ CZEGOŚ
+  PODOBNEGO?" mieścił się przy komplecie 8 kategorii — przy 1366×768
+  brakowało 152 px, a samo ukrycie opisu nie wystarczało; liczy JS, bo CSS
+  nie porówna wysokości treści z oknem (jak D-U5). Wybrana kategoria centruje
+  się w pasku mobile (odchyłka 0 px w środku listy, dojazd do krawędzi przy
+  krańcach; deep-link centruje BEZ animacji). Etykiety parametrów detalu
+  zielone na obu progach. Baseline'y: **15 zrzutów** (hero, sekcja oferty,
+  zespół, hero o-nas mobile, panel oferty), 188 bez zmian; **dwie zmiany są
+  dla pixel-diffa niewidzialne** (kolor etykiet leży poniżej kadru sheeta,
+  karta kategorii w zrzucie ma wpisy) — chroni je kontrakt e2e.
 - Etap 7 — przed nami (umowa → przekazanie).
 
 ## Mapa projektu
