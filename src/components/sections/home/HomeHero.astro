@@ -443,6 +443,15 @@ const HERO_FONT_TEXT = "Kuchnie Łazienki Wnętrza komercyjne Garderoby";
       position: absolute;
       left: -3%;
       top: -3%;
+      /* Preflight Tailwinda ma `img { max-width: 100% }`, więc bez tej
+         linii szerokość 106% jest dławiona do 100% — obraz przesunięty
+         o `left: -3%` kończył się wtedy na 97% i odsłaniał `--bg-dark`
+         paskiem do 43 px z PRAWEJ strony (zmierzone 1440×900; Ken Burns
+         z off-center `transform-origin` raz go zasłaniał, raz odsłaniał —
+         stąd zgłoszenie „pasek raz jest, raz go nie ma"). Wysokość
+         działała, bo max-height preflight nie ustawia. Ta sama pułapka
+         co D-U1, `docs/analiza-parallax-realizacje.md`. */
+      max-width: none;
       width: 106%;
       height: 106%;
       object-fit: cover;

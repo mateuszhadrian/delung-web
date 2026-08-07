@@ -10,12 +10,21 @@
 // panelu = keyframes CSS odpalane klasą .anim (oferta.ts) — bez GSAP;
 // pierwszy render bez animacji (jak w eksporcie), reduce je wyłącza.
 // Treści: oferta-content.ts (D-OK1), kadry: oferta-images.ts (D-OK9).
+import { getCollection } from "astro:content";
 import { categoryLabel } from "@/lib/categories";
 import { KATEGORIE_PATH, WORK_INDEX_PATH } from "@/lib/routes";
+import { categoriesWithWork } from "../work/work-data";
 import { OFERTA_CATEGORIES, OFERTA_KAFLE_MOBILE } from "./oferta-content";
 import { ofertaImage } from "./oferta-images";
 
 const kafle = OFERTA_CATEGORIES.slice(0, OFERTA_KAFLE_MOBILE);
+
+// Karta CTA prowadzi na przefiltrowaną listę realizacji — bez wpisów
+// w kategorii nie pokazujemy jej wcale (runda 4, ta sama reguła co
+// w KategorieSheets). Oba duplikaty karty (--side i --wide) znikają razem.
+const zRealizacjami = categoriesWithWork(
+  (await getCollection("realizacje")).map((e) => e.data),
+);
 ---
 
 <section class="of">
@@ -96,26 +105,28 @@ const kafle = OFERTA_CATEGORIES.slice(0, OFERTA_KAFLE_MOBILE);
                     (style scoped + grid-areas nie pozwalają przenieść
                     jednego węzła między kolumnami samym CSS); widoczny
                     jest zawsze dokładnie jeden z dwóch. */}
-                <div class="of-cta of-cta--side" data-panelitem style="--i:3">
-                  <a class="of-ctaCard" href={`${WORK_INDEX_PATH}#${c.slug}`}>
-                    <span>
-                      <span class="k">REALIZACJE</span>
-                      <span class="t">
-                        Przeglądaj realizacje z kategorii{" "}
-                        <b>{categoryLabel(c.slug).toUpperCase()}</b>
+                {zRealizacjami.has(c.slug) && (
+                  <div class="of-cta of-cta--side" data-panelitem style="--i:3">
+                    <a class="of-ctaCard" href={`${WORK_INDEX_PATH}#${c.slug}`}>
+                      <span>
+                        <span class="k">REALIZACJE</span>
+                        <span class="t">
+                          Przeglądaj realizacje z kategorii{" "}
+                          <b>{categoryLabel(c.slug).toUpperCase()}</b>
+                        </span>
                       </span>
-                    </span>
-                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                      <path
-                        d="M6 18L18 6M18 6H8M18 6v10"
-                        stroke="#256f47"
-                        stroke-width="1.6"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                      />
-                    </svg>
-                  </a>
-                </div>
+                      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <path
+                          d="M6 18L18 6M18 6H8M18 6v10"
+                          stroke="#256f47"
+                          stroke-width="1.6"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                        />
+                      </svg>
+                    </a>
+                  </div>
+                )}
               </div>
               <div class="of-more">
                 <div class="of-specs">
@@ -126,26 +137,28 @@ const kafle = OFERTA_CATEGORIES.slice(0, OFERTA_KAFLE_MOBILE);
                     </div>
                   ))}
                 </div>
-                <div class="of-cta of-cta--wide" data-panelitem style="--i:7">
-                  <a class="of-ctaCard" href={`${WORK_INDEX_PATH}#${c.slug}`}>
-                    <span>
-                      <span class="k">REALIZACJE</span>
-                      <span class="t">
-                        Przeglądaj realizacje z kategorii{" "}
-                        <b>{categoryLabel(c.slug).toUpperCase()}</b>
+                {zRealizacjami.has(c.slug) && (
+                  <div class="of-cta of-cta--wide" data-panelitem style="--i:7">
+                    <a class="of-ctaCard" href={`${WORK_INDEX_PATH}#${c.slug}`}>
+                      <span>
+                        <span class="k">REALIZACJE</span>
+                        <span class="t">
+                          Przeglądaj realizacje z kategorii{" "}
+                          <b>{categoryLabel(c.slug).toUpperCase()}</b>
+                        </span>
                       </span>
-                    </span>
-                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                      <path
-                        d="M6 18L18 6M18 6H8M18 6v10"
-                        stroke="#256f47"
-                        stroke-width="1.6"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                      />
-                    </svg>
-                  </a>
-                </div>
+                      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <path
+                          d="M6 18L18 6M18 6H8M18 6v10"
+                          stroke="#256f47"
+                          stroke-width="1.6"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                        />
+                      </svg>
+                    </a>
+                  </div>
+                )}
               </div>
             </div>
           );

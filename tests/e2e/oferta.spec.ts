@@ -17,6 +17,7 @@ import {
 import { OFERTA_DESKTOP_MIN_PX } from "../../src/components/sections/oferta/oferta-config";
 import { expectBreakpointFlip } from "../helpers/breakpoint";
 import { collectPageIssues, usePreviewGuard } from "../helpers/guards";
+import { readRealizacje } from "../helpers/realizacje";
 import { gotoReady, scrollPageTo, settle } from "../helpers/scroll";
 
 usePreviewGuard();
@@ -123,6 +124,23 @@ test.describe("oferta desktop (zakładki + panel)", () => {
     );
     // Etykieta z categoryLabel() (D-OK6), nie `rel` z eksportu.
     await expect(cta).toContainText("KUCHNIE");
+  });
+
+  test("karta CTA znika w kategoriach bez realizacji (runda 4)", async ({
+    page,
+  }) => {
+    const zWpisami = new Set(
+      readRealizacje<{ category: string; order: number }>().map(
+        (e) => e.category,
+      ),
+    );
+    await gotoReady(page, OFERTA_PATH);
+    for (const [i, c] of OFERTA_CATEGORIES.entries()) {
+      // panele są w SSR wszystkie — czytamy je bez przełączania zakładek
+      const cta = page.locator("[data-ofpanel]").nth(i).locator(".of-ctaCard");
+      // oba duplikaty karty (--side / --wide) znikają razem
+      await expect(cta).toHaveCount(zWpisami.has(c.slug) ? 2 : 0);
+    }
   });
 
   test("CTA procesu nawiguje na /proces-wspolpracy/", async ({ page }) => {

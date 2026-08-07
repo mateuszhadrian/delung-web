@@ -20,9 +20,18 @@
 //
 // Zdjęcia są `loading="lazy"` w kontenerze `hidden` — przeglądarka
 // pobiera je dopiero przy otwarciu karty (koszt stron: HTML + CSS).
+import { getCollection } from "astro:content";
 import { CONTACT_PATH, WORK_INDEX_PATH } from "@/lib/routes";
+import { categoriesWithWork } from "../work/work-data";
 import { OFERTA_CATEGORIES } from "./oferta-content";
 import { ofertaImage } from "./oferta-images";
+
+// CTA prowadzi na przefiltrowaną listę realizacji, więc pokazujemy je
+// tylko dla kategorii, które JAKIEŚ realizacje mają (runda 4) — inaczej
+// klient obiecywał odwiedzającemu pustą stronę.
+const zRealizacjami = categoriesWithWork(
+  (await getCollection("realizacje")).map((e) => e.data),
+);
 
 // Ikony spec „W STANDARDZIE" (4 sztuki, indeksowane pozycją — eksport
 // IKONY): okrąg / kwadraty / front z zawiasami / romb.
@@ -94,21 +103,23 @@ const SPEC_ICONS = [
                   </div>
                 ))}
               </div>
-              <div class="dt-more">
-                {/* deep-link filtra realizacji (część 4.4, D-R2) */}
-                <a href={`${WORK_INDEX_PATH}#${c.slug}`}>
-                  Zobacz realizacje z tej kategorii
-                  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                    <path
-                      d="M6 18L18 6M18 6H8M18 6v10"
-                      stroke="#1a1a1a"
-                      stroke-width="1.5"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    />
-                  </svg>
-                </a>
-              </div>
+              {zRealizacjami.has(c.slug) && (
+                <div class="dt-more">
+                  {/* deep-link filtra realizacji (część 4.4, D-R2) */}
+                  <a href={`${WORK_INDEX_PATH}#${c.slug}`}>
+                    Zobacz realizacje z tej kategorii
+                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                      <path
+                        d="M6 18L18 6M18 6H8M18 6v10"
+                        stroke="#1a1a1a"
+                        stroke-width="1.5"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      />
+                    </svg>
+                  </a>
+                </div>
+              )}
             </div>
           </div>
           <div class="dt-foot">

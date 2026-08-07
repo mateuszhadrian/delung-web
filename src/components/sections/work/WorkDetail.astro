@@ -8,10 +8,14 @@
 // do hosta przy otwarciu; liczniki (REALIZACJA NN/NN, 01/0N) maluje
 // open-detail.ts po klonowaniu.
 //
-// Wideo: preload="none" + poster z videoFrameAt() — po remoncie panelu
-// pozycja z filmem NIE MA własnego zdjęcia, więc plakatem jest klatka
-// wycięta z samego filmu (środek liczony z `duration`). Odtwarzanie na tap
-// w kadr bez zmian; `duration` dalej służy też za badge czasu (desktop).
+// Wideo: preload="none", a miniaturą jest klatka wycięta z samego filmu
+// (videoFrameAt, środek liczony z `duration`) — po remoncie panelu pozycja
+// z filmem NIE MA własnego zdjęcia. Klatka jest podłożona DWOMA drogami:
+// jako <img class="dt-poster"> pod <video> ORAZ jako atrybut `poster`.
+// Powód (runda 4, zmierzone): przy preload="none" Chromium nie pobiera
+// plakatu nigdy — także na produkcji i także po zmianie na "metadata" —
+// więc na Chrome i Androidzie kadr filmu był pustym prostokątem.
+// Odtwarzanie na tap bez zmian; `duration` dalej służy za badge czasu.
 // Kontrasty podbite pod pustą allowlistę axe (D-R8): --accent-ink
 // zamiast --gr, --faint zamiast alpha .45–.55.
 import { imgAt, videoFrameAt } from "@/lib/img";
@@ -46,61 +50,108 @@ const pad = (n: number) => String(n).padStart(2, "0");
 <div class="dt-gal" data-gal>
   <div class="dt-track" data-track>
     {
-      p.gallery.map((item, i) => (
-        <div class="dt-slide" data-slide>
-          {item.type === "video" ? (
-            <>
-              {/* Bez `controls` i bez własnego znaku play (korekta
+      p.gallery.map((item, i) => {
+        // Klatka-miniatura liczona RAZ: leci i do <img> pod spodem,
+        // i do atrybutu `poster` (ten sam URL = jedno pobranie).
+        const klatka =
+          item.type === "video"
+            ? videoFrameAt(item.video, item.duration)
+            : undefined;
+        return (
+          <div class="dt-slide" data-slide>
+            {item.type === "video" ? (
+              <>
+                {/* Miniatura filmu jako ZWYKŁY OBRAZ, nie tylko `poster`
+                  (runda 4, zmierzone na produkcji): przy `preload="none"`
+                  Chromium NIGDY nie pobiera plakatu — ani na dev, ani na
+                  produkcji, ani po zmianie na `preload="metadata"`. Firefox
+                  pobiera 7/7, WebKit 1/1, Chromium 0/7, więc na Chrome
+                  i Androidzie kadr filmu był pustym prostokątem. `poster`
+                  ZOSTAJE (silniki, które go pobierają, mają ten sam URL
+                  z cache), a ten <img> gwarantuje kadr wszędzie.
+                  Galeria żyje w <template>, więc obraz nie jest pobierany
+                  do czasu otwarcia detalu — zero kosztu dla LCP listy. */}
+                {klatka && (
+                  <img
+                    class="dt-poster"
+                    src={klatka}
+                    alt=""
+                    aria-hidden="true"
+                    loading="lazy"
+                    decoding="async"
+                    draggable="false"
+                    style={
+                      item.position
+                        ? `object-position: ${item.position}`
+                        : undefined
+                    }
+                  />
+                )}
+                {/* Bez `controls` i bez własnego znaku play (korekta
                   Mateusza): tap/klik w kadr odpala film w podglądzie
                   pełnoekranowym; stan sygnalizuje ikonka kamery. */}
-              {/* eslint-disable-next-line astro/jsx-a11y/media-has-caption --
+                {/* eslint-disable-next-line astro/jsx-a11y/media-has-caption --
                   klipy realizacji to nieme b-rolle mebli (bez dialogów) */}
-              <video
-                src={item.video}
-                poster={videoFrameAt(item.video, item.duration)}
-                preload="none"
-                playsinline
+                <video
+                  src={item.video}
+                  poster={klatka}
+                  preload="none"
+                  playsinline
+                  style={
+                    item.position
+                      ? `object-position: ${item.position}`
+                      : undefined
+                  }
+                />
+                {/* Podpowiedź w prawym górnym rogu kadru — pokazuje się
+                  i znika RAZEM z ikonką kamery (ta sama reguła
+                  .is-playing w WorkDetailOverlay.astro). Dwa warianty
+                  treści w SSR zamiast podmiany w JS: wzorzec duplikatów
+                  per-breakpoint (4.5), przełącza je @media w parze
+                  z WORK_DESKTOP_MIN_PX. aria-hidden — to dekoracja
+                  dla wzroku, a nie druga nazwa kadru. */}
+                <span class="dt-hint" data-cam-hint aria-hidden="true">
+                  <span class="dt-hint-d">Kliknij, aby obejrzeć</span>
+                  <span class="dt-hint-m">Stuknij, aby obejrzeć</span>
+                </span>
+                <span class="dt-cam" data-cam aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none">
+                    <rect
+                      x="3"
+                      y="7"
+                      width="12"
+                      height="10"
+                      rx="2"
+                      stroke="#fff"
+                      stroke-width="1.5"
+                    />
+                    <path
+                      d="M15 10.5l6-3v9l-6-3"
+                      stroke="#fff"
+                      stroke-width="1.5"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                </span>
+                {item.duration && <span class="dt-time">{item.duration}</span>}
+              </>
+            ) : (
+              <img
+                src={imgAt(item.image, "full")}
+                alt={`${p.title} — zdjęcie ${i + 1}`}
+                loading="lazy"
+                decoding="async"
+                draggable="false"
                 style={
                   item.position
                     ? `object-position: ${item.position}`
                     : undefined
                 }
               />
-              <span class="dt-cam" data-cam aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="none">
-                  <rect
-                    x="3"
-                    y="7"
-                    width="12"
-                    height="10"
-                    rx="2"
-                    stroke="#fff"
-                    stroke-width="1.5"
-                  />
-                  <path
-                    d="M15 10.5l6-3v9l-6-3"
-                    stroke="#fff"
-                    stroke-width="1.5"
-                    stroke-linejoin="round"
-                  />
-                </svg>
-              </span>
-              {item.duration && <span class="dt-time">{item.duration}</span>}
-            </>
-          ) : (
-            <img
-              src={imgAt(item.image, "full")}
-              alt={`${p.title} — zdjęcie ${i + 1}`}
-              loading="lazy"
-              decoding="async"
-              draggable="false"
-              style={
-                item.position ? `object-position: ${item.position}` : undefined
-              }
-            />
-          )}
-        </div>
-      ))
+            )}
+          </div>
+        );
+      })
     }
   </div>
   <div class="dt-galbar">
@@ -292,6 +343,37 @@ const pad = (n: number) => String(n).padStart(2, "0");
     width: 17px;
     height: 17px;
   }
+  /* podpowiedź „Stuknij/Kliknij, aby obejrzeć" — prawy górny róg kadru,
+     bez tła (decyzja Mateusza): sam biały tekst z cieniem, który trzyma
+     czytelność także na jasnym kadrze. Nie łapie zdarzeń — tap w kadr
+     ma otwierać podgląd, tak jak przy ikonce kamery. */
+  .dt-hint {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    max-width: calc(100% - 62px);
+    font-family: var(--font-display), sans-serif;
+    font-weight: 500;
+    font-size: 12px;
+    line-height: 1.25;
+    text-align: right;
+    color: #fff;
+    text-shadow:
+      0 1px 5px rgba(0, 0, 0, 0.75),
+      0 0 2px rgba(0, 0, 0, 0.55);
+    pointer-events: none;
+  }
+  .dt-hint-d {
+    display: none;
+  }
+  /* wąskie kadry widoku mobilnego (165 px — pasmo 835–1023 px): tekst
+     musi zmieścić się obok ikonki kamery, więc schodzi o stopień */
+  @media (min-width: 835px) and (max-width: 1023px) {
+    .dt-hint {
+      font-size: 10.5px;
+      max-width: calc(100% - 54px);
+    }
+  }
   .dt-time {
     display: none;
   }
@@ -359,7 +441,9 @@ const pad = (n: number) => String(n).padStart(2, "0");
     font-size: 10.5px;
     line-height: 1;
     letter-spacing: 0.18em;
-    color: var(--faint);
+    /* zieleń jak na desktopie (runda 4) — etykieta parametru ma ten sam
+       kolor na obu progach; desktop nadpisuje już tylko rozmiar i odstępy */
+    color: var(--accent-ink);
     margin-bottom: 6px;
     /* Kapitalik z makiety, niezależnie od tego, jak klient wpisze etykietę
        w panelu (M5). Świadomie w CSS, nie w danych: to decyzja
@@ -566,6 +650,18 @@ const pad = (n: number) => String(n).padStart(2, "0");
     .dt-cam svg {
       width: 19px;
       height: 19px;
+    }
+    .dt-hint {
+      top: 16px;
+      right: 16px;
+      font-size: 13px;
+      max-width: calc(100% - 76px);
+    }
+    .dt-hint-d {
+      display: inline;
+    }
+    .dt-hint-m {
+      display: none;
     }
     .dt-time {
       display: block;

@@ -62,6 +62,9 @@ paths:
 - Miniatura filmu **nie jest osobnym plikiem**: powstaje z klatki filmu
   (`videoFrameAt()` w `src/lib/img.ts` → `/cdn-cgi/media/mode=frame`).
   Środek liczony z pola `duration` („0:24" → `time=12s`), brak/śmieć → 1 s.
+  Ta sama klatka trafia w markup DWA razy — jako `<img class="dt-poster">`
+  i jako atrybut `poster` — bo Chromium przy `preload="none"` po plakat nie
+  sięga w ogóle (runda 4, pomiar w `docs/analiza-poprawki-4.md`).
 
 ## Media (Cloudflare R2)
 

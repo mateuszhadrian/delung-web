@@ -595,6 +595,70 @@ test.describe("hero desktop: bramka fontu typografii (D-T1)", () => {
   });
 });
 
+// ── Kadry hero desktop zawsze pokrywają pierwszy ekran (runda 4) ─────────
+// Zgłoszenie: przy prawej krawędzi okna widać czarny pas (--bg-dark spod
+// zdjęcia), który w trakcie pętli Ken Burns raz rośnie, raz znika.
+// Przyczyna: preflight Tailwinda (`img { max-width: 100% }`) dławił
+// zadeklarowaną szerokość 106% do 100%, więc obraz przesunięty o `left:-3%`
+// kończył się na 97% — a off-center `transform-origin` każdego kadru raz
+// wsuwał zdjęcie w tę szczelinę, raz je z niej wysuwał. Ta sama pułapka co
+// D-U1 przy kaflach realizacji.
+//
+// Animacja jest tu przewijana `currentTime`, a nie odczekiwana: pętla ma
+// 26 s, a kryterium musi objąć CAŁY cykl (szczelina zależy od fazy).
+test.describe("hero desktop: zdjęcie pokrywa cały ekran przez całą pętlę", () => {
+  test.skip(
+    ({ isMobile }) => !!isMobile,
+    "kadry hero desktop nie istnieją poniżej progu",
+  );
+
+  test("na żadnej klatce Ken Burns nie odsłania tła sekcji", async ({
+    page,
+  }) => {
+    await gotoReady(page, PATH);
+    await settle(page, 300);
+    // Największy odsłonięty pas (px) na dowolnej krawędzi, w dowolnej fazie.
+    // Zmierzone po naprawie: −35,5 px (1024×768) do −66,4 px (1920×1080);
+    // przed naprawą +43,2 px przy 1440×900 (kadr „Łazienki").
+    const max = await page.evaluate(async () => {
+      const host = document.querySelector<HTMLElement>(".hero-d")!;
+      const kadry = [...document.querySelectorAll<HTMLElement>(".heroimg")];
+      const anims = document.getAnimations();
+      anims.forEach((a) => a.pause());
+      const klatka = () =>
+        new Promise((r) =>
+          requestAnimationFrame(() => requestAnimationFrame(r)),
+        );
+      let max = -Infinity;
+      for (let t = 0; t <= 26000; t += 500) {
+        anims.forEach((a) => {
+          try {
+            a.currentTime = t;
+          } catch {
+            /* animacja bez osi czasu — pomijamy */
+          }
+        });
+        await klatka();
+        const h = host.getBoundingClientRect();
+        for (const kadr of kadry) {
+          // liczy się tylko kadr realnie widoczny — pozostałe są wygaszone
+          if (Number(getComputedStyle(kadr).opacity) < 0.9) continue;
+          const img = kadr.querySelector("img")!.getBoundingClientRect();
+          max = Math.max(
+            max,
+            img.left - h.left,
+            h.right - img.right,
+            img.top - h.top,
+            h.bottom - img.bottom,
+          );
+        }
+      }
+      return max;
+    });
+    expect(max).toBeLessThanOrEqual(0);
+  });
+});
+
 // ── kontrakt progu (R14) ──
 // Hero ma dwa NIEZALEŻNE warianty markupu (mobilny `.hero` ze zdjęciem
 // i tekstem, desktopowy `.hero-d` z typografią SVG) przełączane wyłącznie

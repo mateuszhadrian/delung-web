@@ -198,24 +198,66 @@ document.addEventListener("click", (e) => {
 // Chwyt za "kreseczkę"/nagłówek [data-overlay-drag] i pociągnięcie w dół
 // zamyka sheet; puszczenie poniżej progu (dystans lub prędkość „flick”)
 // przywraca go płynnie na miejsce. Desktopowy Modal nie ma tej strefy.
+//
+// Runda 4: gest łapie się także W TREŚCI sheeta, ale WYŁĄCZNIE gdy jest ona
+// przewinięta na samą górę — bo dopiero wtedy ciągnięcie w dół nie ma nic do
+// przewijania. Wcześniej taki gest szedł do przeglądarki i mocniejszy ruch
+// ODŚWIEŻAŁ STRONĘ zamiast zamknąć sheet (zgłoszenie Mateusza). Start z treści
+// jest „warunkowy" (pending): przejmujemy go dopiero, gdy palec pójdzie w dół
+// wyraźnie bardziej niż w bok — inaczej pozioma karuzela galerii w detalu
+// zamykałaby sheet przy każdym przesunięciu kadru. Wyjątek `[data-overlay-nodrag]`
+// nosi podgląd pełnoekranowy, który ma własny swipe-down (open-detail.ts).
 const DRAG_CLOSE_PX = 96; // minimalny dystans, by zamknąć
 const DRAG_CLOSE_FRACTION = 0.28; // …lub ten ułamek wysokości panelu
 const DRAG_FLICK_VY = 0.55; // …lub prędkość „flick” w px/ms
+const DRAG_SLOP_PX = 8; // dystans, po którym rozstrzygamy kierunek gestu
 
 interface DragState {
   root: HTMLElement;
   panel: HTMLElement;
+  startX: number;
   startY: number;
   lastY: number;
   lastT: number;
   dy: number;
   vy: number;
   moved: boolean;
+  /** gest z treści czeka na rozstrzygnięcie kierunku (uchwyt = od razu false) */
+  pending: boolean;
+  /** obszar scrollowalny pod palcem — musi zostać na górze, by przejąć gest */
+  scroller: HTMLElement | null;
 }
 let drag: DragState | null = null;
 
+function detachDrag() {
+  window.removeEventListener("pointermove", onDragMove);
+  window.removeEventListener("pointerup", endDrag);
+  window.removeEventListener("pointercancel", endDrag);
+  drag = null;
+}
+
 function onDragMove(e: PointerEvent) {
   if (!drag) return;
+
+  if (drag.pending) {
+    const dx = Math.abs(e.clientX - drag.startX);
+    const dyRaw = e.clientY - drag.startY;
+    // ruch w górę albo w bok = to nie jest gest zamykający: oddajemy go
+    // przeglądarce (scroll treści, karuzela galerii) i nie wracamy do niego
+    if (dyRaw < -DRAG_SLOP_PX || dx > Math.abs(dyRaw)) {
+      detachDrag();
+      return;
+    }
+    if (dyRaw < DRAG_SLOP_PX) return; // za wcześnie na rozstrzygnięcie
+    // treść zdążyła podjechać (np. przez bezwładność) — nie przejmujemy
+    if (drag.scroller && drag.scroller.scrollTop > 0) {
+      detachDrag();
+      return;
+    }
+    drag.pending = false;
+    drag.startY = e.clientY; // panel rusza od zera, bez skoku o próg
+  }
+
   const dy = Math.max(0, e.clientY - drag.startY); // tylko w dół
   if (!drag.moved && dy > 0) {
     drag.moved = true;
@@ -236,10 +278,7 @@ function onDragMove(e: PointerEvent) {
 function endDrag(e: PointerEvent) {
   if (!drag) return;
   const { root, panel, dy, vy, moved } = drag;
-  window.removeEventListener("pointermove", onDragMove);
-  window.removeEventListener("pointerup", endDrag);
-  window.removeEventListener("pointercancel", endDrag);
-  drag = null;
+  detachDrag();
 
   if (!moved) {
     // czysty tap — nic nie ruszaliśmy, wyczyść ewentualne inline style
@@ -277,9 +316,9 @@ document.addEventListener("pointerdown", (e) => {
   if (drag) return;
   const target = e.target as HTMLElement;
   const handle = target.closest<HTMLElement>("[data-overlay-drag]");
-  if (!handle) return;
   if (target.closest("[data-overlay-close]")) return; // nie startuj z przycisku X
-  const root = handle.closest<HTMLElement>("[data-overlay]");
+  if (target.closest("[data-overlay-nodrag]")) return; // własna obsługa gestu
+  const root = (handle ?? target).closest<HTMLElement>("[data-overlay]");
   if (
     !root ||
     root.hidden ||
@@ -288,15 +327,28 @@ document.addEventListener("pointerdown", (e) => {
   )
     return;
 
+  let scroller: HTMLElement | null = null;
+  if (!handle) {
+    // start z treści: tylko wewnątrz panelu (klik w tło ma własną obsługę)
+    // i tylko gdy obszar pod palcem jest przewinięty na samą górę
+    if (!target.closest("[data-overlay-panel]")) return;
+    scroller =
+      target.closest<HTMLElement>("[data-overlay-scroll]") ?? panelOf(root);
+    if (scroller.scrollTop > 0) return;
+  }
+
   drag = {
     root,
     panel: panelOf(root),
+    startX: e.clientX,
     startY: e.clientY,
     lastY: e.clientY,
     lastT: e.timeStamp,
     dy: 0,
     vy: 0,
     moved: false,
+    pending: !handle,
+    scroller,
   };
   window.addEventListener("pointermove", onDragMove, { passive: false });
   window.addEventListener("pointerup", endDrag);

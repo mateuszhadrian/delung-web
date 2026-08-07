@@ -244,14 +244,84 @@ const pad = (n: number) => String(n).padStart(2, "0");
     if (odUzytkownika) scrollToListTop();
   }
 
+  const desktopMQ = matchMedia(`(min-width:${WORK_DESKTOP_MIN_PX}px)`);
+  const motionOK = matchMedia("(prefers-reduced-motion: no-preference)");
+
+  /** Przewija POZIOMĄ szynę (mobile) tak, by wybrana kategoria wypadła na
+   *  środku ekranu; przy krańcach listy dojeżdża tylko do swojej krawędzi
+   *  (clamp), więc po bokach nigdy nie powstaje pusty pas — wygląd paska
+   *  zostaje bez zmian, ruszamy wyłącznie jego scrollem (runda 4).
+   *  Na desktopie szyna jest pionową listą w przyklejonej kolumnie — nic
+   *  nie robimy. Pionowy scroll strony to osobny mechanizm (D-T2). */
+  function centerRailItem(btn: HTMLElement, smooth = true) {
+    if (!rail || desktopMQ.matches) return;
+    const max = rail.scrollWidth - rail.clientWidth;
+    if (max <= 1) return; // wszystkie kategorie i tak widoczne
+    const r = rail.getBoundingClientRect();
+    const b = btn.getBoundingClientRect();
+    const cel = Math.max(
+      0,
+      Math.min(
+        max,
+        Math.round(
+          rail.scrollLeft + (b.left - r.left) - (r.width - b.width) / 2,
+        ),
+      ),
+    );
+    if (Math.abs(cel - rail.scrollLeft) < 1) return;
+    rail.scrollTo({
+      left: cel,
+      behavior: smooth && motionOK.matches ? "smooth" : "auto",
+    });
+  }
+
   buttons.forEach((b) =>
-    b.addEventListener("click", () => applyFilter(b.dataset.f ?? "", true)),
+    b.addEventListener("click", () => {
+      applyFilter(b.dataset.f ?? "", true);
+      centerRailItem(b);
+    }),
   );
 
   // Deep-link na wejściu; slug spoza szyny (pusta kategoria, literówka)
   // → „Wszystkie".
   const initial = decodeURIComponent(location.hash.slice(1));
   applyFilter(buttons.some((b) => b.dataset.f === initial) ? initial : "");
+  // wejście z deep-linkiem: pokaż wybraną kategorię od razu, ale BEZ ruchu
+  // (animowany przejazd szyny przy pierwszym paincie wyglądałby na usterkę)
+  const aktywny = buttons.find((b) => b.classList.contains("on"));
+  if (aktywny) centerRailItem(aktywny, false);
+
+  /** Kolumna nagłówka (desktop) jest przyklejona i rośnie z liczbą
+   *  kategorii — przy komplecie wypychała kafel „SZUKASZ CZEGOŚ
+   *  PODOBNEGO?" poza ekran (runda 4). Dwa stopnie ratunku: najpierw
+   *  znika opis, potem zacieśniają się odstępy szyny. Liczy JS, bo CSS
+   *  nie potrafi warunku „treść jest wyższa niż okno" — @media na
+   *  wysokość nie wie, ile kategorii ma wpisy. */
+  const head = document.querySelector<HTMLElement>(".re-head");
+  function fitHeadColumn() {
+    if (!head) return;
+    head.classList.remove("is-tight", "is-tighter");
+    if (!desktopMQ.matches) return;
+    const hdr =
+      parseFloat(
+        getComputedStyle(document.documentElement).getPropertyValue("--hdr-h"),
+      ) || 80;
+    const dostepna = window.innerHeight - hdr;
+    if (head.getBoundingClientRect().height <= dostepna) return;
+    head.classList.add("is-tight"); // stopień 1: bez opisu
+    if (head.getBoundingClientRect().height <= dostepna) return;
+    head.classList.add("is-tighter"); // stopień 2: ciaśniejsza szyna
+  }
+  fitHeadColumn();
+  let fitRaf = 0;
+  addEventListener("resize", () => {
+    cancelAnimationFrame(fitRaf);
+    fitRaf = requestAnimationFrame(fitHeadColumn);
+  });
+  // wysokość paska zmienia się po podmianie fontu (--hdr-h) — kolumna
+  // liczy się z niej, więc pomiar trzeba powtórzyć
+  const hdrEl = document.querySelector(".hdr");
+  if (hdrEl) new ResizeObserver(fitHeadColumn).observe(hdrEl);
 
   // Klik/tap w kafel → detal.
   document
@@ -538,6 +608,20 @@ const pad = (n: number) => String(n).padStart(2, "0");
       margin: 0;
       overflow: visible;
       background: none;
+    }
+    /* Dwa stopnie ratunku, gdy przyklejona kolumna nie mieści się w oknie
+       (klasy zakłada fitHeadColumn w skrypcie strony — runda 4). Stopień 1
+       oddaje ~127 px (opis), stopień 2 kolejne ~10 px na każdą pozycję
+       szyny. Bez nich kafel z telefonem wyjeżdżał poza ekran przy komplecie
+       kategorii — zmierzone: 1366×768 z 8 pozycjami brakowało 152 px. */
+    .re-head.is-tight .re-lead {
+      display: none;
+    }
+    .re-head.is-tighter .re-rail button {
+      padding-block: 10px;
+    }
+    .re-head.is-tighter .re-phone {
+      margin-top: 24px;
     }
     .re-rail button {
       display: flex;

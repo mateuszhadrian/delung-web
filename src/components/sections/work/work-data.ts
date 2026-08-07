@@ -83,6 +83,19 @@ export interface WorkRailItem {
   count: number;
 }
 
+/** Slugi kategorii, które mają CHOĆ JEDNĄ realizację.
+ *
+ *  Konsumenci: CTA „Zobacz/Przeglądaj realizacje z kategorii…" w karcie
+ *  kategorii (KategorieSheets) i na panelu /oferta/ (OfertaSection) —
+ *  bez wpisów prowadziłoby na pustą listę, więc CTA tam nie ma (runda 4).
+ *  Wynik zmienia się wraz z treścią z panelu: pierwsza realizacja w danej
+ *  kategorii przywraca przycisk przy najbliższym buildzie. */
+export function categoriesWithWork(
+  projects: readonly Pick<WorkProject, "category">[],
+): Set<CategorySlug> {
+  return new Set(projects.map((p) => p.category));
+}
+
 export function workRail(
   projects: readonly Pick<WorkProject, "category">[],
 ): WorkRailItem[] {

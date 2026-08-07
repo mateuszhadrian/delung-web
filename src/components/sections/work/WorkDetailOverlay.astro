@@ -49,6 +49,7 @@
     class="lb"
     data-lightbox
     data-overlay-panel
+    data-overlay-nodrag
     role="region"
     aria-label="Podgląd pełnoekranowy galerii"
     tabindex="-1"
@@ -578,8 +579,11 @@
   #work-detail .lb-dashes button.on {
     background: #fff;
   }
-  /* grający film chowa ikonkę kamery (open-detail.ts toggluje klasę) */
-  #work-detail .lb-slide.is-playing [data-cam] {
+  /* grający film chowa ikonkę kamery i podpowiedź „…, aby obejrzeć"
+     (open-detail.ts toggluje klasę) — oba znaki mówią o tym samym
+     geście, więc gasną i wracają RAZEM (zgłoszenie rundy 4) */
+  #work-detail .lb-slide.is-playing [data-cam],
+  #work-detail .lb-slide.is-playing [data-cam-hint] {
     display: none;
   }
   @media (prefers-reduced-motion: reduce) {

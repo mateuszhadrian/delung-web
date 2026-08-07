@@ -96,9 +96,15 @@ const CERT_ALT = "Certyfikat Firma Godna Zaufania Gold 2026";
   }
   .hero-photo > img {
     position: absolute;
-    inset: 0;
+    /* Zapas na parallax musi pokryć RUCH (D-U1, reguła w sections.md):
+       `data-par="0.1"` przesuwa obraz o ±0,1 × wysokość kadru, więc bez
+       zapasu przy scrollu odsłaniało się kremowe tło kadru (runda 4).
+       Zapas 13% z każdej strony = height 126% przy top −13%; sam wzór
+       (≥10%) zostawiał margines 4 px, czyli na granicy zaokrągleń. */
+    left: 0;
+    top: -13%;
     width: 100%;
-    height: 100%;
+    height: 126%;
     object-fit: cover;
     object-position: 46% 16%;
   }
