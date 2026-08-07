@@ -652,6 +652,45 @@ test.describe("detal mobile: bottom sheet, karuzela, gesty", () => {
     expect(kolor).toBe(oczekiwany);
   });
 
+  test("swipe-down DOTYKIEM zamyka sheet z treści (a nie tylko myszą)", async ({
+    page,
+    browserName,
+  }) => {
+    // Ten test istnieje, bo mysz NIE odtwarza tej ścieżki: przeglądarka
+    // przerywa strumień pointerów, gdy uzna gest za przewijanie, i pierwsza
+    // wersja poprawki przechodziła testy, nie działając na telefonie.
+    // Zdarzenia dotykowe idą przez CDP, więc przechodzą przez ten sam tor
+    // co palec (dostępne tylko w chromium).
+    test.skip(
+      browserName !== "chromium",
+      "Input.dispatchTouchEvent — chromium",
+    );
+    await gotoReady(page, PATH);
+    const detail = await openDetail(page, await revealFirstCard(page));
+    const box = await detail.locator(".dt-txt").boundingBox();
+    expect(box).not.toBeNull();
+
+    const cdp = await page.context().newCDPSession(page);
+    const x = box!.x + box!.width / 2;
+    const y = box!.y + box!.height / 2;
+    await cdp.send("Input.dispatchTouchEvent", {
+      type: "touchStart",
+      touchPoints: [{ x, y }],
+    });
+    for (let i = 1; i <= 12; i++) {
+      await cdp.send("Input.dispatchTouchEvent", {
+        type: "touchMove",
+        touchPoints: [{ x, y: y + i * 22 }],
+      });
+    }
+    await cdp.send("Input.dispatchTouchEvent", {
+      type: "touchEnd",
+      touchPoints: [],
+    });
+
+    await expect(detail).toBeHidden();
+  });
+
   test("swipe-down w TREŚCI zamyka, gdy sheet jest przewinięty na górę", async ({
     page,
   }) => {
@@ -920,6 +959,27 @@ test("kolumna nagłówka mieści telefon nawet przy komplecie kategorii", async 
       );
     });
     expect(nadmiar, `okno ${w}×${h}`).toBeLessThanOrEqual(0);
+
+    // Odstęp pod nagłówkiem niósł opis, więc po jego ukryciu szyna dotykała
+    // tytułu. Ma być nie mniejszy niż ten, który dzieli szynę od telefonu.
+    const odstepy = await page.evaluate(() => {
+      const head = document.querySelector<HTMLElement>(".re-head")!;
+      const rail = document.querySelector<HTMLElement>("[data-rail]")!;
+      const phone = document.querySelector<HTMLElement>(".re-phone")!;
+      const h1 = head.querySelector("h1")!;
+      return {
+        nadSzyna: Math.round(
+          rail.getBoundingClientRect().top - h1.getBoundingClientRect().bottom,
+        ),
+        podSzyna: Math.round(
+          phone.getBoundingClientRect().top -
+            rail.getBoundingClientRect().bottom,
+        ),
+      };
+    });
+    expect(odstepy.nadSzyna, `okno ${w}×${h}`).toBeGreaterThanOrEqual(
+      odstepy.podSzyna,
+    );
   }
 });
 

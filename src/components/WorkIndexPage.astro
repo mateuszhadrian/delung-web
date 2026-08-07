@@ -617,6 +617,12 @@ const pad = (n: number) => String(n).padStart(2, "0");
     .re-head.is-tight .re-lead {
       display: none;
     }
+    /* Odstęp pod nagłówkiem niósł opis (`margin: 20px 0 32px`), więc po jego
+       ukryciu szyna dotykała tytułu. Oddajemy tyle, ile dzieli szynę od
+       kafla z telefonem — kolumna ma wtedy ten sam rytm u góry i u dołu. */
+    .re-head.is-tight .re-rail {
+      margin-top: 36px;
+    }
     .re-head.is-tighter .re-rail button {
       padding-block: 10px;
     }
