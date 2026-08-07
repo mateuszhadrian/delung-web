@@ -132,6 +132,62 @@ mobilne) — decyzja Mateusza, jeden mechanizm w jednym miejscu.
 swipe-down zamykający sam podgląd, więc dwa mechanizmy nie walczą o ten sam
 ruch palca.
 
+### 4a. DOGRYWKA: pierwsza wersja przechodziła testy i nie działała na palcu
+
+Po merge'u Mateusz zgłosił, że gest **dalej łapie się tylko na kreseczce**
+(pull-to-refresh już nie występuje, czyli `overscroll-behavior` zadziałał).
+Testy były zielone, bo Playwright wykonuje gest **myszą**.
+
+Sonda z prawdziwymi zdarzeniami dotykowymi (CDP `Input.dispatchTouchEvent`)
+odtworzyła usterkę lokalnie i pokazała mechanizm:
+
+| touchmove | `cancelable` | `preventDefault` |
+| --- | --- | --- |
+| 1. (24 px) | **true** — jedyna szansa | **nie padł** |
+| 2.–8. | **false** — przeglądarka już przewija | bez znaczenia |
+
+Dwie przyczyny, obie po naszej stronie:
+
+1. **Dotyk szedł przez `pointer*`.** Uchwyt działa na pointerach wyłącznie
+   dlatego, że ma w CSS `touch-action: none` — przeglądarka nie rości sobie
+   do niego prawa. Treść musi zostać przewijalna, więc przeglądarka uznaje
+   gest za scroll i **przerywa strumień pointerów** (`pointercancel`).
+   Odebrać jej gest da się tylko przez `preventDefault()` na `touchmove`
+   w listenerze non-passive. Mysz i pióro zostają na pointerach.
+2. **Blokada padała o jedną klatkę za późno.** W klatce przejęcia gestu
+   `startY` było przesuwane na bieżącą pozycję (żeby panel nie skoczył
+   o próg), więc `dy` wychodziło zero i `prevent()` nie był wołany — a przy
+   następnym zdarzeniu `cancelable` było już `false`.
+
+Poprawka: gest odbieramy **w pierwszej klatce ruchu w dół** (ruch w bok
+i w górę dalej należy do przeglądarki: `dyRaw < -2` albo `dx > max(dyRaw, 2)`
+oddaje gest), a próg 8 px decyduje już tylko o tym, kiedy **panel zaczyna
+się ruszać**. Zmierzone dotykiem po naprawie: treść na górze → zamyka,
+treść przewinięta → nie zamyka, ruch w bok po galerii → nie zamyka.
+
+**Lekcja do zapamiętania: przy gestach mysz nie zastępuje palca.** Test
+oparty na `page.mouse` przepuścił niedziałającą funkcję do produkcji.
+Kontrakt stoi teraz na CDP (chromium) i jest zweryfikowany w obie strony.
+
+---
+
+## 4b. Zapas pod stopką karty kategorii (D-W9)
+
+Ukrycie CTA (D-W5) zabrało też zapas, bo `padding-bottom: 150px` siedziało
+na samym przycisku. W kategorii bez wpisów ostatni parametr wjeżdżał pod
+przyklejoną stopkę „CHCESZ WIĘCEJ SZCZEGÓŁÓW?" — zmierzone **+35 px**
+zasłonięcia. Zapas przeniesiony na `.dt-in`, więc nie zależy już od
+obecności CTA: po naprawie **−28 px**, identycznie jak w kartach z CTA.
+
+## 4c. Odstęp pod nagłówkiem w zacieśnionej kolumnie (D-W10)
+
+Odstęp między „Nasze realizacje" a szyną niósł ukrywany opis
+(`margin: 20px 0 32px`), więc stopień 1 zostawiał szynę przyklejoną do
+tytułu. Szyna dostaje w tym stanie `margin-top: 36px` — tyle samo, ile
+dzieli ją od kafla z telefonem. Koszt: stopień 2 włącza się o jedną
+kategorię wcześniej (1366×768 przy 7 pozycjach zamiast 8); kolumna dalej
+mieści się wszędzie, najciaśniej **−22 px**.
+
 ---
 
 ## 5. CTA realizacji tylko dla niepustych kategorii (D-W5)

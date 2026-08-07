@@ -584,6 +584,19 @@ img` kasował zapas z reguły bazowej do zera (`top: 0; height: 100%`),
   zespół, hero o-nas mobile, panel oferty), 188 bez zmian; **dwie zmiany są
   dla pixel-diffa niewidzialne** (kolor etykiet leży poniżej kadru sheeta,
   karta kategorii w zrzucie ma wpisy) — chroni je kontrakt e2e.
+  **Dogrywka po testach Mateusza na telefonie** (D-W9/D-W10, §4a–4c analizy):
+  pierwsza wersja swipe-down przechodziła testy i NIE DZIAŁAŁA na palcu —
+  Playwright wykonuje gest myszą, a przeglądarka przerywa strumień pointerów,
+  gdy uzna gest za przewijanie. Dotyk idzie teraz przez `touch*` (uchwyt
+  działał na pointerach tylko dzięki `touch-action: none`, czego treść mieć
+  nie może), a gest odbieramy `preventDefault`-em **w pierwszej klatce ruchu
+  w dół** — poprzednia wersja wołała go dopiero po progu, czyli o klatkę za
+  późno (`cancelable` było już `false`; zmierzone CDP-em). **Lekcja: przy
+  gestach mysz nie zastępuje palca** — kontrakt stoi teraz na
+  `Input.dispatchTouchEvent`. Przy okazji: zapas pod przyklejoną stopką karty
+  kategorii przeniesiony z CTA na kontener treści (bez CTA ostatni parametr
+  chował się o 35 px pod stopką) i szyna filtrów dostała `margin-top: 36px`
+  w stanie zacieśnionym, bo odstęp pod nagłówkiem niósł ukrywany opis.
 - Etap 7 — przed nami (umowa → przekazanie).
 
 ## Mapa projektu
