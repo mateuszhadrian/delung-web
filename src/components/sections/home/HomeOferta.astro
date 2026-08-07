@@ -316,6 +316,10 @@ const KAFLE = HOME_KAFLE.map((k) => ({ ...k, img: IMGS[k.slug]! }));
     }
     .cat img {
       left: -7%;
+      /* bez tego preflight Tailwinda (`img { max-width: 100% }`) ścina 114%
+         do 100% i kafel odsłania jasne tło pasem 30,8 px z PRAWEJ — ta sama
+         pułapka co w hero i przy kaflach realizacji (D-U1) */
+      max-width: none;
       width: 114%;
     }
     .cat-num {
