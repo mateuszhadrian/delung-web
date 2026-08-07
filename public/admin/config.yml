@@ -26,6 +26,24 @@ media_libraries:
 output:
   omit_empty_optional_fields: true
 
+# ── Nazwy plików wpisów: zawsze czyste ASCII ─────────────────────────────
+# Nazwa pliku powstaje z pola „Slug" (patrz `slug:` w kolekcji niżej), a to
+# pole klient wypełnia ręcznie — często wklejając tekst z telefonu albo
+# z aplikacji Apple. Taki tekst bywa zapisany w formie ROZŁOŻONEJ (NFD: „ą"
+# jako „a" + ogonek); wygląda identycznie, ale to inne bajty. Skutek na macOS:
+# git trzyma w indeksie nazwę NFD, a odczytuje z dysku NFC, więc ten sam plik
+# widać dwa razy — raz jako śledzony, raz jako nieśledzony. Przypadkowe
+# `git add .` zrobiłoby z tego DWA wpisy na Linuksie i wywróciło test
+# unikalności slugów (zdarzyło się 2026-08-06, trzy realizacje).
+# `clean_accents` transliteruje polskie znaki (Sveltia ma wbudowaną tablicę:
+# ą→a, ć→c, ę→e, ł→l, ń→n, ś→s, ź→z, ż→z), `encoding: ascii` wycina resztę.
+# Dotyczy WYŁĄCZNIE nazwy pliku — tytuł, opis i wartość pola „Slug" zostają
+# takie, jak wpisał klient. Istniejących plików nie rusza (przemianowanie
+# następuje dopiero przy zmianie pola „Slug" w panelu).
+slug:
+  encoding: "ascii"
+  clean_accents: true
+
 # ── PL-only (decyzja #2 delung): zwykłe pola, bez obiektów {pl,en} ────────
 # Schemat po remoncie panelu (docs/analiza-remont-panelu.md). Zmiana zawsze w TRZECH
 # miejscach naraz (src/content.schema.ts / ten plik /
