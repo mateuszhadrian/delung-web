@@ -287,3 +287,88 @@ Emulacja tego nie wykryje (`.claude/rules/testing.md`):
   strony). Zdjęcia idą z CMS-a, więc to ocena Mateusza, nie testu.
 - **Android, warstwy GPU** — kafel ma teraz obraz o 14 % większy od okna;
   czy scena dalej przewija się płynnie.
+
+---
+
+## 8. Dogrywka tej samej sesji: treść klienta kontra scena (D-U5, D-U6)
+
+Po naprawie parallaxu klient wrzucił do panelu **8 realizacji** (wcześniej
+skasował wszystkie testowe). Obie te czynności wywróciły bramkę — za każdym
+razem nie z winy kodu, tylko dlatego, że kod i testy zakładały treść, której
+klient nie musi się trzymać.
+
+### D-U6. Testy nie mogą wywracać się na treści z panelu
+
+**Objaw:** po usunięciu ostatniej realizacji `quality` i `prod-smoke` poszły
+na czerwono z `ENOENT: scandir 'src/content/realizacje'`.
+
+**Przyczyna:** git nie przechowuje pustych katalogów, więc skasowanie
+ostatniego wpisu usuwa CAŁY katalog. Trzy pliki testowe wołały `readdirSync`
+przy ładowaniu modułu, czyli wywracały się **przed uruchomieniem
+jakiegokolwiek testu**. Build, deploy i produkcja działały bez zarzutu
+(strona stała z pustą listą i „00 Z 00") — czerwień była wyłącznie testowa,
+ale przy required checks blokowała WSZYSTKIE merge'e. Przed przekazaniem
+panelu klientowi to pułapka: kasuje wpisy, a programista traci możliwość
+wypuszczenia czegokolwiek.
+
+**Decyzja:** wpisy czyta się wyłącznie przez `tests/helpers/realizacje.ts`
+(pusta lista zamiast wyjątku), a testy zależne od ich liczby robią
+`test.skip` z jawnym powodem. Mobilny test przyklejenia szyny filtrów pyta
+o **realną wysokość siatki**, a nie o liczbę wpisów — ten sam warunek chroni
+go na bardzo wysokim ekranie z krótką listą. Kontrakt „katalog zawiera co
+najmniej jeden wpis" ZOSTAJE jako jedyny sygnał braku treści, z komunikatem
+napisanym dla człowieka.
+
+Zmierzone: **0 wpisów** → e2e w całości zielone, jeden czerwony test
+jednostkowy; **1 wpis** → wszystko zielone (wcześniej 7 czerwonych e2e);
+**8 wpisów** → 557 ✓.
+
+### D-U5. Opis w scenie realizacji kończy się wielokropkiem, nie w pół słowa
+
+**Objaw:** przy oknie 1440×720 opis w przypiętej scenie urywał się w środku
+zdania („…przeszkleń, w") tuż nad linkiem „Więcej" — widoczne na produkcji.
+Złapał to strażnik D-T3 z rundy poprawek 3.
+
+**Przyczyna — nie ta, której się spodziewałem.** To nie był jeden za długi
+wpis. Scena była kalibrowana na treści, które wtedy istniały (opisy 120–176
+znaków; tyle mają do dziś opisy fixture'u testów wizualnych), a klient pisze
+**214–370**. Pomiar całego przemiatania testu (6 szerokości × 3 wysokości,
+3 wpisy zajawki) pokazał, że przy 720 px wysokości okna nie mieści się nawet
+opis 214-znakowy (6 px), a 370-znakowy wypadał poza boks o 57 px:
+
+| Okno | #1 (214 zn.) | #2 (370 zn.) | #3 (258 zn.) |
+| --- | --- | --- | --- |
+| 1440×900 | ok | ok | ok |
+| 1440×800 | ok | 17 px | ok |
+| 1280×720 | ok | 16 px | ok |
+| 1366×720 | ok | 37 px | 11 px |
+| 1440×720 | 6 px | 57 px | 28 px |
+
+Żadna kalibracja tego nie naprawi: przy 720 px miejsca po prostu nie ma.
+Skracanie opisów w panelu (wariant rozważony i odrzucony) dawałoby budżet
+poniżej 214 znaków i wracałoby przy każdej nowej realizacji wchodzącej do
+pierwszej trójki — a klient nie ma jak o takiej regule pamiętać.
+
+**Decyzja: zmienia się OBIETNICA, nie kalibracja.** Zamiast „opis nigdy nie
+jest przycinany" obowiązuje „opis nigdy nie urywa się w pół zdania": przy
+pełnym oknie widać go w całości, przy niskim kończy się wielokropkiem.
+Realizuje to limit linii (`-webkit-line-clamp`) liczony z wysokości, którą
+flex realnie przydzielił akapitowi — **w JS, bo CSS tego nie policzy**
+(w `calc()` nie wolno dzielić długości przez długość, a `-webkit-line-clamp`
+wymaga liczby). Liczy to `fitReDesc()` w `home-scroll.ts`, wołane z `refresh()`
+— czyli przy zmianie rozmiaru okna i po dojściu fontów, nigdy w pętli
+scrolla. `overflow: hidden` w CSS zostaje ostatnim zaworem, więc gwarancja
+D-Q5 („treść nie wychodzi na przycisk") jest nietknięta, a bez JS scena i tak
+nie istnieje (D-SG9).
+
+Zmierzone po zmianie: przy 1920×900 i 1440×900 **żaden opis nie jest
+skracany** (render identyczny jak dotąd), przy 1440×720 wszystkie trzy
+kończą się wielokropkiem, a odległość akapitu od linku „Więcej" wynosi
+18 px na każdym rozmiarze. **Baseline'y wizualne bez zmian** — fixture ma
+opisy 121–176 znaków, czyli poniżej limitu na każdym profilu.
+
+Test D-T3 dostaje nową treść (`opis nie urywa się w pół zdania (D-U5)`):
+skrócenie musi być zrobione limitem linii, akapit nie może wchodzić na link,
+a przy oknie 900 px opis ma być cały. Przy okazji odpadł pomiar reszty
+z dzielenia wysokości przez interlinię — Gecko liczy wysokość wiersza inaczej
+niż Blink i to kryterium było fałszywie czerwone przy NIEskróconym opisie.

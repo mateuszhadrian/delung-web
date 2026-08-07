@@ -17,6 +17,14 @@ paths:
   zabroniona (jest hook-guard); pliki są w `.prettierignore` — Sveltia ma
   własny formater (tablice zawsze wielolinijkowe).
 
+- **Zero wpisów to stan dopuszczalny** (klient może usunąć wszystko w panelu):
+  build przechodzi, Cloudflare deployuje, `/realizacje/` pokazuje „00 Z 00",
+  a scena na stronie głównej jest pustym blokiem. Uwaga: usunięcie ostatniego
+  wpisu kasuje CAŁY katalog `src/content/realizacje` (git nie przechowuje
+  pustych katalogów) — testy muszą to przeżyć, patrz `.claude/rules/testing.md`.
+  Czerwony jest wtedy dokładnie jeden test: kontrakt „katalog zawiera co
+  najmniej jeden wpis".
+
 ## Schemat danych — zmiana w TRZECH miejscach naraz
 
 1. Zod: `src/content.schema.ts` — źródło prawdy (czysty Zod, współdzielony

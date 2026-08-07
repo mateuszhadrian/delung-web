@@ -126,6 +126,38 @@ const reTags = reRcs.map(
   (rc) => rc.querySelector(".rc-tag")?.textContent?.trim() ?? "",
 );
 
+/* ── realizacje: opis kończy się wielokropkiem, nie w pół słowa (D-U5) ──
+   Opisy idą z CMS-a i bywają dowolnie długie (klient pisze 200–370 znaków,
+   fixture testów ma 120–176). Przy niskim oknie kolumna sceny nie ma dla nich
+   miejsca i `overflow: hidden` ucinał tekst w połowie zdania, tuż nad linkiem
+   „Więcej" — zgłoszone na produkcji przy 1440×720 („…przeszkleń, w").
+   CSS nie umie policzyć liczby linii z dostępnej wysokości (w calc() nie wolno
+   dzielić długości przez długość), więc liczy to JS: zdejmujemy limit, czytamy
+   wysokość, którą flex realnie przydzielił akapitowi, i wstawiamy tyle linii,
+   ile się w niej mieści. Przy wysokim oknie limit wypada większy od tekstu
+   i render jest identyczny jak dotąd.
+   `overflow: hidden` w CSS ZOSTAJE ostatnim zaworem (gwarancja D-Q5: treść nie
+   wychodzi na przycisk) — bez JS scena i tak nie istnieje (D-SG9). */
+const reDescs = reTxts
+  .map((tx) => tx.querySelector<HTMLElement>("p:not(.re-meta)"))
+  .filter((p): p is HTMLElement => !!p);
+function fitReDesc() {
+  if (mqMobile.matches) {
+    for (const p of reDescs) p.style.cssText = "";
+    return;
+  }
+  for (const p of reDescs) {
+    // pomiar bez limitu: clientHeight akapitu = miejsce, które dał mu flex
+    p.style.cssText = "";
+    const lh = parseFloat(getComputedStyle(p).lineHeight);
+    if (!lh) continue;
+    const linie = Math.max(2, Math.floor((p.clientHeight + 1) / lh));
+    p.style.display = "-webkit-box";
+    p.style.webkitBoxOrient = "vertical";
+    p.style.webkitLineClamp = String(linie);
+  }
+}
+
 /* ── proces: linia + reveal kroków ── */
 const prBody = q("[data-prbody]");
 const prLine = q("[data-prline]");
@@ -303,6 +335,7 @@ function tick() {
 }
 const refresh = () => {
   fitCta();
+  fitReDesc();
   tick();
 };
 addEventListener("scroll", tick, { passive: true });
@@ -318,4 +351,5 @@ document.fonts?.ready.then(refresh);
 if (document.readyState === "complete") refresh();
 else addEventListener("load", refresh);
 fitCta();
+fitReDesc();
 paint();

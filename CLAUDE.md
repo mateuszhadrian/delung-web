@@ -498,6 +498,37 @@ img` kasował zapas z reguły bazowej do zera (`top: 0; height: 100%`),
   `/cdn-cgi/image` nie istnieje, kafle realizacji są pustymi ramkami, więc
   pixel-diff tej klasy usterki NIE WIDZI. Strażnikiem jest sonda układu
   w `tests/e2e/index.spec.ts` (weryfikacja „łapie regresję" w obie strony).
+- **Testy odporne na treść z panelu — WYKONANE** (2026-08-06, po realnym
+  incydencie na main): klient usunął w panelu wszystkie realizacje, co
+  skasowało CAŁY katalog `src/content/realizacje` (git nie trzyma pustych
+  katalogów) — trzy pliki testowe wołały `readdirSync` przy ładowaniu modułu,
+  więc `quality` i `prod-smoke` poszły na czerwono z `ENOENT` PRZED
+  uruchomieniem jakiegokolwiek testu. Build i deploy działały bez zarzutu
+  (produkcja stała z pustą listą), czyli czerwień była wyłącznie testowa —
+  ale przy required checks blokowała WSZYSTKIE merge'e, co przed przekazaniem
+  klientowi jest pułapką. Wpisy czyta się teraz wyłącznie przez
+  `tests/helpers/realizacje.ts`, a testy zależne od ich liczby robią
+  `test.skip` z jawnym powodem (mobilna szyna filtrów pyta o realną wysokość
+  siatki, nie o liczbę wpisów). Zmierzone: 0 wpisów → e2e w całości zielone
+  i JEDEN czerwony test (kontrakt „katalog zawiera co najmniej jeden wpis",
+  komunikat napisany dla człowieka); 1 wpis → wszystko zielone (wcześniej
+  7 czerwonych); 6 wpisów → 551 ✓ jak dotąd. Reguły: `.claude/rules/testing.md`
+  i `.claude/rules/cms-realizacje.md`.
+- **Opis realizacji w scenie na stronie głównej — WIELOKROPEK ZAMIAST
+  URWANIA** (2026-08-06, D-U5: `docs/analiza-parallax-realizacje.md` §8 —
+  KOREKTA obietnicy D-T3): po wrzuceniu przez klienta 8 realizacji strażnik
+  z rundy 3 zapalił się na całym przemiataniu. Przyczyną NIE był jeden za
+  długi wpis: scena jest kalibrowana na opisy 120–176 znaków (tyle ma fixture
+  testów wizualnych), a klient pisze 214–370 — przy oknie 720 px nie mieści
+  się nawet ten najkrótszy. Zamiast kalibracji zmieniła się OBIETNICA:
+  „opis nigdy nie jest przycinany" → „opis nigdy nie urywa się w pół zdania".
+  Limit linii (`-webkit-line-clamp`) liczy `fitReDesc()` w `home-scroll.ts`
+  z wysokości realnie przydzielonej akapitowi przez flex — **w JS, bo CSS
+  tego nie policzy** (w `calc()` nie wolno dzielić długości przez długość);
+  wołane z `refresh()`, nigdy w pętli scrolla. `overflow: hidden` zostaje
+  ostatnim zaworem, więc gwarancja D-Q5 stoi. Zmierzone: przy 900 px wysokości
+  okna żaden opis nie jest skracany (render jak dotąd), przy 720 px wszystkie
+  kończą się wielokropkiem. Baseline'y bez zmian (fixture poniżej limitu).
 - Etap 7 — przed nami (umowa → przekazanie).
 
 ## Mapa projektu

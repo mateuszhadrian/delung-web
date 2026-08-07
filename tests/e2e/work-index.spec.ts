@@ -4,9 +4,6 @@
 // detal = JEDEN overlay #work-detail (modal ≥1024 / sheet <1024 w CSS —
 // D-R3) z galerią (strzałki/dashes desktop, snap-karuzela mobile),
 // projnav i wideo na tap. Decyzje: docs/analiza-realizacje.md.
-import { readdirSync, readFileSync } from "node:fs";
-import { join } from "node:path";
-import { fileURLToPath } from "node:url";
 import { expect, test, type Page } from "@playwright/test";
 import { ui } from "../../src/i18n/ui";
 import { CATEGORIES } from "../../src/lib/categories";
@@ -18,6 +15,7 @@ import {
   useChromium1920Only,
   usePreviewGuard,
 } from "../helpers/guards";
+import { readRealizacje } from "../helpers/realizacje";
 import { gotoReady, scrollPageTo } from "../helpers/scroll";
 
 const SITE = "https://delung.pl";
@@ -36,13 +34,7 @@ interface Entry {
     | { type: "video"; video: string; duration?: string }
   )[];
 }
-const DIR = fileURLToPath(
-  new URL("../../src/content/realizacje", import.meta.url),
-);
-const ENTRIES: Entry[] = readdirSync(DIR)
-  .filter((f) => f.endsWith(".json"))
-  .map((f) => JSON.parse(readFileSync(join(DIR, f), "utf8")) as Entry)
-  .sort((a, b) => a.order - b.order);
+const ENTRIES = readRealizacje<Entry>();
 
 const pad = (n: number) => String(n).padStart(2, "0");
 const CATS_WITH = CATEGORIES.filter((c) =>
@@ -58,6 +50,14 @@ const VIDEO_ENTRY = ENTRIES.find((e) =>
 );
 
 usePreviewGuard();
+
+// Pusta kolekcja to stan, który panel dopuszcza (klient może usunąć wszystko),
+// a strona go przeżywa — lista renderuje się jako „00 Z 00". Sygnałem jest
+// kontrakt CMS w tests/unit/cms-contract.test.ts; tu nie ma czego klikać.
+test.skip(
+  ENTRIES.length === 0,
+  "brak realizacji w kolekcji — lista, filtry i detal nie mają treści",
+);
 
 /** Dociera do pierwszego kafla siatki i uspokaja scroll przed klikiem. */
 async function revealFirstCard(page: Page) {
@@ -254,10 +254,19 @@ test.describe("szyna filtrów: zasięg przyklejenia (mobile)", () => {
 
     // Dno siatki kafli — miejsce, w którym przed poprawką szyny dawno
     // nie było w kadrze.
-    const gridBottom = await page
-      .locator(".re-grid")
-      .evaluate((el) => el.getBoundingClientRect().bottom + window.scrollY);
-    await scrollPageTo(page, gridBottom - page.viewportSize()!.height);
+    const grid = await page.locator(".re-grid").evaluate((el) => ({
+      top: el.getBoundingClientRect().top + window.scrollY,
+      bottom: el.getBoundingClientRect().bottom + window.scrollY,
+    }));
+    // Przy krótkiej liście (jeden–dwa kafle) siatka nie sięga nawet ekranu,
+    // więc „dno listy" leży NAD szyną i test nie ma czego mierzyć. Warunkiem
+    // jest realna wysokość siatki, a nie liczba wpisów — tak samo zachowa się
+    // przy trzech kaflach na bardzo wysokim ekranie.
+    test.skip(
+      grid.bottom - grid.top < page.viewportSize()!.height,
+      "siatka kafli krótsza niż ekran — nie ma dna listy do przewinięcia",
+    );
+    await scrollPageTo(page, grid.bottom - page.viewportSize()!.height);
 
     await expect(rail).toBeVisible();
     const box = await rail.boundingBox();

@@ -34,6 +34,18 @@ liczby szablonu nie obowiązują.
   wyłącznie wtedy, gdy zrzut ma świadomie pokazać inny UKŁAD (wtedy = nowe
   baseline'y w tym samym PR). Testy e2e funkcjonalne fixture'u NIE używają:
   czytają treść produkcyjną dynamicznie i są na jej zmiany odporne.
+- **Test NIE MOŻE wywracać się na treści z panelu.** Wpisy realizacji czyta
+  się wyłącznie przez `tests/helpers/realizacje.ts` (`realizacjeFiles()` /
+  `readRealizacje()`) — nigdy gołym `readdirSync` na `src/content/realizacje`:
+  git nie przechowuje pustych katalogów, więc usunięcie ostatniego wpisu
+  w panelu kasuje CAŁY katalog i goły odczyt wywraca moduł przy jego
+  ładowaniu, czyli przed uruchomieniem czegokolwiek (`quality` i `prod-smoke`
+  czerwone z `ENOENT`, 2026-08-06). Testy zależne od liczby wpisów robią
+  `test.skip(...)` z jawnym powodem — pusta albo krótka lista jest stanem
+  dopuszczalnym (strona buduje się i deployuje). JEDYNYM sygnałem o braku
+  treści jest kontrakt „katalog zawiera co najmniej jeden wpis"
+  w `tests/unit/cms-contract.test.ts` — to on ma świecić na czerwono,
+  z komunikatem napisanym dla człowieka.
 - Baseline'y (`tests/visual/__screenshots__/`, commitowane): DWA komplety
   per plik — `*-darwin.png` (lokalnie: `pnpm test:visual:update`) i
   `*-linux.png` (ręcznie wyzwalany workflow `update-visual-baselines.yml`,
