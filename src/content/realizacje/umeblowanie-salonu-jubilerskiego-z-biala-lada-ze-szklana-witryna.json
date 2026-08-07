@@ -1,0 +1,44 @@
+{
+  "slug": "umeblowanie-salonu-jubilerskiego-z-biala-ladą-ze-szklaną-witryną",
+  "order": 5,
+  "title": "Umeblowanie salonu jubilerskiego z białą ladą ze szklaną witryną",
+  "category": "wnetrza-komercyjne",
+  "year": "2025",
+  "description": "Prezentowany projekt to kompleksowe wykonanie i montaż eleganckiej zabudowy meblowej dla nowoczesnego salonu jubilerskiego. Głównym założeniem było stworzenie luksusowej, a zarazem minimalistycznej przestrzeni, która maksymalnie wyeksponuje prezentowany asortyment. Zabudowa łączy w sobie klasyczną biel o matowym wykończeniu z subtelnymi, złotymi akcentami oraz transparentnym szkłem. Zastosowane precyzyjne oświetlenie wewnątrz witryn i gablot idealnie podkreśla blask biżuterii, a ukryte w dolnej części pojemne szuflady gwarantują wysoką ergonomię i wygodną przestrzeń do przechowywania dla obsługi salonu. Całość tworzy spójne i prestiżowe wnętrze, zachęcające klientów do zakupów.",
+  "gallery": [
+    {
+      "type": "photo",
+      "image": "https://media.delung.pl/realizacje/Umeblowanie salonu jubilerskiego w z białą ladą ze szklaną witryną zdjecie1.png"
+    },
+    {
+      "type": "photo",
+      "image": "https://media.delung.pl/realizacje/Umeblowanie salonu jubilerskiego w z białą ladą ze szklaną witryną zdjecie2.png"
+    },
+    {
+      "type": "photo",
+      "image": "https://media.delung.pl/realizacje/Umeblowanie salonu jubilerskiego w z białą ladą ze szklaną witryną zdjecie3.png"
+    }
+  ],
+  "specs": [
+    {
+      "label": "FRONTY / KORPUS",
+      "value": "Lakierowana płyta MDF (wykończenie półmat), kolor RAL 9003 (Signal White)"
+    },
+    {
+      "label": "PRZESZKLENIA",
+      "value": "Szkło hartowane Optiwhite 8 mm (łączone metodą klejenia UV)"
+    },
+    {
+      "label": "ZAWIASY",
+      "value": "Blum CLIP top BLUMOTION z systemem cichego domykania"
+    },
+    {
+      "label": "SYSTEM SZUFLAD",
+      "value": "Prowadnice Hettich Actro YOU z pełnym wysuwem (obciążenie do 40 kg)"
+    },
+    {
+      "label": "OŚWIETLENIE",
+      "value": "integrowane profile LED HÄFELE Loox 5 (barwa neutralna 4000K, wysoki współczynnik oddawania barw CRI>90)"
+    }
+  ]
+}
