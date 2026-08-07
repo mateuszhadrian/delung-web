@@ -159,6 +159,45 @@ test.describe("kategorie mobile", () => {
     }
   });
 
+  test("koniec treści nie chowa się pod stopką, gdy karta nie ma CTA", async ({
+    page,
+  }) => {
+    // Zapas pod przyklejoną stopką niósł kiedyś sam przycisk CTA, więc gdy
+    // zniknął (D-W5), ostatni parametr wjeżdżał pod „CHCESZ WIĘCEJ
+    // SZCZEGÓŁÓW?" — zmierzone 35 px zasłonięcia.
+    const zWpisami = new Set(
+      readRealizacje<{ category: string; order: number }>().map(
+        (e) => e.category,
+      ),
+    );
+    const bezCta = OFERTA_CATEGORIES.find((c) => !zWpisami.has(c.slug));
+    test.skip(
+      !bezCta,
+      "każda kategoria oferty ma realizacje — nie ma czego mierzyć",
+    );
+
+    await gotoReady(page, KATEGORIE_PATH);
+    await page.evaluate(
+      (id) => window.overlay?.open(id),
+      `kat-${bezCta!.slug}`,
+    );
+    const sheet = page.locator(`#kat-${bezCta!.slug}`);
+    await expect(sheet).toHaveClass(/is-open/);
+    await settle(page, 400);
+
+    const zaslonieteO = await sheet.evaluate((el) => {
+      const scroll = el.querySelector<HTMLElement>("[data-overlay-scroll]")!;
+      scroll.scrollTo({ top: scroll.scrollHeight, behavior: "instant" });
+      const foot = el.querySelector<HTMLElement>(".dt-foot")!;
+      const ostatni = [...el.querySelectorAll<HTMLElement>(".dt-spec")].pop()!;
+      return Math.round(
+        ostatni.getBoundingClientRect().bottom -
+          foot.getBoundingClientRect().top,
+      );
+    });
+    expect(zaslonieteO).toBeLessThanOrEqual(0);
+  });
+
   test("CTA finałowe prowadzi do kontaktu", async ({ page }) => {
     await gotoReady(page, KATEGORIE_PATH);
     const cta = page.locator(".kt-cta a");

@@ -260,6 +260,11 @@ const SPEC_ICONS = [
     max-width: var(--col);
     margin-inline: auto;
     padding-inline: var(--pad);
+    /* Zapas pod przyklejoną stopkę („CHCESZ WIĘCEJ SZCZEGÓŁÓW?") — musi
+       siedzieć na kontenerze, a nie na CTA realizacji: odkąd CTA znika
+       w kategoriach bez wpisów (D-W5), zapas znikał razem z nim i stopka
+       zasłaniała koniec treści. */
+    padding-bottom: 150px;
   }
   .dt-kick {
     font-family: var(--font-display), sans-serif;
@@ -367,7 +372,8 @@ const SPEC_ICONS = [
   }
   .dt-more {
     display: block;
-    padding: 20px 0 150px;
+    /* dolny zapas przeniesiony na .dt-in — patrz komentarz tamże */
+    padding: 20px 0 0;
     text-align: center;
   }
   .dt-more a {
